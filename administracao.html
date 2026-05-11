@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Administração</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f6f8;
+      color: #1f2937;
+    }
+
+    header {
+      background: #1f2a8a;
+      color: #fff;
+      padding: 32px 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+    }
+
+    header p {
+      margin: 0;
+      font-size: 17px;
+      opacity: 0.9;
+    }
+
+    main {
+      width: min(1100px, calc(100% - 32px));
+      margin: 32px auto;
+    }
+
+    nav {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    nav a {
+      min-height: 96px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      border-radius: 8px;
+      background: #fff;
+      color: #1f2a8a;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 700;
+      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    nav a:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+    }
+
+    .back-link {
+      display: inline-block;
+      color: #1f2a8a;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 800px) {
+      nav {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 520px) {
+      header h1 {
+        font-size: 28px;
+      }
+
+      nav {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Administração</h1>
+    <p>Selecione uma opção administrativa.</p>
+  </header>
+
+  <main>
+    <nav aria-label="Opções da administração">
+      <a href="banco-dados.html">Base de Dados</a>
+      <a href="#">GSI</a>
+      <a href="#">Bloqueio / Desbloqueio</a>
+      <a href="#">FOPAG</a>
+      <a href="#">Contratos</a>
+      <a href="#">Acesso Comandante</a>
+    </nav>
+
+    <a class="back-link" href="index.html">Voltar para o início</a>
+  </main>
+</body>
+</html>

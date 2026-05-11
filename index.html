@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Sistema</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f6f8;
+      color: #1f2937;
+    }
+
+    header {
+      background: #1f2a8a;
+      color: #fff;
+      padding: 32px 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+    }
+
+    header p {
+      margin: 0;
+      font-size: 17px;
+      opacity: 0.9;
+    }
+
+    main {
+      width: min(1100px, calc(100% - 32px));
+      margin: 32px auto;
+    }
+
+    nav {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    nav a {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      border-radius: 8px;
+      background: #fff;
+      color: #1f2a8a;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 700;
+      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    nav a:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+    }
+
+    section {
+      margin-bottom: 22px;
+      padding: 24px;
+      border-left: 5px solid #1f2a8a;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+    }
+
+    section h2 {
+      margin: 0 0 10px;
+      color: #1f2a8a;
+      font-size: 24px;
+    }
+
+    section p {
+      margin: 0 0 16px;
+      line-height: 1.5;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 20px;
+      line-height: 1.8;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 18px;
+      color: #1f2a8a;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 800px) {
+      nav {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 520px) {
+      header h1 {
+        font-size: 28px;
+      }
+
+      nav {
+        grid-template-columns: 1fr;
+      }
+
+      section {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body id="topo">
+  <header>
+    <h1>Sistema CPROEIS</h1>
+    <p>Selecione um módulo para consultar as opções disponíveis.</p>
+  </header>
+
+  <main>
+    <nav aria-label="Módulos do sistema">
+      <a href="administracao.html">Administração CPROEIS</a>
+      <a href="#convenio">Convênio</a>
+      <a href="#policial">Policial</a>
+      <a href="#p1-unidade">P/1 Unidade</a>
+    </nav>
+
+    <!-- <section id="administracao">
+      <h2>Administração</h2>
+      <p>Área destinada ao acompanhamento geral do sistema e das informações administrativas.</p>
+      <ul>
+        <li>Controle de cadastros</li>
+        <li>Consulta de relatórios</li>
+        <li>Gestão de usuários</li>
+      </ul>
+      <a class="back-link" href="#topo">Voltar ao topo</a>
+    </section>
+
+    <section id="convenio">
+      <h2>Convênio</h2>
+      <p>Área para acompanhamento de convênios, registros e informações relacionadas.</p>
+      <ul>
+        <li>Cadastro de convênio</li>
+        <li>Consulta de escalas</li>
+        <li>Acompanhamento de pagamentos</li>
+      </ul>
+      <a class="back-link" href="#topo">Voltar ao topo</a>
+    </section>
+
+    <section id="policial">
+      <h2>Policial</h2>
+      <p>Área de acesso rápido para informações e consultas relacionadas ao policial.</p>
+      <ul>
+        <li>Consulta de dados pessoais</li>
+        <li>Visualização de escalas</li>
+        <li>Acompanhamento de participações</li>
+      </ul>
+      <a class="back-link" href="#topo">Voltar ao topo</a>
+    </section>
+
+    <section id="p1-unidade">
+      <h2>P/1 Unidade</h2>
+      <p>Área voltada ao gerenciamento das informações da unidade e seus integrantes.</p>
+      <ul>
+        <li>Controle de efetivo</li>
+        <li>Organização de escalas</li>
+        <li>Conferência de dados da unidade</li>
+      </ul>
+      <a class="back-link" href="#topo">Voltar ao topo</a>
+    </section> -->
+  </main>
+</body>
+</html>

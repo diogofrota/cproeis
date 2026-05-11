@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Base de Dados</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #eef2f7;
+      color: #1f2937;
+    }
+
+    header {
+      background: #1f2a8a;
+      color: #fff;
+      padding: 34px 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+    }
+
+    header p {
+      margin: 0;
+      font-size: 17px;
+      opacity: 0.9;
+    }
+
+    main {
+      width: min(1280px, calc(100% - 32px));
+      margin: 28px auto 40px;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 42px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      background: #fff;
+      color: #1f2a8a;
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+    }
+
+    .back-link:hover {
+      background: #eef2ff;
+    }
+
+    .panel {
+      margin-bottom: 22px;
+      padding: 22px;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .panel h2 {
+      margin: 0;
+      color: #1f2a8a;
+      font-size: 24px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .summary-item {
+      padding: 16px;
+      border-left: 5px solid #1f2a8a;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+    }
+
+    .summary-item.primary {
+      background: #1f2a8a;
+      color: #fff;
+    }
+
+    .summary-item.primary span,
+    .summary-item.primary strong {
+      color: #fff;
+    }
+
+    .summary-item span {
+      display: block;
+      color: #64748b;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .summary-item strong {
+      display: block;
+      margin-top: 6px;
+      color: #1f2a8a;
+      font-size: 28px;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 42px;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font: inherit;
+      color: #1f2937;
+      background: #fff;
+    }
+
+    input:focus,
+    select:focus {
+      outline: 2px solid rgba(31, 42, 138, 0.25);
+      border-color: #1f2a8a;
+    }
+
+    .wide {
+      grid-column: span 2;
+    }
+
+    .form-actions {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    button {
+      min-height: 42px;
+      padding: 10px 16px;
+      border: 0;
+      border-radius: 8px;
+      background: #1f2a8a;
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+      background: #151d66;
+      transform: translateY(-1px);
+    }
+
+    .secondary {
+      background: #475569;
+    }
+
+    .secondary:hover {
+      background: #334155;
+    }
+
+    .danger {
+      background: #b42318;
+    }
+
+    .danger:hover {
+      background: #8f1c13;
+    }
+
+    .view-switch {
+      display: flex;
+      gap: 8px;
+      padding: 4px;
+      border-radius: 8px;
+      background: #e2e8f0;
+    }
+
+    .view-switch button {
+      min-height: 38px;
+      background: transparent;
+      color: #334155;
+    }
+
+    .view-switch button.active {
+      background: #1f2a8a;
+      color: #fff;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      min-width: 880px;
+      border-collapse: collapse;
+      background: #fff;
+    }
+
+    th,
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #e2e8f0;
+      text-align: left;
+      vertical-align: middle;
+      font-size: 14px;
+    }
+
+    th {
+      background: #eef2ff;
+      color: #1f2a8a;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    tr:hover td {
+      background: #f8fafc;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .actions button {
+      min-height: 34px;
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+
+    .empty {
+      padding: 18px;
+      color: #64748b;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      form,
+      .summary {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .wide {
+        grid-column: span 2;
+      }
+
+      .panel-header,
+      .top-bar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 560px) {
+      header h1 {
+        font-size: 28px;
+      }
+
+      form,
+      .summary {
+        grid-template-columns: 1fr;
+      }
+
+      .wide {
+        grid-column: span 1;
+      }
+
+      .view-switch {
+        width: 100%;
+      }
+
+      .view-switch button {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Base de Dados</h1>
+    <p>Gerenciamento da relação de policiais.</p>
+  </header>
+
+  <main>
+    <div class="top-bar">
+      <a class="back-link" href="administracao.html">← Voltar para Administração</a>
+    </div>
+
+    <section class="summary" aria-label="Resumo da base de dados">
+      <div class="summary-item primary">
+        <span>Ativos</span>
+        <strong id="total-ativos">0</strong>
+      </div>
+      <div class="summary-item">
+        <span>Apto A</span>
+        <strong id="total-apto-a">0</strong>
+      </div>
+      <div class="summary-item">
+        <span>Apto B</span>
+        <strong id="total-apto-b">0</strong>
+      </div>
+      <div class="summary-item">
+        <span>LTS</span>
+        <strong id="total-lts">0</strong>
+      </div>
+      <div class="summary-item">
+        <span>Adidos</span>
+        <strong id="total-adidos">0</strong>
+      </div>
+      <div class="summary-item">
+        <span>Reserva</span>
+        <strong id="total-reserva">0</strong>
+      </div>
+      <div class="summary-item">
+        <span>Total</span>
+        <strong id="total-geral">0</strong>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2 id="form-title">Cadastrar policial</h2>
+      </div>
+
+      <form id="policial-form">
+        <input type="hidden" id="editing-id">
+        <input type="hidden" id="editing-origin">
+
+        <label>
+          RG
+          <input id="rg" type="text" inputmode="numeric" pattern="[0-9]{5,6}" placeholder="Ex.: 120345" required>
+        </label>
+
+        <label>
+          ID Funcional
+          <input id="identificacao" type="text" inputmode="numeric" pattern="[0-9]{6}-?[0-9]" placeholder="Ex.: 123456-7" required>
+        </label>
+
+        <label class="wide">
+          Nome
+          <input id="nome" type="text" required>
+        </label>
+
+        <label>
+          Graduação / Posto
+          <select id="graduacao" required>
+            <option value="Soldado">Soldado</option>
+            <option value="Cabo">Cabo</option>
+            <option value="3º Sargento">3º Sargento</option>
+            <option value="2º Sargento">2º Sargento</option>
+            <option value="1º Sargento">1º Sargento</option>
+            <option value="Subtenente">Subtenente</option>
+            <option value="Aspirante">Aspirante</option>
+            <option value="2º Tenente">2º Tenente</option>
+            <option value="1º Tenente">1º Tenente</option>
+            <option value="Capitão">Capitão</option>
+            <option value="Major">Major</option>
+            <option value="Tenente-Coronel">Tenente-Coronel</option>
+            <option value="Coronel">Coronel</option>
+          </select>
+        </label>
+
+        <label>
+          Unidade
+          <select id="unidade" required>
+            <option value="1º BPM">1º BPM</option>
+            <option value="2º BPM">2º BPM</option>
+            <option value="3º BPM">3º BPM</option>
+            <option value="4º BPM">4º BPM</option>
+            <option value="5º BPM">5º BPM</option>
+            <option value="6º BPM">6º BPM</option>
+            <option value="7º BPM">7º BPM</option>
+            <option value="9º BPM">9º BPM</option>
+            <option value="12º BPM">12º BPM</option>
+            <option value="14º BPM">14º BPM</option>
+            <option value="16º BPM">16º BPM</option>
+            <option value="18º BPM">18º BPM</option>
+            <option value="19º BPM">19º BPM</option>
+            <option value="20º BPM">20º BPM</option>
+            <option value="22º BPM">22º BPM</option>
+            <option value="23º BPM">23º BPM</option>
+            <option value="27º BPM">27º BPM</option>
+            <option value="31º BPM">31º BPM</option>
+            <option value="39º BPM">39º BPM</option>
+            <option value="41º BPM">41º BPM</option>
+            <option value="BOPE">BOPE</option>
+            <option value="BPChq">BPChq</option>
+            <option value="RECOM">RECOM</option>
+            <option value="DGP">DGP</option>
+            <option value="DGO">DGO</option>
+            <option value="DGF">DGF</option>
+            <option value="CPROEIS">CPROEIS</option>
+            <option value="QG">QG</option>
+          </select>
+        </label>
+
+        <label>
+          Situação Sanitária
+          <select id="situacao-sanitaria" required>
+            <option value="Apto A">Apto A</option>
+            <option value="Apto B">Apto B</option>
+            <option value="LTS">LTS</option>
+          </select>
+        </label>
+
+        <label>
+          Adido
+          <select id="adido">
+            <option value="Não">Não</option>
+            <option value="Sim">Sim</option>
+          </select>
+        </label>
+
+        <div class="form-actions">
+          <button type="submit" id="submit-button">Salvar</button>
+          <button type="button" class="secondary" id="cancel-button">Cancelar edição</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2 id="table-title">Policiais ativos</h2>
+
+        <div class="view-switch" aria-label="Visualização da tabela">
+          <button type="button" class="active" id="show-ativos">Ativos</button>
+          <button type="button" id="show-reserva">Reserva</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>RG</th>
+              <th>ID Funcional</th>
+              <th>Nome</th>
+              <th>Graduação / Posto</th>
+              <th>Unidade</th>
+              <th>Situação Sanitária</th>
+              <th>Adido</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="policiais-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_ATIVOS = 'cproeis_policiais_ativos';
+    const STORAGE_RESERVA = 'cproeis_policiais_reserva';
+    const STORAGE_SEED_VERSION = 'cproeis_seed_version';
+    const SEED_VERSION = '2026-05-11-02';
+
+    const form = document.getElementById('policial-form');
+    const policiaisBody = document.getElementById('policiais-body');
+    const editingId = document.getElementById('editing-id');
+    const editingOrigin = document.getElementById('editing-origin');
+    const formTitle = document.getElementById('form-title');
+    const submitButton = document.getElementById('submit-button');
+    const cancelButton = document.getElementById('cancel-button');
+    const tableTitle = document.getElementById('table-title');
+    const showAtivos = document.getElementById('show-ativos');
+    const showReserva = document.getElementById('show-reserva');
+    const totalAtivos = document.getElementById('total-ativos');
+    const totalAptoA = document.getElementById('total-apto-a');
+    const totalAptoB = document.getElementById('total-apto-b');
+    const totalLts = document.getElementById('total-lts');
+    const totalAdidos = document.getElementById('total-adidos');
+    const totalReserva = document.getElementById('total-reserva');
+    const totalGeral = document.getElementById('total-geral');
+
+    const fields = {
+      rg: document.getElementById('rg'),
+      identificacao: document.getElementById('identificacao'),
+      nome: document.getElementById('nome'),
+      graduacao: document.getElementById('graduacao'),
+      unidade: document.getElementById('unidade'),
+      situacaoSanitaria: document.getElementById('situacao-sanitaria'),
+      adido: document.getElementById('adido')
+    };
+
+    const policiaisIniciais = [
+      {
+        idInterno: 'seed-001',
+        rg: '120034',
+        identificacao: '123456-7',
+        nome: 'Carlos Henrique Silva',
+        graduacao: 'Cabo',
+        unidade: '1º BPM',
+        situacaoSanitaria: 'Apto A',
+        adido: 'Não',
+        reserva: 'Não'
+      },
+      {
+        idInterno: 'seed-002',
+        rg: '120118',
+        identificacao: '123457-5',
+        nome: 'Mariana Costa Almeida',
+        graduacao: 'Soldado',
+        unidade: '5º BPM',
+        situacaoSanitaria: 'Apto A',
+        adido: 'Não',
+        reserva: 'Não'
+      },
+      {
+        idInterno: 'seed-003',
+        rg: '120207',
+        identificacao: '123458-3',
+        nome: 'Roberto Luiz Pereira',
+        graduacao: '3º Sargento',
+        unidade: '12º BPM',
+        situacaoSanitaria: 'Apto B',
+        adido: 'Sim',
+        reserva: 'Não'
+      },
+      {
+        idInterno: 'seed-004',
+        rg: '120319',
+        identificacao: '123459-1',
+        nome: 'Juliana Martins Rocha',
+        graduacao: '2º Tenente',
+        unidade: 'CPROEIS',
+        situacaoSanitaria: 'Apto A',
+        adido: 'Não',
+        reserva: 'Não'
+      },
+      {
+        idInterno: 'seed-005',
+        rg: '120426',
+        identificacao: '123460-5',
+        nome: 'Rafael Nunes Barbosa',
+        graduacao: '1º Sargento',
+        unidade: 'BOPE',
+        situacaoSanitaria: 'Apto A',
+        adido: 'Não',
+        reserva: 'Não'
+      },
+      {
+        idInterno: 'seed-006',
+        rg: '120538',
+        identificacao: '123461-3',
+        nome: 'Fernanda Lopes Carvalho',
+        graduacao: 'Capitão',
+        unidade: 'DGP',
+        situacaoSanitaria: 'Apto B',
+        adido: 'Sim',
+        reserva: 'Não'
+      },
+      {
+        idInterno: 'seed-007',
+        rg: '120647',
+        identificacao: '123462-1',
+        nome: 'Bruno Azevedo Lima',
+        graduacao: 'Soldado',
+        unidade: '19º BPM',
+        situacaoSanitaria: 'LTS',
+        adido: 'Não',
+        reserva: 'Não'
+      },
+      {
+        idInterno: 'seed-008',
+        rg: '120759',
+        identificacao: '123463-0',
+        nome: 'Patricia Gomes Ferreira',
+        graduacao: 'Subtenente',
+        unidade: 'DGO',
+        situacaoSanitaria: 'Apto A',
+        adido: 'Não',
+        reserva: 'Não'
+      },
+      {
+        idInterno: 'seed-009',
+        rg: '120864',
+        identificacao: '123464-8',
+        nome: 'Eduardo Ribeiro Santos',
+        graduacao: 'Major',
+        unidade: 'QG',
+        situacaoSanitaria: 'Apto A',
+        adido: 'Sim',
+        reserva: 'Não'
+      },
+      {
+        idInterno: 'seed-010',
+        rg: '120975',
+        identificacao: '123465-6',
+        nome: 'Aline Moraes Teixeira',
+        graduacao: '1º Tenente',
+        unidade: '31º BPM',
+        situacaoSanitaria: 'Apto B',
+        adido: 'Não',
+        reserva: 'Não'
+      }
+    ];
+
+    let visualizacaoAtual = 'ativo';
+
+    function carregar(chave) {
+      try {
+        return JSON.parse(localStorage.getItem(chave)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function salvar(chave, dados) {
+      localStorage.setItem(chave, JSON.stringify(dados));
+    }
+
+    function novoId() {
+      return window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+    }
+
+    function normalizarPolicial(policial) {
+      return {
+        idInterno: policial.idInterno || novoId(),
+        rg: policial.rg || '',
+        identificacao: policial.identificacao || '',
+        nome: policial.nome || '',
+        graduacao: policial.graduacao || '',
+        unidade: policial.unidade || '',
+        situacaoSanitaria: policial.situacaoSanitaria || 'Apto A',
+        adido: policial.adido || 'Não',
+        reserva: policial.reserva || 'Não'
+      };
+    }
+
+    function inicializarDados() {
+      const ativos = carregar(STORAGE_ATIVOS);
+      const reserva = carregar(STORAGE_RESERVA);
+      const seedVersion = localStorage.getItem(STORAGE_SEED_VERSION);
+
+      if (seedVersion !== SEED_VERSION) {
+        const seeds = policiaisIniciais.map(normalizarPolicial);
+        const seedIds = new Set(seeds.map((policial) => policial.idInterno));
+        const reservaNormalizada = reserva.map(normalizarPolicial);
+        const idsNaReserva = new Set(reservaNormalizada.map((policial) => policial.idInterno));
+        const ativosDoUsuario = ativos
+          .map(normalizarPolicial)
+          .filter((policial) => !seedIds.has(policial.idInterno));
+        const seedsAtivos = seeds.filter((policial) => !idsNaReserva.has(policial.idInterno));
+        const reservaAtualizada = reservaNormalizada.map((policial) => {
+          const seedAtualizado = seeds.find((seed) => seed.idInterno === policial.idInterno);
+          return seedAtualizado ? { ...seedAtualizado, reserva: 'Sim' } : policial;
+        });
+
+        salvar(STORAGE_ATIVOS, [...ativosDoUsuario, ...seedsAtivos]);
+        salvar(STORAGE_RESERVA, reservaAtualizada);
+        localStorage.setItem(STORAGE_SEED_VERSION, SEED_VERSION);
+      }
+    }
+
+    function lerFormulario() {
+      return {
+        idInterno: editingId.value || novoId(),
+        rg: fields.rg.value.trim(),
+        identificacao: fields.identificacao.value.trim(),
+        nome: fields.nome.value.trim(),
+        graduacao: fields.graduacao.value.trim(),
+        unidade: fields.unidade.value.trim(),
+        situacaoSanitaria: fields.situacaoSanitaria.value,
+        adido: fields.adido.value,
+        reserva: editingOrigin.value === 'reserva' ? 'Sim' : 'Não'
+      };
+    }
+
+    function preencherFormulario(policial, origem) {
+      const dados = normalizarPolicial(policial);
+
+      editingId.value = dados.idInterno;
+      editingOrigin.value = origem;
+      fields.rg.value = dados.rg;
+      fields.identificacao.value = dados.identificacao;
+      fields.nome.value = dados.nome;
+      fields.graduacao.value = dados.graduacao;
+      fields.unidade.value = dados.unidade;
+      fields.situacaoSanitaria.value = dados.situacaoSanitaria;
+      fields.adido.value = dados.adido;
+      formTitle.textContent = 'Editar policial';
+      submitButton.textContent = 'Atualizar';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function limparFormulario() {
+      form.reset();
+      editingId.value = '';
+      editingOrigin.value = '';
+      formTitle.textContent = 'Cadastrar policial';
+      submitButton.textContent = 'Salvar';
+    }
+
+    function renderizarTabela(dados, tipo) {
+      policiaisBody.innerHTML = '';
+
+      if (dados.length === 0) {
+        const linha = document.createElement('tr');
+        const coluna = document.createElement('td');
+        coluna.className = 'empty';
+        coluna.colSpan = 8;
+        coluna.textContent = tipo === 'ativo'
+          ? 'Nenhum policial ativo cadastrado.'
+          : 'Nenhum policial na reserva.';
+        linha.appendChild(coluna);
+        policiaisBody.appendChild(linha);
+        return;
+      }
+
+      dados.map(normalizarPolicial).forEach((policial) => {
+        const linha = document.createElement('tr');
+
+        [
+          policial.rg,
+          policial.identificacao,
+          policial.nome,
+          policial.graduacao,
+          policial.unidade || '-',
+          policial.situacaoSanitaria,
+          policial.adido
+        ].forEach((valor) => {
+          const coluna = document.createElement('td');
+          coluna.textContent = valor;
+          linha.appendChild(coluna);
+        });
+
+        const colunaAcoes = document.createElement('td');
+        const acoes = document.createElement('div');
+        acoes.className = 'actions';
+
+        acoes.appendChild(criarBotaoAcao('Editar', 'editar', policial.idInterno, tipo));
+
+        if (tipo === 'ativo') {
+          acoes.appendChild(criarBotaoAcao('Reserva', 'reservar', policial.idInterno, tipo, 'danger'));
+        } else {
+          acoes.appendChild(criarBotaoAcao('Restaurar', 'restaurar', policial.idInterno, tipo, 'secondary'));
+          acoes.appendChild(criarBotaoAcao('Excluir definitivo', 'excluir', policial.idInterno, tipo, 'danger'));
+        }
+
+        colunaAcoes.appendChild(acoes);
+        linha.appendChild(colunaAcoes);
+        policiaisBody.appendChild(linha);
+      });
+    }
+
+    function criarBotaoAcao(texto, action, id, tipo, classe = '') {
+      const botao = document.createElement('button');
+      botao.type = 'button';
+      botao.textContent = texto;
+      botao.dataset.action = action;
+      botao.dataset.id = id;
+      botao.dataset.tipo = tipo;
+
+      if (classe) botao.className = classe;
+
+      return botao;
+    }
+
+    function renderizar() {
+      const ativos = carregar(STORAGE_ATIVOS).map(normalizarPolicial);
+      const reserva = carregar(STORAGE_RESERVA).map(normalizarPolicial);
+      const dados = visualizacaoAtual === 'ativo' ? ativos : reserva;
+
+      totalAtivos.textContent = ativos.length;
+      totalAptoA.textContent = ativos.filter((item) => item.situacaoSanitaria === 'Apto A').length;
+      totalAptoB.textContent = ativos.filter((item) => item.situacaoSanitaria === 'Apto B').length;
+      totalLts.textContent = ativos.filter((item) => item.situacaoSanitaria === 'LTS').length;
+      totalAdidos.textContent = ativos.filter((item) => item.adido === 'Sim').length;
+      totalReserva.textContent = reserva.length;
+      totalGeral.textContent = ativos.length + reserva.length;
+
+      tableTitle.textContent = visualizacaoAtual === 'ativo' ? 'Policiais ativos' : 'Policiais na reserva';
+      showAtivos.classList.toggle('active', visualizacaoAtual === 'ativo');
+      showReserva.classList.toggle('active', visualizacaoAtual === 'reserva');
+      renderizarTabela(dados, visualizacaoAtual);
+    }
+
+    function moverParaReserva(id) {
+      const ativos = carregar(STORAGE_ATIVOS).map(normalizarPolicial);
+      const reserva = carregar(STORAGE_RESERVA).map(normalizarPolicial);
+      const policial = ativos.find((item) => item.idInterno === id);
+
+      if (!policial) return;
+
+      salvar(STORAGE_ATIVOS, ativos.filter((item) => item.idInterno !== id));
+      salvar(STORAGE_RESERVA, [...reserva, { ...policial, reserva: 'Sim' }]);
+      renderizar();
+    }
+
+    function restaurarAtivo(id) {
+      const ativos = carregar(STORAGE_ATIVOS).map(normalizarPolicial);
+      const reserva = carregar(STORAGE_RESERVA).map(normalizarPolicial);
+      const policial = reserva.find((item) => item.idInterno === id);
+
+      if (!policial) return;
+
+      salvar(STORAGE_RESERVA, reserva.filter((item) => item.idInterno !== id));
+      salvar(STORAGE_ATIVOS, [...ativos, { ...policial, reserva: 'Não' }]);
+      renderizar();
+    }
+
+    function excluirDefinitivo(id) {
+      if (!confirm('Deseja excluir definitivamente este policial da reserva?')) return;
+
+      const reserva = carregar(STORAGE_RESERVA).map(normalizarPolicial);
+      salvar(STORAGE_RESERVA, reserva.filter((item) => item.idInterno !== id));
+      renderizar();
+    }
+
+    function editar(id, tipo) {
+      const chave = tipo === 'ativo' ? STORAGE_ATIVOS : STORAGE_RESERVA;
+      const policial = carregar(chave).map(normalizarPolicial).find((item) => item.idInterno === id);
+
+      if (policial) preencherFormulario(policial, tipo);
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      const policial = lerFormulario();
+      const origem = editingOrigin.value === 'reserva' ? STORAGE_RESERVA : STORAGE_ATIVOS;
+      const destino = editingOrigin.value === 'reserva' ? STORAGE_ATIVOS : STORAGE_RESERVA;
+      const dadosOrigem = carregar(origem).map(normalizarPolicial);
+      const dadosDestino = carregar(destino)
+        .map(normalizarPolicial)
+        .filter((item) => item.idInterno !== policial.idInterno);
+      const atualizados = dadosOrigem.some((item) => item.idInterno === policial.idInterno)
+        ? dadosOrigem.map((item) => item.idInterno === policial.idInterno ? policial : item)
+        : [...dadosOrigem, policial];
+
+      salvar(origem, atualizados);
+      salvar(destino, dadosDestino);
+      visualizacaoAtual = editingOrigin.value === 'reserva' ? 'reserva' : 'ativo';
+      limparFormulario();
+      renderizar();
+    });
+
+    cancelButton.addEventListener('click', limparFormulario);
+
+    showAtivos.addEventListener('click', () => {
+      visualizacaoAtual = 'ativo';
+      renderizar();
+    });
+
+    showReserva.addEventListener('click', () => {
+      visualizacaoAtual = 'reserva';
+      renderizar();
+    });
+
+    document.addEventListener('click', (event) => {
+      const botao = event.target.closest('button[data-action]');
+      if (!botao) return;
+
+      const { action, id, tipo } = botao.dataset;
+
+      if (action === 'editar') editar(id, tipo);
+      if (action === 'reservar') moverParaReserva(id);
+      if (action === 'restaurar') restaurarAtivo(id);
+      if (action === 'excluir') excluirDefinitivo(id);
+    });
+
+    inicializarDados();
+    renderizar();
+  </script>
+</body>
+</html>
