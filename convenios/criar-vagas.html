@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Criar Vagas</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1 id="page-title">Criar vagas de serviço</h1>
+    <p id="page-subtitle">Criação local de vagas vinculadas ao contrato vigente.</p>
+  </header>
+
+  <main>
+    <div class="top-bar">
+      <a class="back-link" id="back-menu-link" href="operacao.html">Voltar ao menu</a>
+      <a class="back-link" href="index.html">Trocar convênio</a>
+    </div>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Gerar vagas de serviço</h2>
+          <p class="hint">O valor da vaga é calculado pelos valores por classe cadastrados no contrato, somando passagem e alimentação.</p>
+        </div>
+      </div>
+
+      <form id="vaga-form" class="wizard-form">
+        <input type="hidden" id="editing-id">
+
+        <section class="wizard-card attention-card" id="creation-type-card" aria-label="Tipo de criação de vagas">
+          <div class="wizard-card-header">
+            <span>1</span>
+            <div>
+              <h3>Tipo de criação</h3>
+              <p class="hint">Escolha como as datas das vagas serão geradas.</p>
+            </div>
+          </div>
+
+          <div class="choice-grid" id="creation-type-options">
+            <button class="choice-card" type="button" data-date-mode-option="selected">
+              <strong>Por dia</strong>
+              <small>Marque datas específicas no calendário.</small>
+            </button>
+            <button class="choice-card" type="button" data-date-mode-option="week">
+              <strong>Por semana</strong>
+              <small>Informe o primeiro dia para gerar 7 dias.</small>
+            </button>
+            <button class="choice-card" type="button" data-date-mode-option="month">
+              <strong>Por mês</strong>
+              <small>Gere vagas em todos os dias da competência.</small>
+            </button>
+            <button class="choice-card" type="button" data-date-mode-option="period">
+              <strong>Período específico</strong>
+              <small>Informe uma data inicial e uma final.</small>
+            </button>
+          </div>
+        </section>
+
+        <section class="wizard-card calendar-card is-hidden" id="date-selection-card" aria-label="Seleção de datas para criação de vagas">
+          <div class="wizard-card-header">
+            <span>2</span>
+            <div>
+              <h3>Datas de criação</h3>
+              <p class="hint">A seleção abaixo muda conforme o tipo escolhido no primeiro card.</p>
+            </div>
+          </div>
+
+          <div class="calendar-head">
+            <input id="calendar-month" type="hidden">
+            <div class="month-selector" id="month-selector" aria-label="Selecionar mês"></div>
+          </div>
+
+          <div class="date-mode" id="date-mode-fields">
+            <input id="date-mode" type="hidden" value="selected">
+
+            <label>
+              Início
+              <input id="data-inicio" type="date" required>
+              <small class="date-description" id="data-inicio-descricao">Selecione uma data</small>
+            </label>
+
+            <label>
+              Fim
+              <input id="data-fim" type="date">
+              <small class="date-description" id="data-fim-descricao">Selecione uma data</small>
+            </label>
+          </div>
+
+          <div class="calendar-title is-hidden" id="calendar-title"></div>
+          <div class="calendar-grid" id="calendar-grid"></div>
+          <div class="week-grid is-hidden" id="week-grid"></div>
+          <div class="month-grid is-hidden" id="month-grid"></div>
+
+          <div class="selected-dates is-hidden" id="selected-dates-box">
+            <span>Dias selecionados</span>
+            <strong id="selected-dates-count">0</strong>
+          </div>
+        </section>
+
+        <section class="wizard-card" id="service-name-card" aria-label="Nome do serviço">
+          <div class="wizard-card-header">
+            <span>3</span>
+            <div>
+              <h3>Nome do serviço</h3>
+              <p class="hint">Defina a identificação operacional que aparecerá nas vagas criadas.</p>
+            </div>
+          </div>
+
+          <div class="service-grid">
+            <label class="full">
+              Nome do serviço
+              <input id="nome-servico" type="text" placeholder="Ex.: Reforço operacional, evento, patrulhamento..." required>
+            </label>
+          </div>
+        </section>
+
+        <section class="wizard-card service-card" id="service-info-card" aria-label="Local de apresentação">
+          <div class="wizard-card-header">
+            <span>4</span>
+            <div>
+              <h3>Local de apresentação</h3>
+              <p class="hint">Informe o local, endereço e ponto de referência para apresentação.</p>
+            </div>
+          </div>
+
+          <div class="service-grid">
+
+            <label>
+              Local de apresentação
+              <input id="local-servico" type="text" placeholder="Ex.: Portaria principal, base operacional..." required>
+            </label>
+
+            <label>
+              CEP
+              <input id="servico-cep" type="text" inputmode="numeric" placeholder="00000-000">
+            </label>
+
+            <label class="wide">
+              Logradouro
+              <input id="servico-logradouro" type="text" placeholder="Rua, avenida, praça..." required>
+            </label>
+
+            <label>
+              Número
+              <input id="servico-numero" type="text" required>
+            </label>
+
+            <label>
+              Complemento
+              <input id="servico-complemento" type="text">
+            </label>
+
+            <label>
+              Bairro
+              <input id="servico-bairro" type="text" required>
+            </label>
+
+            <label>
+              Cidade
+              <input id="servico-cidade" type="text" required>
+            </label>
+
+            <label>
+              UF
+              <input id="servico-uf" type="text" maxlength="2" placeholder="RJ" required>
+            </label>
+
+            <label class="wide">
+              Ponto de referência
+              <input id="ponto-referencia" type="text" placeholder="Ex.: Ao lado do terminal, entrada pela rua lateral...">
+            </label>
+          </div>
+        </section>
+
+        <section class="wizard-card class-selection-card" id="class-selection-card" aria-label="Classes, turnos e quantidades">
+          <div class="wizard-card-header">
+            <span>5</span>
+            <div>
+              <h3>Classes, turnos e vagas</h3>
+              <p class="hint">Selecione uma ou mais classes e configure turno, horário, quantidade e curso.</p>
+            </div>
+          </div>
+
+          <div class="class-choice-grid" id="class-choice-grid"></div>
+
+          <div class="form-actions">
+            <button type="button" id="preview-button">Revisar criação</button>
+            <button type="button" class="secondary" id="clear-button">Limpar</button>
+          </div>
+        </section>
+
+        <section class="wizard-card summary-preview-card is-hidden" id="summary-preview-card" aria-label="Resumo da criação">
+          <div class="wizard-card-header">
+            <span>6</span>
+            <div>
+              <h3>Resumo antes de criar</h3>
+              <p class="hint">Confira as datas, local de apresentação, classes e valores antes de gravar.</p>
+            </div>
+          </div>
+
+          <div id="creation-summary"></div>
+
+          <div class="form-actions">
+            <button type="button" class="secondary" id="edit-summary-button">Editar informações</button>
+            <button type="submit" id="submit-button">Criar vagas</button>
+          </div>
+        </section>
+      </form>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

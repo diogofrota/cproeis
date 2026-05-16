@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Vagas Criadas</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1 id="page-title">Vagas criadas</h1>
+    <p id="page-subtitle">Tabela mensal de vagas geradas para o convênio vigente.</p>
+  </header>
+
+  <main>
+    <div class="top-bar">
+      <a class="back-link" id="back-menu-link" href="operacao.html">Voltar ao menu</a>
+      <a class="back-link" id="menu-criar-vagas" href="criar-vagas.html">Criar vagas</a>
+      <a class="back-link" id="menu-acompanhamento" href="acompanhamento.html">Acompanhar limite</a>
+    </div>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Vagas criadas no mês</h2>
+          <p class="hint" id="month-label">Nenhuma competência selecionada.</p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Classe</th>
+              <th>Tipo</th>
+              <th>Horário</th>
+              <th>Ofertadas</th>
+              <th>Com policial</th>
+              <th>Valor ofertado</th>
+              <th>Valor escalado</th>
+              <th>Local</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="vagas-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

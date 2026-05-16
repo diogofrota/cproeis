@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Acompanhamento do Convênio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1 id="page-title">Acompanhamento do convênio</h1>
+    <p id="page-subtitle">Controle mensal de vagas ofertadas, vagas preenchidas e limite financeiro.</p>
+  </header>
+
+  <main>
+    <div class="top-bar">
+      <a class="back-link" id="back-menu-link" href="operacao.html">Voltar ao menu</a>
+      <a class="back-link" id="menu-criar-vagas" href="criar-vagas.html">Criar vagas</a>
+      <a class="back-link" id="menu-vagas" href="vagas.html">Ver vagas criadas</a>
+    </div>
+
+    <section class="contract-status" aria-label="Controle financeiro mensal">
+      <div class="limit-card" id="limit-card">
+        <span>Situação mensal</span>
+        <strong id="limit-status">Sem contrato selecionado</strong>
+        <small id="limit-detail">Selecione um convênio vigente para acompanhar a utilização mensal.</small>
+      </div>
+      <div class="summary-item">
+        <span>Limite mensal</span>
+        <strong id="limite-mensal">R$ 0,00</strong>
+      </div>
+      <div class="summary-item">
+        <span>Ofertado no mês</span>
+        <strong id="total-ofertado">R$ 0,00</strong>
+      </div>
+      <div class="summary-item">
+        <span>Escalado no mês</span>
+        <strong id="total-escalado">R$ 0,00</strong>
+      </div>
+    </section>
+
+    <section class="summary" aria-label="Médias e volumes do mês">
+      <div class="summary-item">
+        <span>Média diária ofertada</span>
+        <strong id="media-ofertada">R$ 0,00</strong>
+      </div>
+      <div class="summary-item">
+        <span>Média diária escalada</span>
+        <strong id="media-escalada">R$ 0,00</strong>
+      </div>
+      <div class="summary-item">
+        <span>Vagas ofertadas</span>
+        <strong id="quantidade-ofertada">0</strong>
+      </div>
+      <div class="summary-item">
+        <span>Vagas com policial</span>
+        <strong id="quantidade-escalada">0</strong>
+      </div>
+    </section>
+
+    <section class="dashboard-grid" aria-label="Dashboard operacional do convênio">
+      <article class="dashboard-panel span-2">
+        <div class="panel-header compact">
+          <div>
+            <h2>Execução financeira</h2>
+            <p class="hint">Acompanhamento do consumo mensal em relação ao limite do contrato.</p>
+          </div>
+          <span class="badge" id="dashboard-competencia">Mês atual</span>
+        </div>
+
+        <div class="progress-block">
+          <div class="progress-header">
+            <span>Utilização ofertada</span>
+            <strong id="uso-percentual">0%</strong>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="uso-progress"></div>
+          </div>
+        </div>
+
+        <div class="chart-split">
+          <div class="chart-box">
+            <canvas id="uso-limite-chart" width="260" height="220" aria-label="Gráfico de uso do limite mensal"></canvas>
+          </div>
+          <div class="chart-box">
+            <canvas id="gasto-diario-chart" width="520" height="220" aria-label="Gráfico de gasto diário ofertado"></canvas>
+          </div>
+        </div>
+
+        <div class="metric-row">
+          <div>
+            <span>Saldo mensal restante</span>
+            <strong id="saldo-restante">R$ 0,00</strong>
+          </div>
+          <div>
+            <span>Projeção no mês</span>
+            <strong id="projecao-mensal">R$ 0,00</strong>
+          </div>
+          <div>
+            <span>Valor diário disponível</span>
+            <strong id="valor-diario-disponivel">R$ 0,00</strong>
+          </div>
+          <div>
+            <span>Saldo total do contrato</span>
+            <strong id="saldo-total-contrato">R$ 0,00</strong>
+          </div>
+          <div>
+            <span>Gasto ofertado hoje</span>
+            <strong id="valor-gasto-hoje">R$ 0,00</strong>
+          </div>
+        </div>
+      </article>
+
+      <article class="dashboard-panel">
+        <div class="panel-header compact">
+          <div>
+            <h2>Vagas por tipo</h2>
+            <p class="hint">Quantidade ofertada por duração do serviço.</p>
+          </div>
+        </div>
+        <div class="chart-box compact-chart">
+          <canvas id="tipos-vagas-chart" width="420" height="220" aria-label="Gráfico de vagas por tipo"></canvas>
+        </div>
+        <div class="rank-list" id="tipos-vagas-list"></div>
+      </article>
+
+      <article class="dashboard-panel">
+        <div class="panel-header compact">
+          <div>
+            <h2>Vagas por semana</h2>
+            <p class="hint">Volume semanal dentro da competência.</p>
+          </div>
+        </div>
+        <div class="chart-box compact-chart">
+          <canvas id="semanas-chart" width="420" height="220" aria-label="Gráfico de vagas por semana"></canvas>
+        </div>
+        <div class="bar-list" id="semanas-list"></div>
+      </article>
+
+      <article class="dashboard-panel">
+        <div class="panel-header compact">
+          <div>
+            <h2>Uso diário</h2>
+            <p class="hint">Dias com maior valor ofertado.</p>
+          </div>
+        </div>
+        <div class="rank-list" id="dias-custo-list"></div>
+      </article>
+
+      <article class="dashboard-panel">
+        <div class="panel-header compact">
+          <div>
+            <h2>Efetividade</h2>
+            <p class="hint">Comparação entre vagas criadas e vagas com policial.</p>
+          </div>
+        </div>
+        <div class="metric-row single">
+          <div>
+            <span>Taxa de preenchimento</span>
+            <strong id="taxa-preenchimento">0%</strong>
+          </div>
+          <div>
+            <span>Vagas pendentes</span>
+            <strong id="vagas-pendentes">0</strong>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
