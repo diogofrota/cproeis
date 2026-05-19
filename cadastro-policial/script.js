@@ -91,6 +91,7 @@ const initialFieldIds = [
   'initialPostoGraduacao',
   'initialGrupoHierarquico',
   'initialGrupoOficial',
+  'initialComportamento',
   'initialSituacaoFuncional',
   'initialUnidade',
   'initialSituacaoSanitaria'
@@ -114,8 +115,7 @@ const behaviorFieldIds = [
 
 const unitFieldIds = [
   'unitUnidade',
-  'unitDataInicio',
-  'unitDataTermino',
+  'unitDataApresentacao',
   'unitBolpm',
   'unitDataBolpm'
 ];
@@ -163,6 +163,27 @@ const statusFields = Object.fromEntries(
   statusFieldIds.map((id) => [id, document.getElementById(id)])
 );
 
+const formHintIds = [
+  'rg',
+  'idFuncional',
+  'nomeCompleto',
+  'nomeGuerra',
+  'telefone',
+  'email',
+  'dataEntrada',
+  'initialPostoGraduacao',
+  'initialComportamento',
+  'initialSituacaoFuncional',
+  'initialUnidade',
+  'initialSituacaoSanitaria'
+];
+
+const formHints = Object.fromEntries(
+  formHintIds.map((id) => [id, document.getElementById(`${id}Hint`)])
+);
+
+const activeValidationFields = new Set();
+
 const detailLabels = [
   ['rg', 'RG'],
   ['idFuncional', 'ID Funcional'],
@@ -172,8 +193,6 @@ const detailLabels = [
   ['email', 'Email'],
   ['dataEntrada', 'Data de Entrada'],
   ['postoGraduacao', 'Posto/Graduação'],
-  ['grupoHierarquico', 'Grupo Hierárquico'],
-  ['grupoOficial', 'Grupo Oficial'],
   ['situacaoFuncional', 'Situação Funcional'],
   ['unidade', 'Unidade'],
   ['situacaoSanitaria', 'Situação Sanitária'],
@@ -322,12 +341,20 @@ function normalizeBehaviorHistorico(historico) {
 }
 
 function normalizeUnitHistorico(historico) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Padroniza cada registro do histórico de unidade antes de leitura,
+   * renderização ou gravação, garantindo compatibilidade com dados antigos sem Data de Apresentação.
+   * PARÂMETROS E RETORNO: Recebe um objeto de histórico e retorna um objeto normalizado com strings
+   * para unidade, Data de Apresentação, BOLPM e metadados.
+   * ARMAZENAMENTO E PERSISTÊNCIA: O objeto normalizado é usado antes de gravar/ler o array salvo em
+   * localStorage pela chave UNIT_HISTORY_STORAGE_KEY.
+   * TODO: Em ambiente online, mover esta normalização para uma camada de DTO/validação da API.
+   */
   return {
     id: historico.id || createId(),
     idFuncional: historico.idFuncional || '',
     unidade: historico.unidade || '',
-    dataInicio: historico.dataInicio || '',
-    dataTermino: historico.dataTermino || '',
+    dataApresentacao: historico.dataApresentacao || historico.dataInicio || '',
     bolpm: historico.bolpm || '',
     dataBolpm: historico.dataBolpm || '',
     createdAt: historico.createdAt || new Date().toISOString()
@@ -346,18 +373,195 @@ function normalizeStatusHistorico(historico) {
   };
 }
 
+function onlyDigits(value) {
+  return String(value || '').replace(/\D/g, '');
+}
+
+function toTitleCase(value) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Padroniza nomes digitados pelo usuário para primeira letra maiúscula e demais
+   * minúsculas em cada palavra, evitando cadastros com texto todo em caixa alta ou baixa.
+   * PARÂMETROS E RETORNO: Recebe uma string e retorna a string normalizada, preservando espaços simples.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Atua somente sobre o valor em memória/DOM; o resultado é persistido em
+   * localStorage quando readForm monta o registro final do policial.
+   * TODO: Em produção, repetir esta normalização no backend para manter consistência entre clientes.
+   */
+  return String(value || '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/(^|\s)([a-zà-ú])/g, (match) => match.toUpperCase());
+}
+
+function toTitleCaseInput(value) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Normaliza nomes durante a digitação sem remover o espaço final que o usuário
+   * acabou de inserir, permitindo compor nomes completos naturalmente.
+   * PARÂMETROS E RETORNO: Recebe uma string do input e retorna a string com capitalização por palavra.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Atualiza apenas o valor exibido no DOM; a versão final é tratada em
+   * readForm antes de gravar no localStorage.
+   * TODO: Em produção, usar uma máscara/normalizador com preservação de cursor para nomes compostos.
+   */
+  return String(value || '')
+    .toLowerCase()
+    .replace(/\s{2,}/g, ' ')
+    .replace(/(^|\s)([a-zà-ú])/g, (match) => match.toUpperCase());
+}
+
+function formatRg(value) {
+  const digits = onlyDigits(value);
+  return digits ? Number(digits).toLocaleString('pt-BR') : '';
+}
+
+function formatFunctionalId(value) {
+  const digits = onlyDigits(value);
+  if (digits.length !== 7) return digits;
+  return `${digits.slice(0, 6)}-${digits.slice(6)}`;
+}
+
+function formatPhone(value) {
+  const digits = onlyDigits(value);
+  if (digits.length !== 11) return digits;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
+function requiresBehaviorByPosto(postoGraduacao) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Indica se o posto/graduação possui classificação de comportamento no cadastro
+   * inicial, regra aplicada somente de Subtenente para baixo.
+   * PARÂMETROS E RETORNO: Recebe o posto/graduação como string e retorna true para praças até Subtenente.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; apenas apoia a validação e exibição do campo.
+   * TODO: Em produção, carregar essa regra de uma tabela parametrizável para acompanhar mudanças normativas.
+   */
+  return ['Soldado', 'Cabo', '3º Sargento', '2º Sargento', '1º Sargento', 'Subtenente'].includes(postoGraduacao);
+}
+
+function updateInitialBehaviorVisibility() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Mantém o campo Comportamento visível, mas habilita a seleção somente quando o
+   * posto/graduação exige essa classificação, limpando o valor para oficiais e aspirante.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valor; altera o estado disabled do select.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê o posto selecionado e altera apenas o DOM; o valor é persistido no
+   * submit se a regra exigir comportamento.
+   * TODO: Em ambiente online, receber do backend se a graduação selecionada aceita comportamento.
+   */
+  const shouldShow = requiresBehaviorByPosto(initialFields.initialPostoGraduacao.value);
+
+  initialFields.initialComportamento.disabled = !shouldShow;
+  if (!shouldShow) {
+    initialFields.initialComportamento.value = '';
+    activeValidationFields.delete('initialComportamento');
+  }
+}
+
+function sanitizeMainFormInput(id) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Restringe a digitação dos campos principais ao padrão esperado pelo cadastro,
+   * removendo símbolos de RG, ID Funcional e telefone e normalizando nomes/email.
+   * PARÂMETROS E RETORNO: Recebe o id do campo alterado como string e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Atualiza apenas o valor dos inputs no DOM; a persistência ocorre no
+   * submit por meio de savePoliciais/localStorage.
+   * TODO: Em ambiente online, complementar com máscaras acessíveis e validação assíncrona de duplicidade.
+   */
+  if (id === 'rg') fields.rg.value = onlyDigits(fields.rg.value).slice(0, 6);
+  if (id === 'idFuncional') fields.idFuncional.value = onlyDigits(fields.idFuncional.value).slice(0, 7);
+  if (id === 'telefone') fields.telefone.value = onlyDigits(fields.telefone.value).slice(0, 11);
+  if (id === 'email') fields.email.value = fields.email.value.trim().toLowerCase();
+  if (id === 'nomeCompleto') fields.nomeCompleto.value = toTitleCaseInput(fields.nomeCompleto.value);
+  if (id === 'nomeGuerra') fields.nomeGuerra.value = toTitleCaseInput(fields.nomeGuerra.value);
+}
+
+function getMainFormValidation() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Valida todos os campos obrigatórios do cadastro principal antes de habilitar o
+   * botão Salvar e antes de persistir o registro.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros; retorna um objeto com o estado booleano de cada campo.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê valores atuais do DOM e não grava dados; a função é usada apenas
+   * para controle visual e bloqueio de submissão.
+   * TODO: Em produção, replicar essas regras no servidor e retornar mensagens padronizadas pela API.
+   */
+  const rgNumber = Number(onlyDigits(fields.rg.value));
+  const phoneDigits = onlyDigits(fields.telefone.value);
+  const emailValue = fields.email.value.trim().toLowerCase();
+
+  return {
+    rg: rgNumber >= 2000 && rgNumber <= 150000,
+    idFuncional: onlyDigits(fields.idFuncional.value).length === 7,
+    nomeCompleto: toTitleCase(fields.nomeCompleto.value).length >= 3,
+    nomeGuerra: toTitleCase(fields.nomeGuerra.value).length >= 2,
+    telefone: phoneDigits.length === 11 && phoneDigits[2] === '9',
+    email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue),
+    dataEntrada: Boolean(fields.dataEntrada.value),
+    initialPostoGraduacao: Boolean(initialFields.initialPostoGraduacao.value),
+    initialComportamento: !requiresBehaviorByPosto(initialFields.initialPostoGraduacao.value) || Boolean(initialFields.initialComportamento.value),
+    initialSituacaoFuncional: Boolean(initialFields.initialSituacaoFuncional.value),
+    initialUnidade: Boolean(initialFields.initialUnidade.value),
+    initialSituacaoSanitaria: Boolean(initialFields.initialSituacaoSanitaria.value)
+  };
+}
+
+function hasMainFieldValue(id) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Verifica se um campo obrigatório já recebeu algum valor do usuário para manter
+   * o alerta visual quando esse valor existe, mas ainda está incompleto ou inválido.
+   * PARÂMETROS E RETORNO: Recebe o id do campo como string e retorna booleano indicando presença de valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê somente o DOM atual; não grava em localStorage nem altera arrays.
+   * TODO: Em produção, combinar este estado com validação assíncrona para dados já usados no banco.
+   */
+  const element = fields[id] || initialFields[id];
+  return Boolean(element && String(element.value || '').trim());
+}
+
+function updateMainFormValidation(options = {}) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Mostra ou oculta as orientações discretas em vermelho e habilita o botão Salvar
+   * somente quando todos os campos obrigatórios estão corretos. As mensagens aparecem apenas no campo em
+   * foco ou quando o fluxo força a exibição após tentativa de salvar.
+   * PARÂMETROS E RETORNO: Recebe um objeto opcional com showAll booleano e retorna true quando o formulário está válido.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Altera classes CSS no DOM e o estado disabled do botão; não grava em
+   * localStorage nem modifica arrays.
+   * TODO: Em produção, integrar esta validação com erros vindos da API para cobrir regras de negócio.
+   */
+  const validation = getMainFormValidation();
+  const { showAll = false } = options;
+
+  formHintIds.forEach((id) => {
+    const element = fields[id] || initialFields[id];
+    const hint = formHints[id];
+    if (!element || !hint) return;
+
+    const isValid = validation[id];
+    const shouldShowError = !isValid && (showAll || activeValidationFields.has(id) || hasMainFieldValue(id));
+    element.classList.toggle('invalid', shouldShowError);
+    hint.classList.toggle('hidden', !shouldShowError);
+  });
+
+  const isValidForm = Object.values(validation).every(Boolean);
+  saveButton.disabled = !isValidForm;
+  return isValidForm;
+}
+
 function readForm() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Monta o objeto principal do policial a partir do formulário de cadastro,
+   * preservando grupo hierárquico/grupo oficial como dados técnicos e incluindo comportamento apenas
+   * quando o posto/graduação permite essa classificação.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros; retorna o objeto de policial pronto para persistência.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê inputs/selects do DOM; o objeto retornado é salvo posteriormente
+   * em localStorage por savePoliciais e usado para criar históricos iniciais.
+   * TODO: Em produção, enviar este payload para uma API que valide regras funcionais e grave em banco.
+   */
   const postoGraduacao = initialFields.initialPostoGraduacao.value;
   const groups = getGroupsByPosto(postoGraduacao);
 
   return {
     id: editingId.value || createId(),
-    rg: fields.rg.value.trim(),
-    idFuncional: fields.idFuncional.value.trim(),
-    nomeCompleto: fields.nomeCompleto.value.trim(),
-    nomeGuerra: fields.nomeGuerra.value.trim(),
-    telefone: fields.telefone.value.trim(),
-    email: fields.email.value.trim(),
+    rg: formatRg(fields.rg.value),
+    idFuncional: formatFunctionalId(fields.idFuncional.value),
+    nomeCompleto: toTitleCase(fields.nomeCompleto.value),
+    nomeGuerra: toTitleCase(fields.nomeGuerra.value),
+    telefone: formatPhone(fields.telefone.value),
+    email: fields.email.value.trim().toLowerCase(),
     dataEntrada: fields.dataEntrada.value,
     postoGraduacao,
     grupoHierarquico: groups.grupoHierarquico,
@@ -365,7 +569,7 @@ function readForm() {
     situacaoFuncional: initialFields.initialSituacaoFuncional.value,
     unidade: initialFields.initialUnidade.value,
     situacaoSanitaria: initialFields.initialSituacaoSanitaria.value || 'APTO_A',
-    comportamento: '',
+    comportamento: requiresBehaviorByPosto(postoGraduacao) ? initialFields.initialComportamento.value : '',
     historicoSanitario: []
   };
 }
@@ -394,10 +598,16 @@ function readBehaviorForm() {
 }
 
 function readUnitForm() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Coleta os campos do formulário de histórico de unidade, incluindo a data em
+   * que o policial se apresentou de fato na nova unidade.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros; retorna um objeto com unidade, Data de Apresentação e dados de BOLPM.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Apenas lê valores do DOM; a gravação ocorre no submit do unitForm.
+   * TODO: Em produção, validar essas datas também no backend antes de persistir a movimentação.
+   */
   return {
     unidade: unitFields.unitUnidade.value,
-    dataInicio: unitFields.unitDataInicio.value,
-    dataTermino: unitFields.unitDataTermino.value,
+    dataApresentacao: unitFields.unitDataApresentacao.value,
     bolpm: unitFields.unitBolpm.value.trim(),
     dataBolpm: unitFields.unitDataBolpm.value
   };
@@ -453,8 +663,7 @@ function hasBehaviorData(historico) {
 function hasUnitData(historico) {
   return Boolean(
     historico.unidade ||
-    historico.dataInicio ||
-    historico.dataTermino ||
+    historico.dataApresentacao ||
     historico.bolpm ||
     historico.dataBolpm
   );
@@ -470,22 +679,38 @@ function hasStatusData(historico) {
 }
 
 function fillForm(policial) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Preenche o formulário de cadastro para edição, exibindo apenas números nos
+   * campos que possuem máscara salva, como RG, ID Funcional e telefone.
+   * PARÂMETROS E RETORNO: Recebe um objeto de policial e não retorna valor; atualiza os campos do DOM.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê o objeto já carregado do localStorage e não grava dados até o submit.
+   * TODO: Em ambiente online, carregar o registro por ID real do banco e tratar falhas de consulta.
+   */
   const data = normalizePolicial(policial);
   editingId.value = data.id;
 
   fieldIds.forEach((id) => {
     if (fields[id] && id in data) fields[id].value = data[id];
   });
+  fields.rg.value = onlyDigits(data.rg);
+  fields.idFuncional.value = onlyDigits(data.idFuncional);
+  fields.telefone.value = onlyDigits(data.telefone);
+  fields.email.value = data.email.toLowerCase();
+  fields.nomeCompleto.value = toTitleCase(data.nomeCompleto);
+  fields.nomeGuerra.value = toTitleCase(data.nomeGuerra);
 
   const currentFunctional = getCurrentFunctional(data);
   initialFields.initialPostoGraduacao.value = currentFunctional.postoGraduacao;
   initialFields.initialGrupoHierarquico.value = currentFunctional.grupoHierarquico;
   initialFields.initialGrupoOficial.value = currentFunctional.grupoOficial;
+  initialFields.initialComportamento.value = getCurrentBehavior(data);
   initialFields.initialSituacaoFuncional.value = getCurrentStatus(data);
   initialFields.initialUnidade.value = getCurrentUnit(data);
   initialFields.initialSituacaoSanitaria.value = getCurrentSituacaoSanitaria(data);
+  updateInitialBehaviorVisibility();
 
   saveButton.textContent = 'Atualizar';
+  updateMainFormValidation();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -494,7 +719,10 @@ function clearForm() {
   editingId.value = '';
   initialFields.initialGrupoHierarquico.value = '';
   initialFields.initialGrupoOficial.value = '';
+  initialFields.initialComportamento.value = '';
+  updateInitialBehaviorVisibility();
   saveButton.textContent = 'Salvar';
+  updateMainFormValidation();
 }
 
 function clearHistoryForm() {
@@ -627,6 +855,28 @@ function getLatest(items) {
   return items[items.length - 1] || {};
 }
 
+function getLatestPresentedUnit(historicos) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Identifica a unidade vigente para o cadastro principal considerando somente
+   * históricos com Data de Apresentação preenchida, pois a transferência só altera a unidade do policial
+   * depois da apresentação efetiva.
+   * PARÂMETROS E RETORNO: Recebe um array de históricos de unidade normalizados e retorna o histórico
+   * apresentado mais recente; se nenhum tiver apresentação, retorna um objeto vazio.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê apenas o array em memória recebido de loadUnitHistoricos ou de
+   * listas já montadas antes do salvamento; não grava dados diretamente.
+   * TODO: Em ambiente online, substituir a ordenação local por consulta ao banco com índice em
+   * idFuncional/dataApresentacao e regra transacional para evitar concorrência entre lançamentos do P/1.
+   */
+  const presented = historicos
+    .filter((historico) => historico.dataApresentacao)
+    .sort((a, b) => {
+      const dateCompare = a.dataApresentacao.localeCompare(b.dataApresentacao);
+      return dateCompare || a.createdAt.localeCompare(b.createdAt);
+    });
+
+  return getLatest(presented);
+}
+
 function getCurrentSituacaoSanitaria(policial) {
   const historicos = getHistoricosByPolicial(policial);
   const latest = historicos[historicos.length - 1];
@@ -648,7 +898,7 @@ function getCurrentBehavior(policial) {
 }
 
 function getCurrentUnit(policial) {
-  const latest = getLatest(getUnitHistoricosByPolicial(policial));
+  const latest = getLatestPresentedUnit(getUnitHistoricosByPolicial(policial));
   return latest.unidade || policial.unidade || '';
 }
 
@@ -687,6 +937,22 @@ function setActiveView(viewId) {
 
   if (viewId !== 'details-view' && !detailsCard.hidden) detailsCard.hidden = true;
   if (viewId !== 'details-view') detailsEmpty.hidden = false;
+}
+
+function openInitialViewFromHash() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Abre a visão inicial indicada na URL, permitindo que o dashboard direcione o
+   * usuário diretamente para o formulário ou para a tabela de policiais.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valor; usa window.location.hash.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava localStorage; altera apenas a aba ativa no DOM.
+   * TODO: Em produção, substituir por roteamento formal quando a aplicação virar SPA ou tiver backend.
+   */
+  const requestedView = window.location.hash.replace('#', '');
+  const allowedViews = ['form-view', 'table-view'];
+
+  if (!allowedViews.includes(requestedView)) return;
+  setActiveView(requestedView);
+  if (requestedView === 'table-view') render();
 }
 
 function render() {
@@ -758,22 +1024,44 @@ function renderEmptyHistory(tbody, colSpan, message) {
   tbody.appendChild(row);
 }
 
+function attachHistoryRowReferences(row, historico) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Mantém referências técnicas do histórico na linha HTML sem exibi-las como
+   * colunas visíveis, preparando a tela para integração futura com banco relacional.
+   * PARÂMETROS E RETORNO: Recebe a linha de tabela HTMLTableRowElement e o objeto de histórico; não
+   * retorna valor, apenas grava atributos data-* na linha.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não altera localStorage nem arrays; escreve somente metadados no DOM
+   * renderizado, como data-id-funcional, data-grupo-hierarquico e data-grupo-oficial.
+   * TODO: Em produção, substituir essas referências de apoio por chaves estrangeiras reais retornadas
+   * pela API, mantendo somente identificadores não sensíveis no DOM.
+   */
+  row.dataset.idFuncional = historico.idFuncional || '';
+  row.dataset.grupoHierarquico = historico.grupoHierarquico || '';
+  row.dataset.grupoOficial = historico.grupoOficial || '';
+}
+
 function renderFuncionalTable(historicos) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Renderiza o histórico funcional exibindo apenas os dados operacionais que o
+   * usuário precisa ver, com Data Promoção como primeira coluna e referências técnicas ocultas na linha.
+   * PARÂMETROS E RETORNO: Recebe um array de históricos funcionais normalizados e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê o array em memória e escreve linhas no tbody funcionalBody; os dados
+   * completos continuam persistidos no localStorage em FUNCTIONAL_HISTORY_STORAGE_KEY.
+   * TODO: Em ambiente online, carregar esse histórico via relacionamento entre policial e promoções.
+   */
   funcionalBody.innerHTML = '';
 
   if (historicos.length === 0) {
-    renderEmptyHistory(funcionalBody, 8, 'Nenhum histórico funcional informado.');
+    renderEmptyHistory(funcionalBody, 5, 'Nenhum histórico funcional informado.');
     return;
   }
 
   historicos.forEach((historico) => {
     const row = document.createElement('tr');
+    attachHistoryRowReferences(row, historico);
     [
-      historico.idFuncional,
-      historico.postoGraduacao,
-      historico.grupoHierarquico,
-      historico.grupoOficial,
       formatDate(historico.dataAlteracao),
+      historico.postoGraduacao,
       historico.bolpm,
       formatDate(historico.dataBolpm)
     ].forEach((value) => {
@@ -794,19 +1082,27 @@ function renderFuncionalTable(historicos) {
 }
 
 function renderComportamentoTable(historicos) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Renderiza o histórico de comportamento sem expor o ID Funcional na tabela,
+   * iniciando pela Data Alteração e preservando o vínculo técnico no atributo data-id-funcional.
+   * PARÂMETROS E RETORNO: Recebe um array de históricos de comportamento e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Atualiza apenas o tbody comportamentoBody; os registros completos
+   * permanecem no localStorage em BEHAVIOR_HISTORY_STORAGE_KEY.
+   * TODO: Em produção, trocar a leitura local por consulta relacional filtrada pelo policial.
+   */
   comportamentoBody.innerHTML = '';
 
   if (historicos.length === 0) {
-    renderEmptyHistory(comportamentoBody, 6, 'Nenhum histórico de comportamento informado.');
+    renderEmptyHistory(comportamentoBody, 5, 'Nenhum histórico de comportamento informado.');
     return;
   }
 
   historicos.forEach((historico) => {
     const row = document.createElement('tr');
+    attachHistoryRowReferences(row, historico);
     [
-      historico.idFuncional,
-      historico.comportamento,
       formatDate(historico.dataAlteracao),
+      historico.comportamento,
       historico.bolpm,
       formatDate(historico.dataBolpm)
     ].forEach((value) => {
@@ -827,20 +1123,27 @@ function renderComportamentoTable(historicos) {
 }
 
 function renderUnidadeTable(historicos) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Renderiza a grade de histórico de unidade no detalhe do policial, mostrando
+   * Data de Apresentação como primeira coluna, publicação e ações, sem expor o ID Funcional.
+   * PARÂMETROS E RETORNO: Recebe um array de históricos normalizados e não retorna valor; atualiza o DOM.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê o array recebido em memória e escreve apenas na tabela HTML
+   * unidadeBody, mantendo o vínculo em data-id-funcional; a persistência permanece no localStorage.
+   * TODO: Em produção, carregar essa lista paginada da API para evitar tabelas grandes no navegador.
+   */
   unidadeBody.innerHTML = '';
 
   if (historicos.length === 0) {
-    renderEmptyHistory(unidadeBody, 7, 'Nenhum histórico de unidade informado.');
+    renderEmptyHistory(unidadeBody, 5, 'Nenhum histórico de unidade informado.');
     return;
   }
 
   historicos.forEach((historico) => {
     const row = document.createElement('tr');
+    attachHistoryRowReferences(row, historico);
     [
-      historico.idFuncional,
+      formatDate(historico.dataApresentacao),
       historico.unidade,
-      formatDate(historico.dataInicio),
-      formatDate(historico.dataTermino),
       historico.bolpm,
       formatDate(historico.dataBolpm)
     ].forEach((value) => {
@@ -861,19 +1164,27 @@ function renderUnidadeTable(historicos) {
 }
 
 function renderSituacaoFuncionalTable(historicos) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Renderiza o histórico de situação funcional sem mostrar o ID Funcional,
+   * começando pela Data Alteração e mantendo essa referência técnica na própria linha para uso futuro.
+   * PARÂMETROS E RETORNO: Recebe um array de históricos de situação funcional e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Escreve somente no DOM em situacaoFuncionalBody; os dados completos
+   * continuam salvos em localStorage pela chave STATUS_HISTORY_STORAGE_KEY.
+   * TODO: Em ambiente online, consultar essa tabela por chave estrangeira do policial.
+   */
   situacaoFuncionalBody.innerHTML = '';
 
   if (historicos.length === 0) {
-    renderEmptyHistory(situacaoFuncionalBody, 6, 'Nenhum histórico de situação funcional informado.');
+    renderEmptyHistory(situacaoFuncionalBody, 5, 'Nenhum histórico de situação funcional informado.');
     return;
   }
 
   historicos.forEach((historico) => {
     const row = document.createElement('tr');
+    attachHistoryRowReferences(row, historico);
     [
-      historico.idFuncional,
-      historico.situacaoFuncional,
       formatDate(historico.dataAlteracao),
+      historico.situacaoFuncional,
       historico.bolpm,
       formatDate(historico.dataBolpm)
     ].forEach((value) => {
@@ -950,19 +1261,27 @@ function showDetails(id) {
   renderUnidadeTable(unidadeHistoricos);
   renderSituacaoFuncionalTable(statusHistoricos);
 
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Renderiza o histórico sanitário do policial sem exibir o ID Funcional como
+   * coluna, mantendo esse vínculo técnico em data-id-funcional na linha.
+   * PARÂMETROS E RETORNO: Usa a lista historicos já filtrada no detalhe do policial e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Atualiza apenas o tbody historicoBody; os dados completos seguem
+   * persistidos no localStorage pela chave HISTORY_STORAGE_KEY.
+   * TODO: Em produção, substituir o vínculo textual por chave estrangeira relacional e paginação via API.
+   */
   if (historicos.length === 0) {
     const row = document.createElement('tr');
     const cell = document.createElement('td');
     cell.className = 'empty';
-    cell.colSpan = 7;
+    cell.colSpan = 6;
     cell.textContent = 'Nenhum histórico sanitário informado.';
     row.appendChild(cell);
     historicoBody.appendChild(row);
   } else {
     historicos.forEach((historico) => {
       const row = document.createElement('tr');
+      attachHistoryRowReferences(row, historico);
       [
-        displayValue(historico.idFuncional),
         formatDate(historico.dataInicio),
         formatDate(historico.dataTermino),
         displayValue(historico.bolpm),
@@ -1089,6 +1408,13 @@ function editBehavior(id) {
 }
 
 function editUnit(id) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Carrega um registro do histórico de unidade no formulário para edição.
+   * PARÂMETROS E RETORNO: Recebe o id do histórico como string e não retorna valor; preenche campos do DOM.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê os dados do localStorage via loadUnitHistoricos e mantém alterações
+   * somente no formulário até o submit.
+   * TODO: Em ambiente online, buscar o registro por endpoint protegido e tratar falhas de rede/permissão.
+   */
   const historico = loadUnitHistoricos().map(normalizeUnitHistorico).find((item) => item.id === id);
   if (!historico) return;
 
@@ -1100,8 +1426,7 @@ function editUnit(id) {
 
   editingUnitId.value = historico.id;
   unitFields.unitUnidade.value = historico.unidade;
-  unitFields.unitDataInicio.value = historico.dataInicio;
-  unitFields.unitDataTermino.value = historico.dataTermino;
+  unitFields.unitDataApresentacao.value = historico.dataApresentacao;
   unitFields.unitBolpm.value = historico.bolpm;
   unitFields.unitDataBolpm.value = historico.dataBolpm;
   saveUnitButton.textContent = 'Atualizar histórico';
@@ -1175,15 +1500,24 @@ function syncPolicialBehavior(link) {
 }
 
 function syncPolicialUnit(link) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Sincroniza a unidade exibida no cadastro principal com a última unidade em que
+   * o policial possui Data de Apresentação registrada.
+   * PARÂMETROS E RETORNO: Recebe o vínculo funcional/idFuncional como string e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê históricos de unidade e policiais do localStorage e grava o cadastro
+   * atualizado em STORAGE_KEY por meio de savePoliciais.
+   * TODO: Em produção, executar essa atualização em transação no backend quando o P/1 confirmar a
+   * apresentação, registrando auditoria do usuário responsável.
+   */
   const historicos = loadUnitHistoricos()
     .map(normalizeUnitHistorico)
     .filter((historico) => historico.idFuncional === link);
-  const latest = getLatest(sortByCreation(historicos));
+  const latest = getLatestPresentedUnit(historicos);
   const policiais = loadPoliciais().map(normalizePolicial);
 
   savePoliciais(policiais.map((policial) => {
     if (getHistoryLink(policial) !== link) return policial;
-    return { ...policial, unidade: latest.unidade || '' };
+    return { ...policial, unidade: latest.unidade || policial.unidade || '' };
   }));
 }
 
@@ -1252,6 +1586,14 @@ function deleteBehavior(id) {
 }
 
 function deleteUnit(id) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Exclui um registro do histórico de unidade e sincroniza a unidade vigente do
+   * policial conforme a última Data de Apresentação restante.
+   * PARÂMETROS E RETORNO: Recebe o id do histórico como string e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê e grava o array de histórico de unidade no localStorage e sincroniza
+   * a unidade vigente do policial em STORAGE_KEY.
+   * TODO: Em ambiente online, exigir confirmação/autorização no backend e registrar auditoria da exclusão.
+   */
   if (!confirm('Deseja excluir este registro do histórico de unidade?')) return;
 
   const historicos = loadUnitHistoricos().map(normalizeUnitHistorico);
@@ -1309,7 +1651,15 @@ function getLatestBehaviorFromList(historicos, link) {
 }
 
 function getLatestUnitFromList(historicos, link) {
-  const latest = getLatest(sortByCreation(historicos.filter((historico) => historico.idFuncional === link)));
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Retorna a unidade que deve aparecer no cadastro principal a partir de uma lista
+   * já carregada, respeitando a regra de só atualizar após Data de Apresentação.
+   * PARÂMETROS E RETORNO: Recebe um array de históricos e o link funcional do policial; retorna a unidade
+   * como string ou vazio quando não há apresentação registrada.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Usa apenas a lista em memória criada durante o salvamento do formulário.
+   * TODO: Em produção, centralizar esta regra na API para que listagem e cadastro usem a mesma fonte.
+   */
+  const latest = getLatestPresentedUnit(historicos.filter((historico) => historico.idFuncional === link));
   return latest.unidade || '';
 }
 
@@ -1378,6 +1728,7 @@ function updateInitialGroups() {
   const groups = getGroupsByPosto(initialFields.initialPostoGraduacao.value);
   initialFields.initialGrupoHierarquico.value = groups.grupoHierarquico;
   initialFields.initialGrupoOficial.value = groups.grupoOficial;
+  updateInitialBehaviorVisibility();
 }
 
 function addInitialHistoryRows({
@@ -1385,9 +1736,19 @@ function addInitialHistoryRows({
   currentLink,
   updatedHistories,
   updatedFunctionalHistories,
+  updatedBehaviorHistories,
   updatedUnitHistories,
   updatedStatusHistories
 }) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Cria os registros iniciais de histórico a partir do primeiro cadastro do policial,
+   * incluindo comportamento inicial somente quando ele existir para praças/Subtenente.
+   * PARÂMETROS E RETORNO: Recebe o formData, link funcional e arrays de históricos já carregados; não
+   * retorna valor, pois adiciona os registros diretamente nos arrays recebidos por referência.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Manipula arrays em memória que serão gravados em localStorage pelas
+   * funções saveHistoricos/saveFunctionalHistoricos/saveBehaviorHistoricos e equivalentes.
+   * TODO: Em produção, substituir por criação transacional dos registros relacionados no banco.
+   */
   const dataEntrada = formData.dataEntrada;
 
   if (formData.situacaoSanitaria) {
@@ -1408,11 +1769,19 @@ function addInitialHistoryRows({
     }));
   }
 
+  if (formData.comportamento) {
+    updatedBehaviorHistories.push(normalizeBehaviorHistorico({
+      idFuncional: currentLink,
+      comportamento: formData.comportamento,
+      dataAlteracao: dataEntrada
+    }));
+  }
+
   if (formData.unidade) {
     updatedUnitHistories.push(normalizeUnitHistorico({
       idFuncional: currentLink,
       unidade: formData.unidade,
-      dataInicio: dataEntrada
+      dataApresentacao: dataEntrada
     }));
   }
 
@@ -1427,6 +1796,7 @@ function addInitialHistoryRows({
 
 form.addEventListener('submit', (event) => {
   event.preventDefault();
+  if (!updateMainFormValidation({ showAll: true })) return;
 
   const formData = readForm();
   const policiais = loadPoliciais().map(normalizePolicial);
@@ -1460,6 +1830,7 @@ form.addEventListener('submit', (event) => {
       currentLink,
       updatedHistories,
       updatedFunctionalHistories,
+      updatedBehaviorHistories,
       updatedUnitHistories,
       updatedStatusHistories
     });
@@ -1469,7 +1840,7 @@ form.addEventListener('submit', (event) => {
     ...formData,
     ...getLatestFunctionalFromList(updatedFunctionalHistories, currentLink),
     comportamento: getLatestBehaviorFromList(updatedBehaviorHistories, currentLink),
-    unidade: getLatestUnitFromList(updatedUnitHistories, currentLink),
+    unidade: getLatestUnitFromList(updatedUnitHistories, currentLink) || (existing ? existing.unidade : formData.unidade),
     situacaoFuncional: getLatestStatusFromList(updatedStatusHistories, currentLink),
     situacaoSanitaria: getLatestSituacaoFromList(updatedHistories, currentLink) || formData.situacaoSanitaria || 'APTO_A',
     historicoSanitario: []
@@ -1572,6 +1943,14 @@ behaviorForm.addEventListener('submit', (event) => {
 });
 
 unitForm.addEventListener('submit', (event) => {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Processa inclusão/edição do histórico de unidade e atualiza o cadastro apenas
+   * quando há Data de Apresentação.
+   * PARÂMETROS E RETORNO: Recebe o evento submit do formulário; não retorna valor e controla o fluxo na tela.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê policiais e históricos do localStorage, grava o array atualizado em
+   * UNIT_HISTORY_STORAGE_KEY e sincroniza o cadastro principal em STORAGE_KEY.
+   * TODO: Em produção, substituir localStorage por endpoint transacional com validação de permissão do P/1.
+   */
   event.preventDefault();
 
   const policial = loadPoliciais()
@@ -1632,7 +2011,41 @@ showUnitFormButton.addEventListener('click', openNewUnitForm);
 showStatusFormButton.addEventListener('click', openNewStatusForm);
 
 functionalFields.functionalPostoGraduacao.addEventListener('change', updateFunctionalGroups);
-initialFields.initialPostoGraduacao.addEventListener('change', updateInitialGroups);
+initialFields.initialPostoGraduacao.addEventListener('change', () => {
+  updateInitialGroups();
+  updateMainFormValidation();
+});
+
+fieldIds.forEach((id) => {
+  if (!fields[id]) return;
+
+  fields[id].addEventListener('focus', () => {
+    activeValidationFields.add(id);
+    updateMainFormValidation();
+  });
+
+  fields[id].addEventListener('input', () => {
+    sanitizeMainFormInput(id);
+    updateMainFormValidation();
+  });
+
+  fields[id].addEventListener('blur', () => {
+    activeValidationFields.delete(id);
+    updateMainFormValidation();
+  });
+});
+
+Object.entries(initialFields).forEach(([id, element]) => {
+  element.addEventListener('focus', () => {
+    activeValidationFields.add(id);
+    updateMainFormValidation();
+  });
+  element.addEventListener('change', updateMainFormValidation);
+  element.addEventListener('blur', () => {
+    activeValidationFields.delete(id);
+    updateMainFormValidation();
+  });
+});
 
 cancelHistoryButton.addEventListener('click', () => {
   clearHistoryForm();
@@ -1662,6 +2075,7 @@ cancelStatusButton.addEventListener('click', () => {
 tabButtons.forEach((button) => {
   button.addEventListener('click', () => {
     setActiveView(button.dataset.view);
+    window.history.replaceState(null, '', `#${button.dataset.view}`);
     if (button.dataset.view === 'table-view') render();
   });
 });
@@ -1707,4 +2121,6 @@ document.addEventListener('click', (event) => {
 });
 
 migrateLegacyHistoricos();
+updateMainFormValidation();
 render();
+openInitialViewFromHash();

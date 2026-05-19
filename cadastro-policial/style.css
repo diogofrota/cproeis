@@ -77,9 +77,14 @@ body {
 }
 
 .tab-button {
-  flex: 1 1 220px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 320px;
   background: transparent;
   color: #334155;
+  text-align: center;
+  text-decoration: none;
 }
 
 .tab-button:hover {
@@ -89,6 +94,13 @@ body {
 .tab-button.active {
   background: var(--blue);
   color: var(--white);
+}
+
+.tab-link {
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 700;
 }
 
 .view-panel {
@@ -105,6 +117,58 @@ body {
   border-radius: 8px;
   background: var(--white);
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.07);
+}
+
+.dashboard-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.summary-item {
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: var(--white);
+}
+
+.summary-item span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.summary-item strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--blue);
+  font-size: 28px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.chart-card {
+  min-height: 360px;
+}
+
+.chart-card h2 {
+  margin-bottom: 16px;
+  font-size: 18px;
+}
+
+.chart-frame {
+  position: relative;
+  height: 280px;
+}
+
+.dashboard-empty {
+  color: var(--muted);
 }
 
 .section-heading {
@@ -148,12 +212,27 @@ h3 {
   gap: 14px;
 }
 
+.initial-data-grid {
+  /*
+   * DESCRIÇÃO DO BLOCO: Organiza os dados iniciais em três colunas para equilibrar visualmente a seção
+   * quando o campo Comportamento é exibido para praças/Subtenente.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica layout CSS específico.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados, apenas controla a distribuição dos campos na tela.
+   * TODO: Em produção, transformar estes padrões de grade em utilitários reutilizáveis do design system.
+   */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 label {
   display: grid;
   gap: 7px;
   font-size: 14px;
   font-weight: 400;
   color: #263244;
+}
+
+label[hidden] {
+  display: none !important;
 }
 
 input,
@@ -186,13 +265,40 @@ select:focus {
   border-color: var(--blue);
 }
 
+input.invalid,
+select.invalid {
+  border-color: #dc2626;
+}
+
+.field-hint {
+  display: block;
+  margin-top: -2px;
+  color: #dc2626;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.field-hint.hidden {
+  display: none;
+}
+
 input[readonly] {
   background: #eef2f7;
   color: #475569;
 }
 
+select:disabled {
+  background: #e6edf7;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
 .wide {
   grid-column: span 2;
+}
+
+.hidden-field {
+  display: none;
 }
 
 .form-actions {
@@ -215,6 +321,12 @@ button {
 
 button:hover {
   background: var(--blue-dark);
+}
+
+button:disabled,
+button:disabled:hover {
+  background: #94a3b8;
+  cursor: not-allowed;
 }
 
 .secondary {
@@ -324,24 +436,34 @@ tbody tr:hover td {
 }
 
 .details-grid {
+  /*
+   * DESCRIÇÃO DO BLOCO: Apresenta os dados do policial em uma ficha textual limpa, sem cartões
+   * individuais, para aproveitar melhor o espaço horizontal da tela de detalhes.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; define layout visual da grade.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados, apenas controla como os valores renderizados
+   * por showDetails aparecem no navegador.
+   * TODO: Em produção, transformar este padrão em componente de ficha reutilizável para outras telas.
+   */
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 28px;
+  row-gap: 18px;
+  padding: 6px 0 22px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .detail-item {
-  min-height: 66px;
-  padding: 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #f8fafc;
+  min-height: 42px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #edf2f7;
 }
 
 .detail-item span {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -350,10 +472,20 @@ tbody tr:hover td {
   color: var(--ink);
   font-size: 15px;
   font-weight: 400;
+  line-height: 1.35;
 }
 
 .history-table {
-  min-width: 720px;
+  /*
+   * DESCRIÇÃO DO BLOCO: Define uma grade fixa para alinhar as colunas equivalentes dos históricos
+   * exibidos no detalhe do policial, mantendo Data, descrição, BOLPM, Data BOLPM e Ações nas mesmas
+   * posições visuais.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica regras CSS às tabelas.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados, apenas controla a apresentação no navegador.
+   * TODO: Em produção, mover essas medidas para tokens do design system para padronizar novas tabelas.
+   */
+  min-width: 900px;
+  table-layout: fixed;
 }
 
 .history-wrap {
@@ -393,6 +525,48 @@ tbody tr:hover td {
   width: 220px;
 }
 
+.history-table th:nth-child(1),
+.history-table td:nth-child(1) {
+  width: 18%;
+}
+
+.history-table th:nth-child(2),
+.history-table td:nth-child(2) {
+  width: 28%;
+}
+
+.history-table th:nth-child(3),
+.history-table td:nth-child(3) {
+  width: 14%;
+}
+
+.history-table th:nth-child(4),
+.history-table td:nth-child(4) {
+  width: 16%;
+}
+
+.history-table--sanitario th:nth-child(1),
+.history-table--sanitario td:nth-child(1),
+.history-table--sanitario th:nth-child(2),
+.history-table--sanitario td:nth-child(2) {
+  width: 16%;
+}
+
+.history-table--sanitario th:nth-child(3),
+.history-table--sanitario td:nth-child(3) {
+  width: 12%;
+}
+
+.history-table--sanitario th:nth-child(4),
+.history-table--sanitario td:nth-child(4) {
+  width: 15%;
+}
+
+.history-table--sanitario th:nth-child(5),
+.history-table--sanitario td:nth-child(5) {
+  width: 19%;
+}
+
 .history-table .actions {
   display: grid;
   grid-template-columns: 64px 126px;
@@ -424,7 +598,15 @@ tbody tr:hover td {
 }
 
 @media (max-width: 920px) {
-  .form-grid,
+  .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-summary,
+  .dashboard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .details-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -444,7 +626,9 @@ tbody tr:hover td {
   }
 
   .form-grid,
-  .details-grid {
+  .details-grid,
+  .dashboard-summary,
+  .dashboard-grid {
     grid-template-columns: 1fr;
   }
 

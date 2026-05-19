@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Dashboard de Policiais</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="page-header">
+    <div>
+      <a class="back-link" href="index.html">Voltar ao cadastro</a>
+      <h1>Dashboard de Policiais</h1>
+      <p>Indicadores gerados a partir dos policiais cadastrados localmente.</p>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <nav class="module-menu" aria-label="Menu do dashboard de policiais">
+      <a class="tab-button tab-link" href="index.html#form-view">Adicionar registro</a>
+      <a class="tab-button tab-link" href="index.html#table-view">Visualizar tabela de policiais</a>
+      <a class="tab-button tab-link active" href="dashboard.html">Dashboard</a>
+    </nav>
+
+    <section class="dashboard-summary" aria-label="Resumo dos cadastros">
+      <div class="summary-item">
+        <span>Total de Policiais</span>
+        <strong id="total-policiais">0</strong>
+      </div>
+      <div class="summary-item">
+        <span>Unidades</span>
+        <strong id="total-unidades">0</strong>
+      </div>
+      <div class="summary-item">
+        <span>Ativos</span>
+        <strong id="total-ativos">0</strong>
+      </div>
+      <div class="summary-item">
+        <span>Praças com Comportamento</span>
+        <strong id="total-comportamento">0</strong>
+      </div>
+    </section>
+
+    <section class="dashboard-grid" aria-label="Gráficos dos cadastros">
+      <article class="card chart-card">
+        <h2>Por Posto/Graduação</h2>
+        <div class="chart-frame">
+          <canvas id="posto-chart"></canvas>
+        </div>
+      </article>
+
+      <article class="card chart-card">
+        <h2>Por Unidade</h2>
+        <div class="chart-frame">
+          <canvas id="unidade-chart"></canvas>
+        </div>
+      </article>
+
+      <article class="card chart-card">
+        <h2>Por Situação Funcional</h2>
+        <div class="chart-frame">
+          <canvas id="situacao-chart"></canvas>
+        </div>
+      </article>
+
+      <article class="card chart-card">
+        <h2>Por Condição Sanitária</h2>
+        <div class="chart-frame">
+          <canvas id="sanitaria-chart"></canvas>
+        </div>
+      </article>
+
+      <article class="card chart-card">
+        <h2>Por Comportamento</h2>
+        <div class="chart-frame">
+          <canvas id="comportamento-chart"></canvas>
+        </div>
+      </article>
+
+      <article class="card chart-card">
+        <h2>Visão Geral</h2>
+        <p class="dashboard-empty" id="dashboard-status">Carregando gráficos...</p>
+      </article>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>
