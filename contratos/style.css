@@ -10,10 +10,19 @@ body {
 }
 
 header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 126px;
   background: #1f2a8a;
   color: #fff;
-  padding: 34px 20px;
+  padding: 34px 180px;
   text-align: center;
+}
+
+.header-copy {
+  max-width: 980px;
 }
 
 header h1 {
@@ -32,14 +41,6 @@ main {
   margin: 28px auto 40px;
 }
 
-.top-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 18px;
-}
-
 .back-link,
 .tab-button,
 button {
@@ -50,6 +51,10 @@ button {
 }
 
 .back-link {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
   padding: 10px 16px;
@@ -115,36 +120,6 @@ h2 {
   line-height: 1.45;
 }
 
-.summary {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-bottom: 22px;
-}
-
-.summary-item {
-  padding: 16px;
-  border-left: 5px solid #1f2a8a;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
-}
-
-.summary-item span {
-  display: block;
-  color: #64748b;
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.summary-item strong {
-  display: block;
-  margin-top: 6px;
-  color: #1f2a8a;
-  font-size: 28px;
-}
-
 form {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -181,6 +156,39 @@ select:focus,
 textarea:focus {
   outline: 2px solid rgba(31, 42, 138, 0.25);
   border-color: #1f2a8a;
+}
+
+input.invalid,
+select.invalid,
+textarea.invalid {
+  border-color: #dc2626;
+}
+
+.field-hint {
+  /*
+   * DESCRIÇÃO DO BLOCO: Mantém uma área fixa para mensagens de validação abaixo dos campos do formulário,
+   * impedindo desalinhamento da grade quando o texto vermelho aparece.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica somente comportamento visual CSS.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; a classe é alternada pelo JavaScript de validação.
+   * TODO: Em produção, centralizar este padrão no design system e integrar mensagens retornadas por APIs.
+   */
+  display: block;
+  min-height: 14px;
+  margin-top: -2px;
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.field-hint.hidden {
+  /*
+   * DESCRIÇÃO DO BLOCO: Oculta a mensagem sem retirar o espaço reservado no layout.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; apenas controla visibilidade CSS.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados, preservando somente a estabilidade visual.
+   * TODO: Em produção, revisar estados de acessibilidade para leitores de tela em validações assíncronas.
+   */
+  visibility: hidden;
 }
 
 .wide {
@@ -250,6 +258,77 @@ textarea:focus {
   gap: 14px;
 }
 
+.responsavel-box,
+.access-options {
+  /*
+   * DESCRIÇÃO DO BLOCO: Separa o cadastro de responsável em quadros visuais para dados do usuário,
+   * permissões de acesso e período de atuação.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica layout visual ao fieldset.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os campos são lidos pelo JavaScript no cadastro.
+   * TODO: Em produção, carregar funções e permissões de uma tabela de perfis de acesso do backend.
+   */
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.responsavel-box legend,
+.access-options legend {
+  padding: 0 6px;
+  color: #1f2a8a;
+  font-weight: 700;
+}
+
+.responsavel-box-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.period-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 880px;
+}
+
+.access-options p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.access-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.check-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-weight: 700;
+}
+
+.check-option input {
+  width: auto;
+  min-height: auto;
+  padding: 0;
+}
+
+.pending-option {
+  color: #64748b;
+  background: #eef2f7;
+}
+
 .form-actions {
   grid-column: 1 / -1;
   display: flex;
@@ -259,6 +338,35 @@ textarea:focus {
 }
 
 .compact-actions {
+  margin-top: 0;
+}
+
+.filter-bar {
+  display: grid;
+  grid-template-columns: minmax(280px, 1.35fr) minmax(160px, 0.7fr) minmax(170px, 0.8fr) minmax(170px, 0.8fr) auto;
+  gap: 12px;
+  align-items: start;
+  margin: 14px 0 16px;
+}
+
+.filter-bar label {
+  align-self: start;
+}
+
+.filter-bar input,
+.filter-bar select,
+.filter-bar button {
+  height: 42px;
+  min-height: 42px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.filter-actions {
+  grid-column: auto;
+  align-self: end;
   margin-top: 0;
 }
 
@@ -310,6 +418,17 @@ table {
   min-width: 760px;
 }
 
+.responsaveis-details-table {
+  /*
+   * DESCRIÇÃO DO BLOCO: Dá largura estável à tabela de responsáveis quando as permissões são exibidas
+   * em colunas independentes com marcação V/X.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica somente layout CSS.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; a tabela é preenchida pelo JavaScript de detalhes.
+   * TODO: Em produção, transformar permissões em colunas configuráveis por perfil de acesso.
+   */
+  min-width: 1240px;
+}
+
 th,
 td {
   padding: 12px;
@@ -328,6 +447,36 @@ th {
 
 tbody tr:last-child td {
   border-bottom: 0;
+}
+
+.permission-cell {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.permission-heading {
+  text-align: center;
+}
+
+.permission-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  min-height: 26px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.permission-mark.yes {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.permission-mark.no {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 tr:hover td {
@@ -384,41 +533,51 @@ tr:hover td {
 }
 
 .details-grid {
+  /*
+   * DESCRIÇÃO DO BLOCO: Apresenta os dados do convênio em ficha textual limpa, seguindo o padrão visual
+   * usado nos detalhes do cadastro de policiais.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; define apenas layout CSS.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os valores são renderizados pelo JavaScript.
+   * TODO: Em produção, consolidar este padrão de detalhes em componente compartilhado do sistema.
+   */
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 28px;
+  row-gap: 18px;
+  padding: 6px 0 22px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .detail-item {
-  min-height: 66px;
-  padding: 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #f8fafc;
+  min-height: 42px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #edf2f7;
 }
 
 .detail-item span {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
   color: #64748b;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
 }
 
 .detail-item strong {
   display: block;
+  color: #1f2937;
   font-size: 15px;
+  font-weight: 400;
   line-height: 1.35;
   white-space: pre-line;
 }
 
 @media (max-width: 980px) {
   form,
-  .summary,
   .values-grid,
   .details-grid,
-  .subcard-grid {
+  .subcard-grid,
+  .filter-bar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -426,10 +585,21 @@ tr:hover td {
     grid-column: span 2;
   }
 
-  .panel-header,
-  .top-bar {
+  .panel-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .access-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .responsavel-box-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filter-actions {
+    grid-column: 1 / -1;
   }
 }
 
@@ -438,15 +608,35 @@ tr:hover td {
     font-size: 28px;
   }
 
+  header {
+    justify-content: flex-start;
+    min-height: 156px;
+    padding: 72px 18px 26px;
+  }
+
+  .back-link {
+    top: 18px;
+    transform: none;
+  }
+
   form,
-  .summary,
   .values-grid,
   .details-grid,
-  .subcard-grid {
+  .subcard-grid,
+  .filter-bar {
     grid-template-columns: 1fr;
   }
 
   .wide {
     grid-column: span 1;
+  }
+
+  .access-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .responsavel-box-grid,
+  .period-grid {
+    grid-template-columns: 1fr;
   }
 }

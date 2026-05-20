@@ -20,9 +20,15 @@ body {
 }
 
 .page-header {
-  padding: 30px 20px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 126px;
+  padding: 30px 180px;
   background: var(--blue);
   color: var(--white);
+  text-align: center;
 }
 
 .page-header > div,
@@ -32,7 +38,7 @@ body {
 }
 
 .page-header h1 {
-  margin: 14px 0 8px;
+  margin: 0 0 8px;
   font-size: 32px;
   line-height: 1.15;
 }
@@ -43,18 +49,24 @@ body {
 }
 
 .back-link {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
-  min-height: 38px;
-  padding: 8px 13px;
+  min-height: 42px;
+  padding: 10px 16px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--white);
+  background: var(--white);
+  color: var(--blue);
+  font-weight: 700;
   text-decoration: none;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
 }
 
 .back-link:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: #eef2ff;
 }
 
 .page-shell {
@@ -271,15 +283,30 @@ select.invalid {
 }
 
 .field-hint {
+  /*
+   * DESCRIÇÃO DO BLOCO: Reserva uma linha fixa para a mensagem de validação abaixo dos inputs,
+   * evitando que os campos da grade mudem de posição quando o alerta vermelho aparece.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica somente regras visuais CSS.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; a exibição continua sendo controlada pelas
+   * classes aplicadas no DOM pelo script de validação.
+   * TODO: Em produção, padronizar este espaço de feedback no design system para mensagens vindas da API.
+   */
   display: block;
   margin-top: -2px;
+  min-height: 14px;
   color: #dc2626;
   font-size: 11px;
   line-height: 1.25;
 }
 
 .field-hint.hidden {
-  display: none;
+  /*
+   * DESCRIÇÃO DO BLOCO: Oculta visualmente a mensagem sem remover seu espaço reservado no layout.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; apenas altera visibilidade CSS.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados, preservando somente a estabilidade visual.
+   * TODO: Em produção, revisar com acessibilidade para diferenciar dicas permanentes de erros enviados pelo backend.
+   */
+  visibility: hidden;
 }
 
 input[readonly] {
@@ -619,6 +646,17 @@ tbody tr:hover td {
 @media (max-width: 620px) {
   .page-header h1 {
     font-size: 27px;
+  }
+
+  .page-header {
+    justify-content: flex-start;
+    min-height: 156px;
+    padding: 72px 18px 26px;
+  }
+
+  .back-link {
+    top: 18px;
+    transform: none;
   }
 
   .card {

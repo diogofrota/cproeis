@@ -8,10 +8,11 @@ const gruposClasse = {
   A: 'Classe A',
   B: 'Classe B',
   C: 'Classe C',
-  D: 'Classe D'
+  D: 'Classe D',
+  'C/D': 'Classe C/D'
 };
 
-const classesDisponiveis = ['A', 'B', 'C', 'D'];
+const classesDisponiveis = ['A', 'B', 'C/D'];
 
 const tiposServico = {
   servico12: 'Serviço 12h',
@@ -52,6 +53,13 @@ const creationDateState = {
   mode: '',
   month: currentMonth
 };
+const creationStepIds = [
+  'date-selection-card',
+  'service-name-card',
+  'service-info-card',
+  'class-selection-card',
+  'summary-preview-card'
+];
 let selectedConvenioCache = null;
 
 /**
@@ -134,6 +142,322 @@ function escapeHtml(value) {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Remove caracteres não numéricos de campos que devem aceitar somente números.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} value - Texto digitado pelo usuário.
+ * @returns {string} Texto contendo apenas dígitos.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não lê nem grava dados; normaliza valores antes de exibir e persistir no LocalStorage.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: reaproveitar esta normalização em validações de backend quando os cadastros forem online.
+ */
+function onlyDigits(value) {
+  return String(value || '').replace(/\D/g, '');
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Padroniza espaços em campos textuais do formulário de criação de vagas.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} value - Texto livre informado no input.
+ * @returns {string} Texto sem espaços duplicados e sem espaços nas extremidades.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não acessa armazenamento; prepara o texto antes de compor o payload local da vaga.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: aplicar regras de normalização equivalentes na API para garantir consistência multiusuário.
+ */
+function normalizeTextInput(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Formata CEP no padrão brasileiro 00000-000 enquanto mantém somente números na entrada.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} value - Valor digitado no campo CEP.
+ * @returns {string} CEP formatado ou parcial, limitado a oito dígitos.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; o resultado será usado no DOM e depois salvo junto da vaga no LocalStorage.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: consultar serviço externo de CEP e preencher endereço automaticamente quando houver backend.
+ */
+function formatCepInput(value) {
+  const digits = onlyDigits(value).slice(0, 8);
+  if (digits.length <= 5) return digits;
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Normaliza um campo de serviço específico conforme seu tipo esperado pela criação de vagas.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {HTMLInputElement|null} input - Campo que será tratado.
+ * @returns {string} Valor normalizado aplicado ao campo.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava LocalStorage; atualiza somente o valor visual do input antes da coleta do formulário.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: substituir tratamentos locais por validação compartilhada com o backend em produção.
+ */
+function normalizeServiceField(input) {
+  if (!input) return '';
+
+  if (input.id === 'servico-cep') {
+    input.value = formatCepInput(input.value);
+    return input.value;
+  }
+
+  if (input.id === 'servico-uf') {
+    input.value = normalizeTextInput(input.value).replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase();
+    return input.value;
+  }
+
+  input.value = normalizeTextInput(input.value);
+  return input.value;
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Aplica tratamento leve enquanto o usuário digita, preservando espaços em campos textuais compostos.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {HTMLInputElement|null} input - Campo em edição.
+ * @returns {string} Valor tratado no próprio input.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; mantém a digitação preparada para validação e posterior gravação no LocalStorage.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: mover máscaras e normalização para componente reutilizável quando houver frontend modular.
+ */
+function normalizeServiceFieldOnInput(input) {
+  if (!input) return '';
+
+  if (input.id === 'servico-cep' || input.id === 'servico-uf') {
+    return normalizeServiceField(input);
+  }
+
+  input.value = String(input.value || '').replace(/\s{2,}/g, ' ');
+  return input.value;
+}
+
+const serviceFieldMessages = {
+  'nome-servico': 'Informe um nome de serviço com pelo menos 3 caracteres.',
+  'local-servico': 'Informe o local de apresentação com pelo menos 3 caracteres.',
+  'servico-cep': 'Digite o CEP com 8 números ou deixe em branco.',
+  'servico-logradouro': 'Informe o logradouro do serviço.',
+  'servico-numero': 'Informe o número do endereço.',
+  'servico-bairro': 'Informe o bairro.',
+  'servico-cidade': 'Informe a cidade.',
+  'servico-uf': 'Digite a UF com 2 letras, por exemplo RJ.'
+};
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Cria espaços fixos de mensagem abaixo dos campos de criação de vagas, evitando desalinhamento do formulário.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; cria elementos visuais no DOM da página de criação de vagas.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: migrar mensagens para componente reutilizável quando o frontend for modularizado.
+ */
+function ensureServiceFieldHints() {
+  Object.keys(serviceFieldMessages).forEach((id) => {
+    const input = document.getElementById(id);
+    const label = input?.closest('label');
+    if (!input || !label || label.querySelector(`[data-field-hint="${id}"]`)) return;
+
+    const hint = document.createElement('small');
+    hint.className = 'field-hint hidden';
+    hint.dataset.fieldHint = id;
+    hint.textContent = serviceFieldMessages[id];
+    label.appendChild(hint);
+  });
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Valida um campo do bloco de serviço/endereço e alterna a mensagem visual correspondente.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} id - ID do input validado.
+ * @param {boolean} showMessage - Define se a mensagem de erro deve aparecer imediatamente.
+ * @param {boolean} mutateValue - Define se o valor normalizado deve ser aplicado no input.
+ * @returns {boolean} Verdadeiro quando o campo está válido para criação da vaga.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; lê e ajusta somente o DOM do formulário antes da persistência local.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: retornar códigos de erro padronizados pela API quando a criação for online.
+ */
+function validateServiceField(id, showMessage = false, mutateValue = true) {
+  const input = document.getElementById(id);
+  if (!input) return true;
+
+  const value = mutateValue ? normalizeServiceField(input) : normalizeTextInput(input.value);
+  let valid = true;
+
+  if (id === 'servico-cep') {
+    valid = !value || onlyDigits(value).length === 8;
+  } else if (id === 'servico-uf') {
+    valid = /^[A-Z]{2}$/.test(value);
+  } else {
+    valid = value.length >= (id === 'servico-numero' ? 1 : 3);
+  }
+
+  const hint = document.querySelector(`[data-field-hint="${id}"]`);
+  input.classList.toggle('invalid', !valid);
+  hint?.classList.toggle('hidden', valid || !showMessage);
+  return valid;
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Valida todos os campos obrigatórios do serviço antes de revisar ou salvar a criação de vagas.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {boolean} showMessages - Define se todos os erros devem ficar visíveis.
+ * @returns {boolean} Verdadeiro quando serviço e endereço estão completos.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; usa os inputs do DOM e prepara a interface para persistência em LocalStorage.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: substituir esta validação local por validação transacional no backend.
+ */
+function validateServiceFields(showMessages = false) {
+  ensureServiceFieldHints();
+  return Object.keys(serviceFieldMessages)
+    .map((id) => validateServiceField(id, showMessages))
+    .every(Boolean);
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Controla a etapa visível do assistente de criação de vagas para manter a tela limpa e progressiva.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} stepId - ID do card que deve ficar visível.
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; altera somente classes de exibição dos cards no DOM.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: persistir etapa atual como rascunho do operador quando houver sessão autenticada.
+ */
+function showCreationStep(stepId) {
+  const activeIndex = creationStepIds.indexOf(stepId);
+
+  creationStepIds.forEach((id) => {
+    const card = document.getElementById(id);
+    const index = creationStepIds.indexOf(id);
+    card?.classList.toggle('is-hidden', activeIndex === -1 || index > activeIndex);
+    card?.classList.toggle('is-complete', activeIndex !== -1 && index < activeIndex);
+  });
+
+  document.getElementById(stepId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Valida apenas a etapa atual antes de liberar o próximo card do assistente.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} stepId - ID da etapa atual.
+ * @param {object|null} convenio - Convênio selecionado para validar datas e valores.
+ * @returns {boolean} Verdadeiro quando o usuário pode avançar para o próximo card.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; lê inputs do DOM antes da persistência final em LocalStorage.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: trocar alertas por mensagens de validação vindas de serviço de domínio no backend.
+ */
+function validateCreationStep(stepId, convenio) {
+  if (stepId === 'date-selection-card') {
+    document.getElementById('date-mode').value = 'period';
+    if (!validatePeriodSelection(convenio)) {
+      alert('Informe uma data inicial e uma data final válidas dentro da vigência do convênio.');
+      return false;
+    }
+  }
+
+  if (stepId === 'service-name-card' && !validateServiceField('nome-servico', true)) {
+    alert('Informe o nome do serviço antes de continuar.');
+    return false;
+  }
+
+  if (stepId === 'service-info-card') {
+    const requiredAddressFields = ['local-servico', 'servico-cep', 'servico-logradouro', 'servico-numero', 'servico-bairro', 'servico-cidade', 'servico-uf'];
+    const validAddress = requiredAddressFields
+      .map((id) => validateServiceField(id, true))
+      .every(Boolean);
+
+    if (!validAddress) {
+      alert('Corrija os campos destacados do local de apresentação antes de continuar.');
+      return false;
+    }
+  }
+
+  if (stepId === 'class-selection-card') {
+    const selectedClasses = [...document.querySelectorAll('[data-class-enabled]:checked')];
+    const quantity = Number(document.querySelector('[data-class-quantity]')?.value || 0);
+
+    if (selectedClasses.length !== 1 || quantity <= 0) {
+      syncClassConfig(convenio);
+      alert('Selecione uma classe e informe uma quantidade de vagas maior que zero.');
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Valida o período específico usado para criar vagas, garantindo início, fim, ordem cronológica e vigência.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object|null} convenio - Convênio selecionado para comparar a vigência contratual.
+ * @returns {boolean} Verdadeiro quando o período pode gerar vagas.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; lê apenas os inputs de data do DOM antes de gerar payloads para LocalStorage.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: validar o período no backend para evitar criação fora da vigência em requisições diretas.
+ */
+function validatePeriodSelection(convenio) {
+  const startInput = document.getElementById('data-inicio');
+  const endInput = document.getElementById('data-fim');
+  const start = startInput?.value || '';
+  const end = endInput?.value || '';
+  const valid = Boolean(start && end && start <= end && isDateInsideContract(convenio, start) && isDateInsideContract(convenio, end));
+
+  startInput?.classList.toggle('invalid', !valid);
+  endInput?.classList.toggle('invalid', !valid);
+  return valid;
 }
 
 /**
@@ -632,7 +956,7 @@ function getLimiteMensal(convenio) {
  *
  * PARÂMETROS E RETORNO:
  * @param {object} convenio - Convênio com array `valores` cadastrado em contratos.
- * @param {string} classe - Classe da vaga: A, B, C ou D.
+ * @param {string} classe - Classe da vaga: A, B ou C/D.
  * @returns {object} Objeto de valores da classe ou objeto vazio quando não houver cadastro.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
@@ -642,6 +966,13 @@ function getLimiteMensal(convenio) {
  * TODO: validar no backend se a classe está liberada para o convênio antes de autorizar a criação da vaga.
  */
 function getValorClasse(convenio, classe) {
+  if (classe === 'C/D') {
+    return (convenio.valores || []).find((valor) => valor.classe === 'C/D')
+      || (convenio.valores || []).find((valor) => valor.classe === 'C')
+      || (convenio.valores || []).find((valor) => valor.classe === 'D')
+      || {};
+  }
+
   return (convenio.valores || []).find((valor) => valor.classe === classe) || {};
 }
 
@@ -651,7 +982,7 @@ function getValorClasse(convenio, classe) {
  *
  * PARÂMETROS E RETORNO:
  * @param {object} convenio - Convênio selecionado.
- * @param {string} classe - Classe da vaga: A, B, C ou D.
+ * @param {string} classe - Classe da vaga: A, B ou C/D.
  * @param {string} tipoServico - Chave do tipo: servico12, servico8 ou servico6.
  * @returns {number} Soma do valor do serviço, passagem e alimentação.
  *
@@ -760,52 +1091,48 @@ function renderClassConfigCards(convenio) {
     .map((curso) => `<option value="${escapeHtml(curso.value)}">${escapeHtml(curso.label)}</option>`)
     .join('');
 
-  container.innerHTML = classesDisponiveis.map((classe, index) => {
-    const selected = index === 0 ? ' selected' : '';
-    const checked = index === 0 ? ' checked' : '';
-    const initialQuantity = index === 0 ? 1 : 0;
-    const turno = turnosServico.turno12;
-    const valor = getValorUnitario(convenio, classe, turno.tipoServico);
+  container.innerHTML = `
+    <div class="class-picker" aria-label="Selecionar classe">
+      ${classesDisponiveis.map((classe, index) => `
+        <label class="class-pill">
+          <input type="radio" name="classe-operacional" value="${escapeHtml(classe)}" data-class-enabled="${escapeHtml(classe)}"${index === 0 ? ' checked' : ''}>
+          <span>${escapeHtml(gruposClasse[classe])}</span>
+        </label>
+      `).join('')}
+    </div>
 
-    return `
-      <section class="class-config-card${selected}" data-class-card="${classe}">
-        <div class="class-config-head">
-          <label>
-            <input type="checkbox" data-class-enabled="${classe}"${checked}>
-            ${escapeHtml(gruposClasse[classe])}
-          </label>
-          <strong class="is-hidden" data-class-value="${classe}">${dinheiro.format(valor)}</strong>
-        </div>
-        <div class="class-config-grid">
-          <label>
-            Turno
-            <select data-class-turno="${classe}">
-              <option value="turno6">6 horas</option>
-              <option value="turno8">8 horas</option>
-              <option value="turno12" selected>12 horas</option>
-            </select>
-          </label>
-          <label>
-            Início
-            <input type="time" data-class-start="${classe}" value="${turno.inicio}">
-          </label>
-          <label>
-            Término
-            <input type="time" data-class-end="${classe}" value="${turno.fim}" readonly>
-          </label>
-          <label>
-            Vagas
-            <input type="number" min="0" step="1" value="${initialQuantity}" data-class-quantity="${classe}">
-            <small class="quantity-alert is-hidden" data-class-quantity-alert="${classe}">Informe uma quantidade maior que zero.</small>
-          </label>
-          <label>
-            Curso
-            <select data-class-course="${classe}">${courseOptions}</select>
-          </label>
-        </div>
-      </section>
-    `;
-  }).join('');
+    <section class="class-config-panel" data-class-card>
+      <div class="class-config-grid compact">
+        <label>
+          Turno
+          <select id="classe-turno" data-class-turno>
+            <option value="turno6">6 horas</option>
+            <option value="turno8">8 horas</option>
+            <option value="turno12" selected>12 horas</option>
+          </select>
+        </label>
+        <label>
+          Início
+          <input id="classe-inicio" type="time" data-class-start value="${turnosServico.turno12.inicio}">
+        </label>
+        <label>
+          Término
+          <input id="classe-fim" type="time" data-class-end value="${turnosServico.turno12.fim}" readonly>
+        </label>
+        <label>
+          Vagas
+          <input id="classe-vagas" type="number" min="1" step="1" value="1" data-class-quantity>
+          <small class="quantity-alert is-hidden" data-class-quantity-alert>Informe uma quantidade maior que zero.</small>
+        </label>
+        <label>
+          Curso
+          <select id="classe-curso" data-class-course>${courseOptions}</select>
+        </label>
+      </div>
+    </section>
+  `;
+
+  syncClassConfig(convenio);
 }
 
 /**
@@ -814,7 +1141,7 @@ function renderClassConfigCards(convenio) {
  *
  * PARÂMETROS E RETORNO:
  * @param {object|null} convenio - Convênio selecionado para cálculo de valor.
- * @param {string} classe - Classe configurada no card: A, B, C ou D.
+ * @param {string} classe - Classe configurada no card: A, B ou C/D.
  * @returns {void}
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
@@ -823,16 +1150,14 @@ function renderClassConfigCards(convenio) {
  * NOTAS DE EXPANSÃO:
  * TODO: validar turnos permitidos por classe no backend quando houver regras por contrato.
  */
-function syncClassConfig(convenio, classe) {
-  const card = document.querySelector(`[data-class-card="${classe}"]`);
-  const turnoInput = document.querySelector(`[data-class-turno="${classe}"]`);
-  const startInput = document.querySelector(`[data-class-start="${classe}"]`);
-  const endInput = document.querySelector(`[data-class-end="${classe}"]`);
-  const valueOutput = document.querySelector(`[data-class-value="${classe}"]`);
-  const enabledInput = document.querySelector(`[data-class-enabled="${classe}"]`);
-  const quantityInput = document.querySelector(`[data-class-quantity="${classe}"]`);
-  const quantityAlert = document.querySelector(`[data-class-quantity-alert="${classe}"]`);
-  if (!card || !turnoInput || !startInput || !endInput || !valueOutput || !enabledInput || !quantityInput || !quantityAlert) return;
+function syncClassConfig(convenio) {
+  const card = document.querySelector('[data-class-card]');
+  const turnoInput = document.querySelector('[data-class-turno]');
+  const startInput = document.querySelector('[data-class-start]');
+  const endInput = document.querySelector('[data-class-end]');
+  const quantityInput = document.querySelector('[data-class-quantity]');
+  const quantityAlert = document.querySelector('[data-class-quantity-alert]');
+  if (!card || !turnoInput || !startInput || !endInput || !quantityInput || !quantityAlert) return;
 
   const turno = turnosServico[turnoInput.value] || turnosServico.turno12;
   if (!startInput.value) {
@@ -840,9 +1165,7 @@ function syncClassConfig(convenio, classe) {
   }
 
   endInput.value = addHoursToTime(startInput.value, turno.horas);
-  valueOutput.textContent = dinheiro.format(getValorUnitario(convenio, classe, turno.tipoServico));
-  card.classList.toggle('selected', enabledInput.checked);
-  const hasQuantityError = enabledInput.checked && Number(quantityInput.value || 0) <= 0;
+  const hasQuantityError = Number(quantityInput.value || 0) <= 0;
   card.classList.toggle('quantity-error', hasQuantityError);
   quantityAlert.classList.toggle('is-hidden', !hasQuantityError);
 }
@@ -862,21 +1185,21 @@ function syncClassConfig(convenio, classe) {
  */
 function collectServiceInfo() {
   const enderecoDados = {
-    cep: document.getElementById('servico-cep')?.value.trim() || '',
-    logradouro: document.getElementById('servico-logradouro')?.value.trim() || '',
-    numero: document.getElementById('servico-numero')?.value.trim() || '',
-    complemento: document.getElementById('servico-complemento')?.value.trim() || '',
-    bairro: document.getElementById('servico-bairro')?.value.trim() || '',
-    cidade: document.getElementById('servico-cidade')?.value.trim() || '',
-    uf: (document.getElementById('servico-uf')?.value.trim() || '').toUpperCase()
+    cep: normalizeServiceField(document.getElementById('servico-cep')) || '',
+    logradouro: normalizeServiceField(document.getElementById('servico-logradouro')) || '',
+    numero: normalizeServiceField(document.getElementById('servico-numero')) || '',
+    complemento: normalizeServiceField(document.getElementById('servico-complemento')) || '',
+    bairro: normalizeServiceField(document.getElementById('servico-bairro')) || '',
+    cidade: normalizeServiceField(document.getElementById('servico-cidade')) || '',
+    uf: normalizeServiceField(document.getElementById('servico-uf')) || ''
   };
 
   return {
-    nomeServico: document.getElementById('nome-servico')?.value.trim() || '',
-    localServico: document.getElementById('local-servico')?.value.trim() || '',
+    nomeServico: normalizeServiceField(document.getElementById('nome-servico')) || '',
+    localServico: normalizeServiceField(document.getElementById('local-servico')) || '',
     enderecoDados,
     enderecoServico: formatServiceAddress(enderecoDados),
-    pontoReferencia: document.getElementById('ponto-referencia')?.value.trim() || ''
+    pontoReferencia: normalizeServiceField(document.getElementById('ponto-referencia')) || ''
   };
 }
 
@@ -895,29 +1218,28 @@ function collectServiceInfo() {
  * TODO: validar no backend se a combinação classe/turno/curso está autorizada para o convênio.
  */
 function getSelectedClassConfigs(convenio) {
-  return classesDisponiveis
-    .filter((classe) => document.querySelector(`[data-class-enabled="${classe}"]`)?.checked)
-    .map((classe) => {
-      const turnoKey = document.querySelector(`[data-class-turno="${classe}"]`)?.value || 'turno12';
-      const turno = turnosServico[turnoKey] || turnosServico.turno12;
-      const horaInicio = document.querySelector(`[data-class-start="${classe}"]`)?.value || turno.inicio;
-      const horaFim = addHoursToTime(horaInicio, turno.horas);
-      const quantidade = Number(document.querySelector(`[data-class-quantity="${classe}"]`)?.value || 0);
-      const curso = document.querySelector(`[data-class-course="${classe}"]`)?.value || '';
+  const selectedInput = document.querySelector('[data-class-enabled]:checked');
+  const classe = selectedInput?.value || selectedInput?.dataset.classEnabled || '';
+  if (!classe) return [];
 
-      return {
-        classe,
-        turno: turnoKey,
-        tipoServico: turno.tipoServico,
-        horaInicio,
-        horaFim,
-        quantidade,
-        preenchidas: 0,
-        curso,
-        valorUnitario: getValorUnitario(convenio, classe, turno.tipoServico)
-      };
-    })
-    .filter((config) => config.quantidade > 0);
+  const turnoKey = document.querySelector('[data-class-turno]')?.value || 'turno12';
+  const turno = turnosServico[turnoKey] || turnosServico.turno12;
+  const horaInicio = document.querySelector('[data-class-start]')?.value || turno.inicio;
+  const horaFim = addHoursToTime(horaInicio, turno.horas);
+  const quantidade = Number(document.querySelector('[data-class-quantity]')?.value || 0);
+  const curso = document.querySelector('[data-class-course]')?.value || '';
+
+  return [{
+    classe,
+    turno: turnoKey,
+    tipoServico: turno.tipoServico,
+    horaInicio,
+    horaFim,
+    quantidade,
+    preenchidas: 0,
+    curso,
+    valorUnitario: getValorUnitario(convenio, classe, turno.tipoServico)
+  }].filter((config) => config.quantidade > 0);
 }
 
 /**
@@ -935,37 +1257,30 @@ function getSelectedClassConfigs(convenio) {
  * TODO: migrar validação para serviço de domínio no backend quando houver criação online de vagas.
  */
 function validateCreationWizard(convenio) {
-  if (!document.getElementById('date-mode')?.value) {
-    alert('Escolha o tipo de criação de vagas no primeiro card.');
+  document.getElementById('date-mode').value = 'period';
+
+  if (!validatePeriodSelection(convenio) || !getCreationDates(convenio).length) {
+    alert('Informe uma data inicial e uma data final válidas dentro da vigência do convênio.');
     return false;
   }
 
-  if (!getCreationDates(convenio).length) {
-    alert('Selecione pelo menos uma data ou período para criação das vagas.');
+  if (!validateServiceFields(true)) {
+    alert('Corrija os campos destacados antes de revisar ou criar as vagas.');
     return false;
   }
 
-  const serviceInfo = collectServiceInfo();
-  if (!serviceInfo.nomeServico || !serviceInfo.localServico || !serviceInfo.enderecoDados.logradouro || !serviceInfo.enderecoDados.numero || !serviceInfo.enderecoDados.bairro || !serviceInfo.enderecoDados.cidade || !serviceInfo.enderecoDados.uf) {
-    alert('Preencha nome do serviço, local de apresentação e endereço completo.');
+  const selectedClasses = [...document.querySelectorAll('[data-class-enabled]:checked')];
+  if (selectedClasses.length !== 1) {
+    alert('Selecione exatamente uma classe para gerar as vagas.');
+    syncClassConfig(convenio);
     return false;
   }
 
-  if (!getSelectedClassConfigs(convenio).length) {
-    alert('Selecione pelo menos uma classe e informe a quantidade de vagas.');
-    classesDisponiveis.forEach((classe) => syncClassConfig(convenio, classe));
-    return false;
-  }
-
-  const hasSelectedClassWithZero = classesDisponiveis.some((classe) => {
-    const enabled = document.querySelector(`[data-class-enabled="${classe}"]`)?.checked;
-    const quantity = Number(document.querySelector(`[data-class-quantity="${classe}"]`)?.value || 0);
-    return enabled && quantity <= 0;
-  });
+  const hasSelectedClassWithZero = Number(document.querySelector('[data-class-quantity]')?.value || 0) <= 0;
 
   if (hasSelectedClassWithZero) {
-    classesDisponiveis.forEach((classe) => syncClassConfig(convenio, classe));
-    alert('Existe classe selecionada com quantidade zero. Informe uma quantidade maior que zero.');
+    syncClassConfig(convenio);
+    alert('Informe uma quantidade de vagas maior que zero para a classe selecionada.');
     return false;
   }
 
@@ -1002,19 +1317,18 @@ function renderCreationSummary(convenio) {
 
   target.innerHTML = `
     <div class="summary-grid">
-      <div class="summary-box"><span>Tipo de criação</span><strong>${escapeHtml(document.querySelector('[data-date-mode-option].active')?.querySelector('strong')?.textContent || '-')}</strong></div>
+      <div class="summary-box"><span>Tipo de criação</span><strong>Período específico</strong></div>
       <div class="summary-box"><span>Dias gerados</span><strong>${dates.length}</strong></div>
       <div class="summary-box"><span>Total de vagas</span><strong>${totalVagas}</strong></div>
       <div class="summary-box"><span>Valor ofertado</span><strong>${dinheiro.format(totalValor)}</strong></div>
       <div class="summary-box wide"><span>Serviço</span><strong>${escapeHtml(serviceInfo.nomeServico)}</strong></div>
       <div class="summary-box wide"><span>Apresentação</span><strong>${escapeHtml(`${serviceInfo.localServico}\n${serviceInfo.enderecoServico}`)}</strong></div>
       <div class="summary-box wide"><span>Ponto de referência</span><strong>${escapeHtml(serviceInfo.pontoReferencia || '-')}</strong></div>
-      <div class="summary-box wide"><span>Classes selecionadas</span><strong>${escapeHtml(classText)}</strong></div>
+      <div class="summary-box wide"><span>Classe selecionada</span><strong>${escapeHtml(classText)}</strong></div>
     </div>
   `;
 
-  summaryCard.classList.remove('is-hidden');
-  summaryCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  showCreationStep('summary-preview-card');
 }
 
 /**
@@ -1034,6 +1348,56 @@ function renderCreationSummary(convenio) {
  */
 function getVagasDoMes(convenioId, month) {
   return getVagas().filter((vaga) => vaga.convenioId === convenioId && (vaga.dataServico || '').startsWith(month));
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Lê os filtros preenchidos pelo operador na página de vagas criadas.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {object} Filtros atuais de nome do serviço, data, classe e tipo de serviço.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não acessa LocalStorage; lê apenas os campos de filtro no DOM antes de filtrar a lista em memória.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: enviar filtros para a API quando a listagem passar a ser paginada no backend.
+ */
+function getVagaFilters() {
+  return {
+    text: normalizeTextInput(document.getElementById('vaga-filter-text')?.value || '').toLowerCase(),
+    date: document.getElementById('vaga-filter-date')?.value || '',
+    classe: document.getElementById('vaga-filter-class')?.value || '',
+    tipo: document.getElementById('vaga-filter-type')?.value || ''
+  };
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Aplica os filtros visuais sobre as vagas já carregadas do mês atual.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {Array<object>} vagas - Vagas do convênio e competência já filtradas do LocalStorage.
+ * @returns {Array<object>} Vagas compatíveis com nome do serviço, data, classe e tipo selecionados.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; filtra em memória registros obtidos de `cproeis_convenios_vagas`.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: mover filtros para consulta de backend para suportar grande volume e múltiplas competências.
+ */
+function applyVagaFilters(vagas) {
+  const filters = getVagaFilters();
+
+  return vagas.filter((vaga) => {
+    const serviceName = normalizeTextInput(vaga.nomeServico || '').toLowerCase();
+
+    if (filters.text && !serviceName.includes(filters.text)) return false;
+    if (filters.date && vaga.dataServico !== filters.date) return false;
+    if (filters.classe && vaga.classe !== filters.classe) return false;
+    if (filters.tipo && vaga.tipoServico !== filters.tipo) return false;
+    return true;
+  });
 }
 
 /**
@@ -1072,49 +1436,268 @@ function summarizeVagas(vagas) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
- * Renderiza a tela inicial de convênios com apenas contratos vigentes.
+ * Verifica se um responsável está dentro do período de atuação cadastrado no convênio.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object} responsavel - Responsável cadastrado no contrato/convênio.
+ * @returns {boolean} Verdadeiro quando o responsável pode aparecer na tela de login operacional.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não acessa LocalStorage; usa apenas o objeto de responsável já carregado do convênio.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: validar acesso em sessão autenticada no servidor, considerando perfil, status do usuário e vínculo ativo.
+ */
+function isResponsavelAtivo(responsavel) {
+  if (responsavel.inicio && today < responsavel.inicio) return false;
+  if (responsavel.fim && today > responsavel.fim) return false;
+  return true;
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Retorna a lista de responsáveis ativos de um convênio vigente, preservando compatibilidade com registros
+ * antigos que ainda tenham responsáveis embutidos no objeto principal.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object} convenio - Convênio vigente vindo do LocalStorage compartilhado com contratos.
+ * @returns {Array<object>} Responsáveis aptos a logar no módulo operacional.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; lê a propriedade `responsaveis` já persistida dentro do convênio.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: consultar responsáveis por endpoint próprio quando o cadastro sair do LocalStorage.
+ */
+function getResponsaveisAtivosDoConvenio(convenio) {
+  return (convenio.responsaveis || [])
+    .filter((responsavel) => responsavel.nome && isResponsavelAtivo(responsavel));
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Formata as funções de acesso do responsável em pequenos marcadores para facilitar leitura na tabela.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object} responsavel - Responsável com array `funcoes` ou campo legado `funcao`.
+ * @returns {string} HTML com as funções escapadas e separadas em chips visuais.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não acessa armazenamento; apenas formata dados já carregados.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: trocar textos por permissões identificadas por código quando existir controle real de acesso.
+ */
+function formatResponsavelFuncoes(responsavel) {
+  const funcoes = Array.isArray(responsavel.funcoes)
+    ? responsavel.funcoes
+    : String(responsavel.funcao || '').split(',').map((item) => item.trim()).filter(Boolean);
+
+  if (!funcoes.length) return '-';
+
+  return `<div class="role-list">${funcoes.map((funcao) => `<span class="role-chip">${escapeHtml(funcao)}</span>`).join('')}</div>`;
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Retorna as funções de um responsável em formato de array para filtros e exibição.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object} responsavel - Responsável com array `funcoes` ou campo legado `funcao`.
+ * @returns {Array<string>} Lista de funções normalizadas sem itens vazios.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não acessa armazenamento; transforma dados já carregados do LocalStorage pela lista de convênios.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: substituir textos livres por permissões estáveis vindas do backend.
+ */
+function getResponsavelFuncoes(responsavel) {
+  return Array.isArray(responsavel.funcoes)
+    ? responsavel.funcoes.filter(Boolean)
+    : String(responsavel.funcao || '').split(',').map((item) => item.trim()).filter(Boolean);
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Monta a lista plana de responsáveis com acesso operacional a partir dos convênios vigentes.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {Array<object>} Lista com pares `{ convenio, responsavel }` aptos para login operacional.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Lê convênios persistidos no LocalStorage e filtra os responsáveis ativos em memória.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: carregar esta listagem de endpoint autenticado para respeitar permissões por usuário.
+ */
+function getAcessosOperacionais() {
+  return getConvenios()
+    .filter(isConvenioVigente)
+    .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''))
+    .flatMap((convenio) => getResponsaveisAtivosDoConvenio(convenio)
+      .map((responsavel) => ({ convenio, responsavel })));
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Preenche os selects de filtro de convênio e função sem duplicar opções.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {Array<object>} acessos - Pares de convênio e responsável exibíveis na tabela.
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; usa a lista em memória para atualizar opções no DOM.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: receber opções de filtro do backend quando a listagem for paginada no servidor.
+ */
+function populateAccessFilters(acessos) {
+  const convenioSelect = document.getElementById('access-filter-convenio');
+  const funcaoSelect = document.getElementById('access-filter-funcao');
+
+  if (convenioSelect && convenioSelect.dataset.optionsLoaded !== 'true') {
+    const convenios = [...new Map(acessos.map(({ convenio }) => [convenio.id, convenio])).values()];
+    convenioSelect.innerHTML = '<option value="">Todos</option>'
+      + convenios.map((convenio) => `<option value="${escapeHtml(convenio.id)}">${escapeHtml(convenio.nome || '-')}</option>`).join('');
+    convenioSelect.dataset.optionsLoaded = 'true';
+  }
+
+  if (funcaoSelect && funcaoSelect.dataset.optionsLoaded !== 'true') {
+    const funcoes = [...new Set(acessos.flatMap(({ responsavel }) => getResponsavelFuncoes(responsavel)))].sort((a, b) => a.localeCompare(b));
+    funcaoSelect.innerHTML = '<option value="">Todas</option>'
+      + funcoes.map((funcao) => `<option value="${escapeHtml(funcao)}">${escapeHtml(funcao)}</option>`).join('');
+    funcaoSelect.dataset.optionsLoaded = 'true';
+  }
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Lê os filtros preenchidos na listagem de responsáveis operacionais.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {object} Filtros atuais de responsável, convênio e função.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não acessa LocalStorage; lê somente campos de filtro existentes no DOM.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: persistir preferências de filtro por usuário quando houver login real.
+ */
+function getAccessFilters() {
+  return {
+    text: normalizeTextInput(document.getElementById('access-filter-text')?.value || '').toLowerCase(),
+    convenioId: document.getElementById('access-filter-convenio')?.value || '',
+    funcao: document.getElementById('access-filter-funcao')?.value || ''
+  };
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Aplica os filtros da tabela de responsáveis sem alterar os dados persistidos.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {Array<object>} acessos - Pares `{ convenio, responsavel }` carregados da base local.
+ * @returns {Array<object>} Acessos compatíveis com os filtros selecionados.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; filtra em memória registros vindos do LocalStorage.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: mover filtro para consulta server-side quando houver muitos responsáveis.
+ */
+function applyAccessFilters(acessos) {
+  const filters = getAccessFilters();
+
+  return acessos.filter(({ convenio, responsavel }) => {
+    const nomeResponsavel = normalizeTextInput(responsavel.nome || '').toLowerCase();
+    const funcoes = getResponsavelFuncoes(responsavel);
+
+    if (filters.text && !nomeResponsavel.includes(filters.text)) return false;
+    if (filters.convenioId && convenio.id !== filters.convenioId) return false;
+    if (filters.funcao && !funcoes.includes(filters.funcao)) return false;
+    return true;
+  });
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Configura os eventos dos filtros da listagem de responsáveis operacionais.
  *
  * PARÂMETROS E RETORNO:
  * @returns {void}
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
- * Lê convênios da chave de contratos e vagas da chave operacional no LocalStorage.
+ * Não grava dados; dispara nova renderização lendo filtros do DOM e convênios do LocalStorage.
  *
  * NOTAS DE EXPANSÃO:
- * TODO: aplicar permissões por usuário para exibir apenas convênios autorizados ao operador logado.
+ * TODO: adicionar debounce no campo de busca quando houver consulta remota.
+ */
+function bindAccessFilterEvents() {
+  const filterIds = ['access-filter-text', 'access-filter-convenio', 'access-filter-funcao'];
+
+  filterIds.forEach((id) => {
+    const input = document.getElementById(id);
+    if (!input || input.dataset.filterBound === 'true') return;
+
+    input.dataset.filterBound = 'true';
+    input.addEventListener('input', renderConveniosList);
+    input.addEventListener('change', renderConveniosList);
+  });
+
+  const clearButton = document.getElementById('clear-access-filters');
+  if (clearButton && clearButton.dataset.filterBound !== 'true') {
+    clearButton.dataset.filterBound = 'true';
+    clearButton.addEventListener('click', () => {
+      filterIds.forEach((id) => {
+        const input = document.getElementById(id);
+        if (input) input.value = '';
+      });
+      renderConveniosList();
+    });
+  }
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Renderiza a tela inicial com responsáveis aptos a logar em convênios vigentes.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Lê convênios da chave de contratos no LocalStorage e usa os responsáveis vinculados ao contrato.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: substituir a lista local por autenticação real do responsável com usuário e senha.
  */
 function renderConveniosList() {
   const body = document.getElementById('convenios-body');
   if (!body) return;
 
-  const vigentes = getConvenios()
-    .filter(isConvenioVigente)
-    .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+  const todosAcessos = getAcessosOperacionais();
+  populateAccessFilters(todosAcessos);
+  bindAccessFilterEvents();
 
-  const vagasMes = getVagas().filter((vaga) => (vaga.dataServico || '').startsWith(currentMonth));
-  const totalMensalPrevisto = vigentes.reduce((total, convenio) => total + getLimiteMensal(convenio), 0);
-  const resumoMes = summarizeVagas(vagasMes);
+  const acessos = applyAccessFilters(todosAcessos);
 
-  document.getElementById('total-vigentes').textContent = vigentes.length;
-  document.getElementById('valor-mensal-previsto').textContent = dinheiro.format(totalMensalPrevisto);
-  document.getElementById('vagas-ofertadas-mes').textContent = resumoMes.quantidadeOfertada;
-  document.getElementById('valor-ofertado-mes').textContent = dinheiro.format(resumoMes.valorOfertado);
-
-  if (!vigentes.length) {
-    body.innerHTML = '<tr><td class="empty" colspan="6">Nenhum convênio vigente encontrado. Cadastre ou renove um contrato no módulo Contratos.</td></tr>';
+  if (!acessos.length) {
+    body.innerHTML = '<tr><td class="empty" colspan="7">Nenhum responsável encontrado para os filtros selecionados.</td></tr>';
     return;
   }
 
-  body.innerHTML = vigentes.map((convenio) => `
+  body.innerHTML = acessos.map(({ convenio, responsavel }) => `
     <tr>
-      <td><strong>${escapeHtml(convenio.nome || '-')}</strong></td>
-      <td>${formatDate(convenio.inicio)}</td>
-      <td>${formatDate(convenio.fim)}</td>
-      <td>${dinheiro.format(Number(convenio.valorContrato ?? convenio.valorMensal ?? 0))}</td>
-      <td>${dinheiro.format(getLimiteMensal(convenio))}</td>
+      <td><strong>${escapeHtml(responsavel.nome || '-')}</strong></td>
+      <td>${escapeHtml(convenio.nome || '-')}</td>
+      <td>${escapeHtml(responsavel.cpf || '-')}</td>
+      <td>${escapeHtml(responsavel.email || '-')}</td>
+      <td>${escapeHtml(responsavel.telefone || '-')}</td>
+      <td>${formatResponsavelFuncoes(responsavel)}</td>
       <td>
         <div class="actions">
-          <a href="operacao.html?id=${encodeURIComponent(convenio.id)}">Logar</a>
+          <a class="login-action" href="operacao.html?id=${encodeURIComponent(convenio.id)}&responsavel=${encodeURIComponent(responsavel.id || responsavel.cpf || responsavel.nome || '')}">Logar</a>
         </div>
       </td>
     </tr>
@@ -1138,6 +1721,32 @@ function getSelectedConvenio() {
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id') || '';
   return getConvenios().find((convenio) => convenio.id === id && isConvenioVigente(convenio)) || null;
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Busca o responsável selecionado no login operacional a partir do parâmetro `responsavel` da URL.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object|null} convenio - Convênio vigente selecionado.
+ * @returns {object|null} Responsável encontrado no convênio ou nulo quando não houver correspondência.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; lê somente a URL atual e o array de responsáveis já carregado do convênio.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: substituir parâmetro de URL por sessão autenticada quando existir login real em produção.
+ */
+function getSelectedResponsavel(convenio) {
+  if (!convenio) return null;
+
+  const responsavelParam = new URLSearchParams(window.location.search).get('responsavel') || '';
+  if (!responsavelParam) return null;
+
+  return (convenio.responsaveis || []).find((responsavel) => {
+    const identifiers = [responsavel.id, responsavel.cpf, responsavel.nome].filter(Boolean).map(String);
+    return identifiers.includes(responsavelParam);
+  }) || null;
 }
 
 /**
@@ -1174,7 +1783,9 @@ function getSelectedVagaId() {
 function updateConvenioLinks(convenio) {
   if (!convenio) return;
 
-  const idParam = `id=${encodeURIComponent(convenio.id)}`;
+  const selectedResponsavel = getSelectedResponsavel(convenio);
+  const responsavelId = selectedResponsavel ? (selectedResponsavel.id || selectedResponsavel.cpf || selectedResponsavel.nome || '') : '';
+  const idParam = `id=${encodeURIComponent(convenio.id)}${responsavelId ? `&responsavel=${encodeURIComponent(responsavelId)}` : ''}`;
   const links = {
     'menu-criar-vagas': `criar-vagas.html?${idParam}`,
     'menu-acompanhamento': `acompanhamento.html?${idParam}`,
@@ -1223,7 +1834,9 @@ function renderOperationalHeader(convenio) {
   }
 
   title.textContent = convenio.nome || 'Operação do convênio';
-  subtitle.textContent = `Contrato ${convenio.numero || '-'} | Vigência de ${formatDate(convenio.inicio)} até ${formatDate(convenio.fim)}`;
+  const selectedResponsavel = getSelectedResponsavel(convenio);
+  const responsavelText = selectedResponsavel?.nome ? ` | Responsável: ${selectedResponsavel.nome}` : '';
+  subtitle.textContent = `Contrato ${convenio.numero || '-'} | Vigência de ${formatDate(convenio.inicio)} até ${formatDate(convenio.fim)}${responsavelText}`;
 }
 
 /**
@@ -2102,7 +2715,7 @@ function updateSelectedDatesCount(convenio) {
  * TODO: restringir automaticamente a datas operacionais permitidas quando o contrato trouxer calendário próprio.
  */
 function syncDateModeFields(convenio) {
-  const mode = document.getElementById('date-mode')?.value || 'selected';
+  const mode = document.getElementById('date-mode')?.value || 'period';
   const startInput = document.getElementById('data-inicio');
   const endInput = document.getElementById('data-fim');
   if (!startInput || !endInput) return;
@@ -2159,9 +2772,15 @@ function initializeOperationalDefaults(convenio) {
   document.getElementById('calendar-month').value = validStart.slice(0, 7);
   document.getElementById('data-inicio').value = validStart;
   document.getElementById('data-fim').value = validStart;
+  document.getElementById('date-mode').value = 'period';
+  showCreationStep('date-selection-card');
+  document.querySelectorAll('[data-date-mode-option]').forEach((button) => {
+    button.classList.toggle('active', button.dataset.dateModeOption === 'period');
+  });
   selectedCalendarDates.clear();
   selectedCalendarDates.add(start);
   applyTurnoToFields();
+  ensureServiceFieldHints();
 }
 
 /**
@@ -2179,7 +2798,7 @@ function initializeOperationalDefaults(convenio) {
  * TODO: executar esta expansão de recorrência no backend para evitar divergência entre navegadores.
  */
 function getCreationDates(convenio) {
-  const mode = document.getElementById('date-mode')?.value || 'selected';
+  const mode = document.getElementById('date-mode')?.value || 'period';
   const start = document.getElementById('data-inicio')?.value || today;
   const end = document.getElementById('data-fim')?.value || start;
 
@@ -2297,16 +2916,16 @@ function resetVagaForm() {
   document.getElementById('calendar-month').value = currentMonth;
   document.getElementById('data-inicio').value = today;
   document.getElementById('data-fim').value = today;
-  document.getElementById('date-mode').value = '';
-  document.getElementById('date-selection-card')?.classList.add('is-hidden');
-  document.getElementById('creation-type-card')?.classList.add('attention-card');
-  document.getElementById('summary-preview-card')?.classList.add('is-hidden');
+  document.getElementById('date-mode').value = 'period';
+  showCreationStep('date-selection-card');
   document.getElementById('submit-button').textContent = 'Criar vagas';
   document.querySelectorAll('[data-date-mode-option]').forEach((button) => {
-    button.classList.remove('active');
+    button.classList.toggle('active', button.dataset.dateModeOption === 'period');
   });
+  document.querySelectorAll('.field-hint').forEach((hint) => hint.classList.add('hidden'));
+  document.querySelectorAll('.invalid').forEach((input) => input.classList.remove('invalid'));
   selectedConvenioCache && renderClassConfigCards(selectedConvenioCache);
-  renderCalendar(currentMonth, selectedConvenioCache);
+  renderDateSelectionMode(selectedConvenioCache);
 }
 
 /**
@@ -2341,25 +2960,19 @@ function fillVagaForm(vaga) {
   document.getElementById('servico-uf').value = vaga.enderecoDados?.uf || '';
   document.getElementById('ponto-referencia').value = vaga.pontoReferencia || '';
   document.getElementById('submit-button').textContent = 'Atualizar vagas';
-  classesDisponiveis.forEach((classe) => {
-    const enabled = document.querySelector(`[data-class-enabled="${classe}"]`);
-    const turno = document.querySelector(`[data-class-turno="${classe}"]`);
-    const start = document.querySelector(`[data-class-start="${classe}"]`);
-    const quantity = document.querySelector(`[data-class-quantity="${classe}"]`);
-    const course = document.querySelector(`[data-class-course="${classe}"]`);
+  const classInput = document.querySelector(`[data-class-enabled="${vaga.classe}"]`) || document.querySelector('[data-class-enabled]');
+  const turno = document.querySelector('[data-class-turno]');
+  const start = document.querySelector('[data-class-start]');
+  const quantity = document.querySelector('[data-class-quantity]');
+  const course = document.querySelector('[data-class-course]');
 
-    if (!enabled || !turno || !start || !quantity || !course) return;
+  if (classInput) classInput.checked = true;
+  if (turno) turno.value = vaga.turno || 'turno12';
+  if (start) start.value = vaga.horaInicio || turnosServico.turno12.inicio;
+  if (quantity) quantity.value = vaga.quantidade || 1;
+  if (course) course.value = vaga.curso || '';
 
-    enabled.checked = classe === vaga.classe;
-    if (classe === vaga.classe) {
-      turno.value = vaga.turno || 'turno12';
-      start.value = vaga.horaInicio || turnosServico.turno12.inicio;
-      quantity.value = vaga.quantidade || 1;
-      course.value = vaga.curso || '';
-    }
-
-    syncClassConfig(selectedConvenioCache, classe);
-  });
+  syncClassConfig(selectedConvenioCache);
   renderCalendar((vaga.dataServico || today).slice(0, 7), selectedConvenioCache);
 }
 
@@ -2382,29 +2995,21 @@ function renderVagasTable(convenio, month) {
   const body = document.getElementById('vagas-body');
   if (!body || !convenio) return;
 
-  const vagas = getVagasDoMes(convenio.id, month).sort((a, b) => (a.dataServico || '').localeCompare(b.dataServico || ''));
+  const vagas = applyVagaFilters(getVagasDoMes(convenio.id, month))
+    .sort((a, b) => (a.dataServico || '').localeCompare(b.dataServico || ''));
 
   if (!vagas.length) {
-    body.innerHTML = '<tr><td class="empty" colspan="10">Nenhuma vaga criada para esta competência.</td></tr>';
+    body.innerHTML = '<tr><td class="empty" colspan="6">Nenhuma vaga encontrada para os filtros selecionados.</td></tr>';
     return;
   }
 
-  body.innerHTML = vagas.map((vaga) => {
-    const valorUnitario = Number(vaga.valorUnitario || 0);
-    const valorOfertado = Number(vaga.quantidade || 0) * valorUnitario;
-    const valorEscalado = Number(vaga.preenchidas || 0) * valorUnitario;
-
-    return `
+  body.innerHTML = vagas.map((vaga) => `
       <tr>
         <td>${formatDate(vaga.dataServico)}</td>
+        <td>${escapeHtml(vaga.nomeServico || '-')}</td>
         <td>${escapeHtml(gruposClasse[vaga.classe] || vaga.classe)}</td>
         <td>${escapeHtml(tiposServico[vaga.tipoServico] || vaga.tipoServico)}</td>
         <td>${escapeHtml(vaga.horaInicio || '-')}${vaga.horaFim ? ` às ${escapeHtml(vaga.horaFim)}` : ''}</td>
-        <td>${Number(vaga.quantidade || 0)}</td>
-        <td>${Number(vaga.preenchidas || 0)}</td>
-        <td>${dinheiro.format(valorOfertado)}</td>
-        <td>${dinheiro.format(valorEscalado)}</td>
-        <td>${escapeHtml(vaga.localServico || '-')}</td>
         <td>
           <div class="actions">
             <button type="button" data-action="edit-vaga" data-id="${vaga.id}">Editar</button>
@@ -2412,8 +3017,7 @@ function renderVagasTable(convenio, month) {
           </div>
         </td>
       </tr>
-    `;
-  }).join('');
+    `).join('');
 }
 
 /**
@@ -2445,6 +3049,94 @@ function renderOperationalView(convenio) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
+ * Liga máscaras e validação gradual aos campos de serviço/endereço da tela de criação de vagas.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; trata apenas valores em memória no DOM antes da criação em `cproeis_convenios_vagas`.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: substituir validações locais por validação compartilhada com API quando houver autenticação e backend.
+ */
+function bindServiceFieldValidation() {
+  ensureServiceFieldHints();
+
+  Object.keys(serviceFieldMessages).forEach((id) => {
+    const input = document.getElementById(id);
+    if (!input || input.dataset.validationBound === 'true') return;
+
+    input.dataset.validationBound = 'true';
+    input.addEventListener('input', () => {
+      normalizeServiceFieldOnInput(input);
+      validateServiceField(id, false, false);
+      document.getElementById('summary-preview-card')?.classList.add('is-hidden');
+    });
+    input.addEventListener('blur', () => {
+      validateServiceField(id, Boolean(input.value));
+    });
+  });
+
+  ['servico-complemento', 'ponto-referencia'].forEach((id) => {
+    const input = document.getElementById(id);
+    if (!input || input.dataset.normalizationBound === 'true') return;
+
+    input.dataset.normalizationBound = 'true';
+    input.addEventListener('blur', () => {
+      normalizeServiceField(input);
+      document.getElementById('summary-preview-card')?.classList.add('is-hidden');
+    });
+  });
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Configura eventos dos filtros da tabela de vagas criadas para atualizar a listagem em tempo real.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object|null} convenio - Convênio selecionado para recarregar a tabela filtrada.
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; relê os filtros do DOM e a lista de vagas persistida em LocalStorage via renderização.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: adicionar debounce e filtros persistidos por usuário quando houver autenticação.
+ */
+function bindVagaFilterEvents(convenio) {
+  const filterIds = ['vaga-filter-text', 'vaga-filter-date', 'vaga-filter-class', 'vaga-filter-type'];
+  if (!document.getElementById('vagas-body')) return;
+
+  const rerender = () => {
+    const monthSource = document.getElementById('data-inicio')?.value?.slice(0, 7) || document.getElementById('calendar-month')?.value || currentMonth;
+    renderVagasTable(convenio, monthSource);
+  };
+
+  filterIds.forEach((id) => {
+    const input = document.getElementById(id);
+    if (!input || input.dataset.filterBound === 'true') return;
+
+    input.dataset.filterBound = 'true';
+    input.addEventListener('input', rerender);
+    input.addEventListener('change', rerender);
+  });
+
+  const clearButton = document.getElementById('clear-vaga-filters');
+  if (clearButton && clearButton.dataset.filterBound !== 'true') {
+    clearButton.dataset.filterBound = 'true';
+    clearButton.addEventListener('click', () => {
+      filterIds.forEach((id) => {
+        const input = document.getElementById(id);
+        if (input) input.value = '';
+      });
+      rerender();
+    });
+  }
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
  * Configura eventos da tela operacional para salvar, editar e excluir vagas.
  *
  * PARÂMETROS E RETORNO:
@@ -2461,7 +3153,11 @@ function bindOperationalEvents(convenio) {
   const form = document.getElementById('vaga-form');
   if (!convenio) return;
 
+  bindVagaFilterEvents(convenio);
+
   if (form) {
+    bindServiceFieldValidation();
+
     form.addEventListener('submit', (event) => {
       event.preventDefault();
 
@@ -2480,14 +3176,13 @@ function bindOperationalEvents(convenio) {
     });
 
     document.getElementById('preview-button').addEventListener('click', () => {
-      if (validateCreationWizard(convenio)) {
+      if (validateCreationStep('class-selection-card', convenio) && validateCreationWizard(convenio)) {
         renderCreationSummary(convenio);
       }
     });
 
     document.getElementById('edit-summary-button').addEventListener('click', () => {
-      document.getElementById('summary-preview-card').classList.add('is-hidden');
-      document.getElementById('creation-type-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      showCreationStep('class-selection-card');
     });
 
     document.getElementById('clear-button').addEventListener('click', () => {
@@ -2495,18 +3190,29 @@ function bindOperationalEvents(convenio) {
       renderOperationalView(convenio);
     });
 
-    document.getElementById('creation-type-options').addEventListener('click', (event) => {
+    document.querySelectorAll('[data-step-next]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const currentCard = button.closest('.wizard-card');
+        if (!currentCard || !validateCreationStep(currentCard.id, convenio)) return;
+        showCreationStep(button.dataset.stepNext);
+      });
+    });
+
+    document.querySelectorAll('[data-step-back]').forEach((button) => {
+      button.addEventListener('click', () => {
+        showCreationStep(button.dataset.stepBack);
+      });
+    });
+
+    document.getElementById('creation-type-options')?.addEventListener('click', (event) => {
       const button = event.target.closest('[data-date-mode-option]');
       if (!button) return;
 
       document.querySelectorAll('[data-date-mode-option]').forEach((item) => item.classList.remove('active'));
       button.classList.add('active');
       document.getElementById('creation-type-card')?.classList.remove('attention-card');
-      document.getElementById('date-mode').value = button.dataset.dateModeOption;
+      document.getElementById('date-mode').value = 'period';
       document.getElementById('date-selection-card').classList.remove('is-hidden');
-      if (button.dataset.dateModeOption === 'selected') {
-        selectedCalendarDates.clear();
-      }
       syncDateModeFields(convenio);
       renderOperationalView(convenio);
       document.getElementById('date-selection-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2528,6 +3234,7 @@ function bindOperationalEvents(convenio) {
     });
 
     document.getElementById('data-inicio').addEventListener('change', () => {
+      document.getElementById('date-mode').value = 'period';
       syncDateModeFields(convenio);
       const startValue = document.getElementById('data-inicio').value;
       if (startValue) {
@@ -2608,10 +3315,9 @@ function bindOperationalEvents(convenio) {
       const start = event.target.closest('[data-class-start]');
       const quantity = event.target.closest('[data-class-quantity]');
       const course = event.target.closest('[data-class-course]');
-      const classe = enabled?.dataset.classEnabled || turno?.dataset.classTurno || start?.dataset.classStart || quantity?.dataset.classQuantity || course?.dataset.classCourse;
 
-      if (!classe) return;
-      syncClassConfig(convenio, classe);
+      if (!enabled && !turno && !start && !quantity && !course) return;
+      syncClassConfig(convenio);
       document.getElementById('summary-preview-card')?.classList.add('is-hidden');
     });
   }

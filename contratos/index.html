@@ -8,50 +8,29 @@
 </head>
 <body>
   <header>
-    <h1>Contratos e Convênios</h1>
-    <p>Cadastro local de convênios, contratos, valores, responsáveis e histórico.</p>
+    <a class="back-link" href="../administracao.html">Voltar para Administração</a>
+    <div class="header-copy">
+      <h1>Contratos e Convênios</h1>
+      <p>Cadastro local de convênios, contratos, valores, responsáveis e histórico.</p>
+    </div>
   </header>
 
   <main>
-    <div class="top-bar">
-      <a class="back-link" href="../administracao.html">Voltar para Administração</a>
-    </div>
-
     <nav class="module-menu" aria-label="Funcionalidades de contratos">
       <button class="tab-button active" type="button" data-view="cadastro-view">Cadastrar convênio</button>
-      <button class="tab-button" type="button" data-view="tabela-view">Visualizar tabela</button>
+      <button class="tab-button" type="button" data-view="tabela-view">Tabela Convênios</button>
       <button class="tab-button" type="button" data-view="detalhes-view">Detalhes do convênio</button>
     </nav>
-
-    <section class="summary" aria-label="Resumo dos contratos">
-      <div class="summary-item">
-        <span>Contratos</span>
-        <strong id="total-convenios">0</strong>
-      </div>
-      <div class="summary-item">
-        <span>Ativos pela vigência</span>
-        <strong id="total-ativos">0</strong>
-      </div>
-      <div class="summary-item">
-        <span>Não ativos</span>
-        <strong id="total-inativos">0</strong>
-      </div>
-      <div class="summary-item">
-        <span>Clientes</span>
-        <strong id="total-clientes">0</strong>
-      </div>
-    </section>
 
     <section class="view active" id="cadastro-view">
       <div class="panel">
         <div class="panel-header">
           <div>
             <h2 id="form-title">Cadastrar convênio</h2>
-            <p class="hint">Ao informar um CNPJ já cadastrado, os dados do cliente podem ser reaproveitados para um novo contrato.</p>
           </div>
         </div>
 
-        <form id="convenio-form">
+        <form id="convenio-form" novalidate>
           <input type="hidden" id="editing-id">
 
           <h3 class="section-title">Identificação do conveniado</h3>
@@ -63,8 +42,7 @@
 
           <label>
             CNPJ
-            <input id="cnpj" type="text" inputmode="numeric" list="cnpj-list" placeholder="00.000.000/0000-00" required>
-            <datalist id="cnpj-list"></datalist>
+            <input id="cnpj" type="text" inputmode="numeric" placeholder="00.000.000/0000-00" required>
           </label>
 
           <label>
@@ -106,7 +84,7 @@
 
           <label>
             Nº do contrato
-            <input id="numero" type="text" required>
+            <input id="numero" type="text" inputmode="numeric" maxlength="22" placeholder="SEI-000000/000000/0000" required>
           </label>
 
           <label>
@@ -121,7 +99,7 @@
 
           <label>
             Valor do contrato
-            <input id="valor-contrato" type="number" min="0" step="0.01" required>
+            <input id="valor-contrato" type="text" inputmode="numeric" placeholder="R$ 0,00" required>
           </label>
 
           <h3 class="section-title">Vigência do contrato</h3>
@@ -141,30 +119,30 @@
           <div class="values-grid">
             <section class="class-box">
               <h4>Classe A</h4>
-              <label>Serviço 12h <input id="valor-a-12" type="number" min="0" step="0.01" placeholder="0,00"></label>
-              <label>Serviço 8h <input id="valor-a-8" type="number" min="0" step="0.01" placeholder="0,00"></label>
-              <label>Serviço 6h <input id="valor-a-6" type="number" min="0" step="0.01" placeholder="0,00"></label>
+              <label>Serviço 12h <input id="valor-a-12" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
+              <label>Serviço 8h <input id="valor-a-8" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
+              <label>Serviço 6h <input id="valor-a-6" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
             </section>
 
             <section class="class-box">
               <h4>Classe B</h4>
-              <label>Serviço 12h <input id="valor-b-12" type="number" min="0" step="0.01" placeholder="0,00"></label>
-              <label>Serviço 8h <input id="valor-b-8" type="number" min="0" step="0.01" placeholder="0,00"></label>
-              <label>Serviço 6h <input id="valor-b-6" type="number" min="0" step="0.01" placeholder="0,00"></label>
+              <label>Serviço 12h <input id="valor-b-12" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
+              <label>Serviço 8h <input id="valor-b-8" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
+              <label>Serviço 6h <input id="valor-b-6" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
             </section>
 
             <section class="class-box">
               <h4>Classe C</h4>
-              <label>Serviço 12h <input id="valor-c-12" type="number" min="0" step="0.01" placeholder="0,00"></label>
-              <label>Serviço 8h <input id="valor-c-8" type="number" min="0" step="0.01" placeholder="0,00"></label>
-              <label>Serviço 6h <input id="valor-c-6" type="number" min="0" step="0.01" placeholder="0,00"></label>
+              <label>Serviço 12h <input id="valor-c-12" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
+              <label>Serviço 8h <input id="valor-c-8" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
+              <label>Serviço 6h <input id="valor-c-6" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
             </section>
 
             <section class="class-box">
               <h4>Classe D</h4>
-              <label>Serviço 12h <input id="valor-d-12" type="number" min="0" step="0.01" placeholder="0,00"></label>
-              <label>Serviço 8h <input id="valor-d-8" type="number" min="0" step="0.01" placeholder="0,00"></label>
-              <label>Serviço 6h <input id="valor-d-6" type="number" min="0" step="0.01" placeholder="0,00"></label>
+              <label>Serviço 12h <input id="valor-d-12" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
+              <label>Serviço 8h <input id="valor-d-8" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
+              <label>Serviço 6h <input id="valor-d-6" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
             </section>
           </div>
 
@@ -173,12 +151,12 @@
             <div class="subcard-grid">
               <label>
                 Passagem
-                <input id="valor-passagem" type="number" min="0" step="0.01" placeholder="0,00">
+                <input id="valor-passagem" type="text" inputmode="numeric" placeholder="R$ 0,00">
               </label>
 
               <label>
                 Alimentação
-                <input id="valor-alimentacao" type="number" min="0" step="0.01" placeholder="0,00">
+                <input id="valor-alimentacao" type="text" inputmode="numeric" placeholder="R$ 0,00">
               </label>
             </div>
           </section>
@@ -187,45 +165,82 @@
 
           <section class="subcard">
             <div class="subcard-grid">
-              <label>
-                Nome
-                <input id="responsavel-nome" type="text">
-              </label>
+              <fieldset class="responsavel-box full">
+                <legend>Dados do usuário</legend>
+                <div class="responsavel-box-grid">
+                  <label>
+                    Nome
+                    <input id="responsavel-nome" type="text">
+                  </label>
 
-              <label>
-                CPF
-                <input id="responsavel-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00">
-              </label>
+                  <label>
+                    CPF
+                    <input id="responsavel-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00">
+                  </label>
 
-              <label>
-                Email
-                <input id="responsavel-email" type="email" autocomplete="email">
-              </label>
+                  <label>
+                    Email
+                    <input id="responsavel-email" type="email" autocomplete="email">
+                  </label>
 
-              <label>
-                Telefone
-                <input id="responsavel-telefone" type="tel" autocomplete="tel">
-              </label>
+                  <label>
+                    Telefone
+                    <input id="responsavel-telefone" type="tel" autocomplete="tel">
+                  </label>
+                </div>
+              </fieldset>
 
-              <label class="wide">
-                Função
-                <input id="responsavel-funcao" type="text" placeholder="Ex.: Fiscal do contrato">
-              </label>
+              <fieldset class="access-options full">
+                <legend>Função / nível de acesso</legend>
+                <p>Selecione uma ou mais funções conforme o nível de acesso do usuário. As opções em aberto ficam reservadas para novas funções do sistema.</p>
 
-              <label>
-                Início de atuação
-                <input id="responsavel-inicio" type="date">
-              </label>
+                <div class="access-grid">
+                  <label class="check-option">
+                    <input type="checkbox" name="responsavel-funcoes" value="Gerar vagas">
+                    <span>Gerar vagas</span>
+                  </label>
 
-              <label>
-                Fim de atuação
-                <input id="responsavel-fim" type="date">
-              </label>
+                  <label class="check-option">
+                    <input type="checkbox" name="responsavel-funcoes" value="Ordena - Chefe Operacional">
+                    <span>Ordena - Chefe Operacional</span>
+                  </label>
 
-              <label class="full">
-                Observações
-                <textarea id="responsavel-observacoes"></textarea>
-              </label>
+                  <label class="check-option">
+                    <input type="checkbox" name="responsavel-funcoes" value="Ordena - Despachante">
+                    <span>Ordena - Despachante</span>
+                  </label>
+
+                  <label class="check-option">
+                    <input type="checkbox" name="responsavel-funcoes" value="Ordena - Visualização de Mapa">
+                    <span>Ordena - Visualização de Mapa</span>
+                  </label>
+
+                  <label class="check-option">
+                    <input type="checkbox" name="responsavel-funcoes" value="Outra">
+                    <span>Outra</span>
+                  </label>
+
+                  <label class="check-option pending-option">
+                    <input type="checkbox" disabled>
+                    <span>Função futura por nível de acesso</span>
+                  </label>
+                </div>
+              </fieldset>
+
+              <fieldset class="responsavel-box full">
+                <legend>Período de atuação</legend>
+                <div class="responsavel-box-grid period-grid">
+                  <label>
+                    Início de atuação
+                    <input id="responsavel-inicio" type="date">
+                  </label>
+
+                  <label>
+                    Fim de atuação
+                    <input id="responsavel-fim" type="date">
+                  </label>
+                </div>
+              </fieldset>
             </div>
 
             <div class="form-actions compact-actions">
@@ -249,11 +264,6 @@
             </table>
           </div>
 
-          <label class="full">
-            Observações gerais do convênio
-            <textarea id="observacoes" placeholder="Informações complementares do contrato ou convênio"></textarea>
-          </label>
-
           <div class="form-actions">
             <button type="submit" id="submit-button">Salvar convênio</button>
             <button type="button" class="secondary" id="clear-button">Limpar</button>
@@ -267,8 +277,38 @@
       <div class="panel">
         <div class="panel-header">
           <div>
-            <h2>Contratos ativos</h2>
-            <p class="hint" id="active-count">Nenhum contrato ativo.</p>
+            <h2>Contratos cadastrados</h2>
+            <p class="hint" id="contracts-count">Nenhum contrato cadastrado.</p>
+          </div>
+        </div>
+
+        <div class="filter-bar" aria-label="Filtros de contratos">
+          <label>
+            Pesquisar
+            <input id="contract-filter-text" type="search" placeholder="Convênio, CNPJ ou contrato">
+          </label>
+
+          <label>
+            Situação
+            <select id="contract-filter-status">
+              <option value="">Todos</option>
+              <option value="active">Ativos</option>
+              <option value="inactive">Inativos</option>
+            </select>
+          </label>
+
+          <label>
+            Início a partir de
+            <input id="contract-filter-start-from" type="date">
+          </label>
+
+          <label>
+            Início até
+            <input id="contract-filter-start-to" type="date">
+          </label>
+
+          <div class="form-actions filter-actions">
+            <button type="button" class="secondary" id="clear-contract-filters">Limpar filtros</button>
           </div>
         </div>
 
@@ -285,33 +325,7 @@
                 <th>Ações</th>
               </tr>
             </thead>
-            <tbody id="ativos-body"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <h2>Contratos não ativos</h2>
-            <p class="hint" id="inactive-count">Nenhum contrato não ativo.</p>
-          </div>
-        </div>
-
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Convênio</th>
-                <th>CNPJ</th>
-                <th>Contrato</th>
-                <th>Valor</th>
-                <th>Vigência</th>
-                <th>Situação</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="inativos-body"></tbody>
+            <tbody id="contratos-body"></tbody>
           </table>
         </div>
       </div>

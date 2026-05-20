@@ -8,17 +8,14 @@
 </head>
 <body>
   <header>
-    <h1 id="page-title">Vagas criadas</h1>
-    <p id="page-subtitle">Tabela mensal de vagas geradas para o convênio vigente.</p>
+    <a class="back-link" id="back-menu-link" href="operacao.html">Voltar ao menu</a>
+    <div class="header-copy">
+      <h1 id="page-title">Vagas criadas</h1>
+      <p id="page-subtitle">Tabela mensal de vagas geradas para o convênio vigente.</p>
+    </div>
   </header>
 
   <main>
-    <div class="top-bar">
-      <a class="back-link" id="back-menu-link" href="operacao.html">Voltar ao menu</a>
-      <a class="back-link" id="menu-criar-vagas" href="criar-vagas.html">Criar vagas</a>
-      <a class="back-link" id="menu-acompanhamento" href="acompanhamento.html">Acompanhar limite</a>
-    </div>
-
     <section class="panel">
       <div class="panel-header">
         <div>
@@ -27,19 +24,51 @@
         </div>
       </div>
 
+      <div class="filter-bar" aria-label="Filtros de vagas criadas">
+        <label>
+          Pesquisar
+          <input id="vaga-filter-text" type="search" placeholder="Nome do serviço">
+        </label>
+
+        <label>
+          Data
+          <input id="vaga-filter-date" type="date">
+        </label>
+
+        <label>
+          Classe
+          <select id="vaga-filter-class">
+            <option value="">Todas</option>
+            <option value="A">Classe A</option>
+            <option value="B">Classe B</option>
+            <option value="C/D">Classe C/D</option>
+          </select>
+        </label>
+
+        <label>
+          Tipo de serviço
+          <select id="vaga-filter-type">
+            <option value="">Todos</option>
+            <option value="servico12">Serviço 12h</option>
+            <option value="servico8">Serviço 8h</option>
+            <option value="servico6">Serviço 6h</option>
+          </select>
+        </label>
+
+        <div class="form-actions filter-actions">
+          <button type="button" class="secondary" id="clear-vaga-filters">Limpar filtros</button>
+        </div>
+      </div>
+
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>Data</th>
+              <th>Nome do serviço</th>
               <th>Classe</th>
               <th>Tipo</th>
               <th>Horário</th>
-              <th>Ofertadas</th>
-              <th>Com policial</th>
-              <th>Valor ofertado</th>
-              <th>Valor escalado</th>
-              <th>Local</th>
               <th>Ações</th>
             </tr>
           </thead>

@@ -8,40 +8,44 @@
 </head>
 <body>
   <header>
-    <h1>Convênios</h1>
-    <p>Relação de convênios vigentes para acesso operacional.</p>
+    <a class="back-link" href="../index.html">Voltar para o início</a>
+    <div class="header-copy">
+      <h1>Convênios</h1>
+      <p>Relação de convênios vigentes para acesso operacional.</p>
+    </div>
   </header>
 
   <main>
-    <div class="top-bar">
-      <a class="back-link" href="../index.html">Voltar para o início</a>
-      <a class="back-link" href="../contratos/index.html">Gerenciar contratos</a>
-    </div>
-
-    <section class="summary" aria-label="Resumo dos convênios vigentes">
-      <div class="summary-item">
-        <span>Convênios vigentes</span>
-        <strong id="total-vigentes">0</strong>
-      </div>
-      <div class="summary-item">
-        <span>Valor mensal previsto</span>
-        <strong id="valor-mensal-previsto">R$ 0,00</strong>
-      </div>
-      <div class="summary-item">
-        <span>Vagas ofertadas no mês</span>
-        <strong id="vagas-ofertadas-mes">0</strong>
-      </div>
-      <div class="summary-item">
-        <span>Valor ofertado no mês</span>
-        <strong id="valor-ofertado-mes">R$ 0,00</strong>
-      </div>
-    </section>
-
     <section class="panel">
       <div class="panel-header">
         <div>
-          <h2>Convênios dentro do prazo de vigência</h2>
-          <p class="hint">Somente contratos com data inicial já alcançada e data final não vencida aparecem nesta lista.</p>
+          <h2>Responsáveis com acesso operacional</h2>
+          <p class="hint">Somente responsáveis vinculados a convênios vigentes aparecem nesta lista.</p>
+        </div>
+      </div>
+
+      <div class="filter-bar access-filter-bar" aria-label="Filtros de responsáveis">
+        <label>
+          Pesquisar
+          <input id="access-filter-text" type="search" placeholder="Nome do responsável">
+        </label>
+
+        <label>
+          Convênio
+          <select id="access-filter-convenio">
+            <option value="">Todos</option>
+          </select>
+        </label>
+
+        <label>
+          Função
+          <select id="access-filter-funcao">
+            <option value="">Todas</option>
+          </select>
+        </label>
+
+        <div class="form-actions filter-actions">
+          <button type="button" class="secondary" id="clear-access-filters">Limpar filtros</button>
         </div>
       </div>
 
@@ -49,11 +53,12 @@
         <table>
           <thead>
             <tr>
-              <th>Nome fantasia</th>
-              <th>Início</th>
-              <th>Término</th>
-              <th>Valor do contrato</th>
-              <th>Limite mensal</th>
+              <th>Responsável</th>
+              <th>Convênio</th>
+              <th>CPF</th>
+              <th>Email</th>
+              <th>Telefone</th>
+              <th>Funções</th>
               <th>Ações</th>
             </tr>
           </thead>
@@ -61,9 +66,6 @@
         </table>
       </div>
     </section>
-    <img class="loading" id="loading" src="../assets/loading.gif" alt="Carregando...">
-    
-
   </main>
 
   <script src="script.js"></script>
