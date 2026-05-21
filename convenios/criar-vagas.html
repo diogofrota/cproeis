@@ -20,7 +20,6 @@
       <div class="panel-header">
         <div>
           <h2>Gerar vagas de serviço</h2>
-          <p class="hint">O valor da vaga é calculado pelos valores por classe cadastrados no contrato, somando passagem e alimentação.</p>
         </div>
       </div>
 
@@ -46,12 +45,14 @@
 
             <label>
               Início
-              <input id="data-inicio" type="date" required>
+              <input id="data-inicio-display" class="date-display-input" type="text" inputmode="none" readonly aria-label="Selecionar data inicial">
+              <input id="data-inicio" type="hidden" required>
             </label>
 
             <label>
               Fim
-              <input id="data-fim" type="date">
+              <input id="data-fim-display" class="date-display-input" type="text" inputmode="none" readonly aria-label="Selecionar data final">
+              <input id="data-fim" type="hidden">
             </label>
 
             <div class="form-actions">
@@ -63,6 +64,7 @@
           <div class="calendar-grid" id="calendar-grid"></div>
           <div class="week-grid is-hidden" id="week-grid"></div>
           <div class="month-grid is-hidden" id="month-grid"></div>
+          <div class="custom-date-picker is-hidden" id="custom-date-picker" aria-label="Calendário de seleção de data"></div>
 
           <div class="selected-dates is-hidden" id="selected-dates-box">
             <span>Dias selecionados</span>
@@ -168,27 +170,28 @@
 
           <div class="form-actions">
             <button type="button" class="secondary" data-step-back="service-info-card">Voltar</button>
-            <button type="button" id="preview-button">Revisar criação</button>
-            <button type="button" class="secondary" id="clear-button">Limpar</button>
+            <button type="button" id="preview-button">Avançar</button>
           </div>
         </section>
 
-        <section class="wizard-card summary-preview-card is-hidden" id="summary-preview-card" aria-label="Resumo da criação">
-          <div class="wizard-card-header">
-            <span>5</span>
-            <div>
-              <h3>Resumo antes de criar</h3>
-              <p class="hint">Confira as datas, local de apresentação, classes e valores antes de gravar.</p>
+        <div class="creation-modal is-hidden" id="creation-summary-modal" role="dialog" aria-modal="true" aria-labelledby="creation-summary-title">
+          <div class="creation-modal-panel">
+            <div class="wizard-card-header">
+              <span>5</span>
+              <div>
+                <h3 id="creation-summary-title">Resumo antes de criar</h3>
+                <p class="hint">Confirme as informações abaixo antes de criar.</p>
+              </div>
+            </div>
+
+            <div id="creation-summary"></div>
+
+            <div class="form-actions modal-actions">
+              <button type="button" class="modal-back-button" id="edit-summary-button">Voltar</button>
+              <button type="submit" class="modal-create-button" id="submit-button">Criar vagas</button>
             </div>
           </div>
-
-          <div id="creation-summary"></div>
-
-          <div class="form-actions">
-            <button type="button" class="secondary" id="edit-summary-button">Voltar</button>
-            <button type="submit" id="submit-button">Criar vagas</button>
-          </div>
-        </section>
+        </div>
       </form>
     </section>
   </main>

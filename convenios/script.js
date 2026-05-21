@@ -53,12 +53,16 @@ const creationDateState = {
   mode: '',
   month: currentMonth
 };
+const customDatePickerState = {
+  fieldId: '',
+  month: currentMonth,
+  convenio: null
+};
 const creationStepIds = [
   'date-selection-card',
   'service-name-card',
   'service-info-card',
-  'class-selection-card',
-  'summary-preview-card'
+  'class-selection-card'
 ];
 let selectedConvenioCache = null;
 
@@ -381,6 +385,88 @@ function showCreationStep(stepId) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
+ * Abre ou fecha o modal de resumo da criação de vagas sem alterar a etapa atual do assistente.
+ * Isso mantém o quarto card visível e transforma a revisão em uma confirmação isolada.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {boolean} visible - Indica se o modal deve ser exibido (`true`) ou ocultado (`false`).
+ * @param {boolean} restoreFocus - Indica se o foco deve voltar para o botão Avançar ao fechar.
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; altera apenas classes CSS e estado de acessibilidade no DOM.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: substituir o modal local por componente compartilhado quando o sistema tiver biblioteca de UI padronizada.
+ */
+function toggleCreationSummaryModal(visible, restoreFocus = true) {
+  const modal = document.getElementById('creation-summary-modal');
+  if (!modal) return;
+
+  modal.classList.toggle('is-hidden', !visible);
+  document.body.classList.toggle('modal-open', visible);
+  modal.setAttribute('aria-hidden', String(!visible));
+
+  if (visible) {
+    document.getElementById('submit-button')?.focus();
+  } else if (restoreFocus) {
+    document.getElementById('preview-button')?.focus();
+  }
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Fecha o modal de resumo quando qualquer campo que impacta a criação é alterado.
+ * Evita que o operador confirme uma prévia visual que já não corresponde ao formulário.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {boolean} restoreFocus - Indica se o foco deve voltar para o botão Avançar ao fechar.
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; apenas oculta o modal no DOM e mantém os valores atuais nos inputs.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: controlar versão de rascunho no backend para invalidar confirmações concorrentes em ambiente online.
+ */
+function hideCreationSummaryModal(restoreFocus = true) {
+  toggleCreationSummaryModal(false, restoreFocus);
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Liga eventos de fechamento do modal de resumo por clique no fundo e tecla Escape.
+ * Garante que a revisão em popup tenha comportamento previsível sem descartar o formulário.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; registra listeners no DOM e preserva os campos já preenchidos no formulário.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: centralizar atalhos e foco de modais em um gerenciador acessível quando houver componentes reutilizáveis.
+ */
+function bindCreationSummaryModalEvents() {
+  const modal = document.getElementById('creation-summary-modal');
+  if (!modal || modal.dataset.modalBound === 'true') return;
+
+  modal.dataset.modalBound = 'true';
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) {
+      hideCreationSummaryModal();
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !modal.classList.contains('is-hidden')) {
+      hideCreationSummaryModal();
+    }
+  });
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
  * Valida apenas a etapa atual antes de liberar o próximo card do assistente.
  *
  * PARÂMETROS E RETORNO:
@@ -451,12 +537,16 @@ function validateCreationStep(stepId, convenio) {
 function validatePeriodSelection(convenio) {
   const startInput = document.getElementById('data-inicio');
   const endInput = document.getElementById('data-fim');
+  const startDisplay = document.getElementById('data-inicio-display');
+  const endDisplay = document.getElementById('data-fim-display');
   const start = startInput?.value || '';
   const end = endInput?.value || '';
   const valid = Boolean(start && end && start <= end && isDateInsideContract(convenio, start) && isDateInsideContract(convenio, end));
 
   startInput?.classList.toggle('invalid', !valid);
   endInput?.classList.toggle('invalid', !valid);
+  startDisplay?.classList.toggle('invalid', !valid);
+  endDisplay?.classList.toggle('invalid', !valid);
   return valid;
 }
 
@@ -478,6 +568,62 @@ function formatDate(value) {
   if (!value) return '-';
   const [year, month, day] = value.split('-');
   return `${day}/${month}/${year}`;
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Converte uma data digitada ou exibida no padrão brasileiro para o formato ISO usado internamente.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} value - Data no formato DD/MM/YYYY.
+ * @returns {string} Data no formato YYYY-MM-DD ou string vazia quando inválida.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; apenas prepara o valor visual antes de atualizar inputs ocultos do formulário.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: substituir por parser de datas compartilhado quando houver camada frontend modular.
+ */
+function parseDisplayDate(value) {
+  const match = String(value || '').trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return '';
+
+  const [, day, month, year] = match;
+  const iso = `${year}-${month}-${day}`;
+  const parsed = parseLocalDate(iso);
+  const valid = parsed.getFullYear() === Number(year)
+    && parsed.getMonth() + 1 === Number(month)
+    && parsed.getDate() === Number(day);
+
+  return valid ? iso : '';
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Mantém os campos visuais de data sincronizados com os campos ocultos em ISO.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não acessa LocalStorage; lê inputs ocultos do DOM e grava somente nos inputs visuais da tela.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: centralizar essa sincronização em componente de formulário quando houver framework frontend.
+ */
+function syncDateDisplayFields() {
+  const pairs = [
+    ['data-inicio', 'data-inicio-display'],
+    ['data-fim', 'data-fim-display']
+  ];
+
+  pairs.forEach(([hiddenId, displayId]) => {
+    const hidden = document.getElementById(hiddenId);
+    const display = document.getElementById(displayId);
+    if (hidden && display) {
+      display.value = formatDate(hidden.value);
+    }
+  });
 }
 
 /**
@@ -1299,36 +1445,39 @@ function validateCreationWizard(convenio) {
  * Não grava dados; usa dados coletados do formulário para montar prévia visual no DOM.
  *
  * NOTAS DE EXPANSÃO:
- * TODO: incluir simulação de impacto financeiro por competência quando houver criação multi-mês em produção.
+ * TODO: incluir validação de disponibilidade por dia no backend antes de confirmar criação em lote.
  */
 function renderCreationSummary(convenio) {
   const target = document.getElementById('creation-summary');
-  const summaryCard = document.getElementById('summary-preview-card');
-  if (!target || !summaryCard) return;
+  const summaryModal = document.getElementById('creation-summary-modal');
+  if (!target || !summaryModal) return;
 
   const dates = getCreationDates(convenio);
   const serviceInfo = collectServiceInfo();
   const configs = getSelectedClassConfigs(convenio);
   const totalVagas = dates.length * configs.reduce((total, config) => total + config.quantidade, 0);
-  const totalValor = dates.length * configs.reduce((total, config) => total + config.quantidade * config.valorUnitario, 0);
-  const classText = configs
-    .map((config) => `${gruposClasse[config.classe]}: ${config.quantidade} vagas, ${turnosServico[config.turno].label}, ${config.horaInicio} às ${config.horaFim}`)
-    .join('\n');
+  const firstDate = dates[0] || document.getElementById('data-inicio')?.value || '';
+  const lastDate = dates[dates.length - 1] || document.getElementById('data-fim')?.value || firstDate;
+  const selectedConfig = configs[0] || {};
+  const quantityLabel = `${selectedConfig.quantidade || 0} ${(selectedConfig.quantidade || 0) === 1 ? 'vaga' : 'vagas'} por dia`;
 
   target.innerHTML = `
-    <div class="summary-grid">
-      <div class="summary-box"><span>Tipo de criação</span><strong>Período específico</strong></div>
-      <div class="summary-box"><span>Dias gerados</span><strong>${dates.length}</strong></div>
+    <div class="summary-grid creation-summary-grid">
+      <div class="summary-box"><span>Data de início</span><strong>${formatDate(firstDate)}</strong></div>
+      <div class="summary-box"><span>Data de término</span><strong>${formatDate(lastDate)}</strong></div>
       <div class="summary-box"><span>Total de vagas</span><strong>${totalVagas}</strong></div>
-      <div class="summary-box"><span>Valor ofertado</span><strong>${dinheiro.format(totalValor)}</strong></div>
       <div class="summary-box wide"><span>Serviço</span><strong>${escapeHtml(serviceInfo.nomeServico)}</strong></div>
       <div class="summary-box wide"><span>Apresentação</span><strong>${escapeHtml(`${serviceInfo.localServico}\n${serviceInfo.enderecoServico}`)}</strong></div>
       <div class="summary-box wide"><span>Ponto de referência</span><strong>${escapeHtml(serviceInfo.pontoReferencia || '-')}</strong></div>
-      <div class="summary-box wide"><span>Classe selecionada</span><strong>${escapeHtml(classText)}</strong></div>
+      <div class="summary-box summary-class-box"><span>Classe selecionada</span><strong>${escapeHtml(gruposClasse[selectedConfig.classe] || '-')}</strong></div>
+      <div class="summary-box summary-class-box"><span>Quantidade diária</span><strong>${escapeHtml(quantityLabel)}</strong></div>
+      <div class="summary-box summary-class-box"><span>Turno</span><strong>${escapeHtml(turnosServico[selectedConfig.turno]?.label || '-')}</strong></div>
+      <div class="summary-box summary-class-box"><span>Horário de início</span><strong>${escapeHtml(selectedConfig.horaInicio || '--:--')}</strong></div>
+      <div class="summary-box summary-class-box"><span>Horário de término</span><strong>${escapeHtml(selectedConfig.horaFim || '--:--')}</strong></div>
     </div>
   `;
 
-  showCreationStep('summary-preview-card');
+  toggleCreationSummaryModal(true);
 }
 
 /**
@@ -1352,10 +1501,28 @@ function getVagasDoMes(convenioId, month) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
+ * Filtra todas as vagas vinculadas a um convênio, sem limitar por competência mensal.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} convenioId - Identificador do convênio selecionado.
+ * @returns {Array<object>} Todas as vagas do convênio informado.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Lê a lista completa de vagas do LocalStorage e filtra em memória pelo convênio.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: substituir por endpoint paginado com filtros no backend quando o volume histórico crescer.
+ */
+function getTodasVagasDoConvenio(convenioId) {
+  return getVagas().filter((vaga) => vaga.convenioId === convenioId);
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
  * Lê os filtros preenchidos pelo operador na página de vagas criadas.
  *
  * PARÂMETROS E RETORNO:
- * @returns {object} Filtros atuais de nome do serviço, data, classe e tipo de serviço.
+ * @returns {object} Filtros atuais de busca, data, classe, tipo, oferta e policial escalado.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
  * Não acessa LocalStorage; lê apenas os campos de filtro no DOM antes de filtrar a lista em memória.
@@ -1368,17 +1535,19 @@ function getVagaFilters() {
     text: normalizeTextInput(document.getElementById('vaga-filter-text')?.value || '').toLowerCase(),
     date: document.getElementById('vaga-filter-date')?.value || '',
     classe: document.getElementById('vaga-filter-class')?.value || '',
-    tipo: document.getElementById('vaga-filter-type')?.value || ''
+    tipo: document.getElementById('vaga-filter-type')?.value || '',
+    oferta: document.getElementById('vaga-filter-offer')?.value || '',
+    policial: document.getElementById('vaga-filter-policial')?.value || ''
   };
 }
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
- * Aplica os filtros visuais sobre as vagas já carregadas do mês atual.
+ * Aplica os filtros visuais sobre as vagas já carregadas do convênio.
  *
  * PARÂMETROS E RETORNO:
- * @param {Array<object>} vagas - Vagas do convênio e competência já filtradas do LocalStorage.
- * @returns {Array<object>} Vagas compatíveis com nome do serviço, data, classe e tipo selecionados.
+ * @param {Array<object>} vagas - Vagas do convênio já filtradas do LocalStorage.
+ * @returns {Array<object>} Vagas compatíveis com busca, data, classe, tipo, oferta e policial selecionados.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
  * Não grava dados; filtra em memória registros obtidos de `cproeis_convenios_vagas`.
@@ -1390,12 +1559,28 @@ function applyVagaFilters(vagas) {
   const filters = getVagaFilters();
 
   return vagas.filter((vaga) => {
-    const serviceName = normalizeTextInput(vaga.nomeServico || '').toLowerCase();
+    const offerStatus = getVagaOfferStatus(vaga);
+    const policialText = formatPolicialEscalado(vaga);
+    const hasPolicial = policialText !== 'Sem policial';
+    const searchable = [
+      vaga.nomeServico,
+      formatDate(vaga.dataServico),
+      gruposClasse[vaga.classe] || vaga.classe,
+      tiposServico[vaga.tipoServico] || vaga.tipoServico,
+      vaga.horaInicio,
+      vaga.horaFim,
+      offerStatus.label,
+      offerStatus.note,
+      policialText
+    ].map((value) => normalizeTextInput(value || '').toLowerCase()).join(' ');
 
-    if (filters.text && !serviceName.includes(filters.text)) return false;
+    if (filters.text && !searchable.includes(filters.text)) return false;
     if (filters.date && vaga.dataServico !== filters.date) return false;
     if (filters.classe && vaga.classe !== filters.classe) return false;
     if (filters.tipo && vaga.tipoServico !== filters.tipo) return false;
+    if (filters.oferta && offerStatus.filterValue !== filters.oferta) return false;
+    if (filters.policial === 'com' && !hasPolicial) return false;
+    if (filters.policial === 'sem' && hasPolicial) return false;
     return true;
   });
 }
@@ -2474,6 +2659,161 @@ function renderMonthSelector(month, convenio = null) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
+ * Fecha o calendário customizado usado pelos campos de período específico.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; apenas oculta o componente visual no DOM.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: transformar este controle em componente reutilizável para outras telas com seleção de data.
+ */
+function closeCustomDatePicker() {
+  const picker = document.getElementById('custom-date-picker');
+  picker?.classList.add('is-hidden');
+  customDatePickerState.fieldId = '';
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Renderiza o calendário customizado de um mês para seleção de data inicial ou final.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava LocalStorage; lê estado temporário do datepicker, vigência do convênio e valores atuais do DOM.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: carregar feriados, bloqueios operacionais e indisponibilidades por API quando houver backend.
+ */
+function renderCustomDatePicker() {
+  const picker = document.getElementById('custom-date-picker');
+  const fieldId = customDatePickerState.fieldId;
+  const month = customDatePickerState.month || currentMonth;
+  const convenio = customDatePickerState.convenio;
+  if (!picker || !fieldId) return;
+
+  const [year, monthNumber] = month.split('-').map(Number);
+  const selectedDate = document.getElementById(fieldId)?.value || '';
+  const firstWeekDay = new Date(year, monthNumber - 1, 1).getDay();
+  const daysInMonth = new Date(year, monthNumber, 0).getDate();
+  const previousMonth = toDateInputValue(new Date(year, monthNumber - 2, 1)).slice(0, 7);
+  const nextMonth = toDateInputValue(new Date(year, monthNumber, 1)).slice(0, 7);
+  const dayCells = [];
+
+  for (let i = 0; i < firstWeekDay; i += 1) {
+    dayCells.push('<span class="custom-date-empty"></span>');
+  }
+
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const date = `${month}-${String(day).padStart(2, '0')}`;
+    const disabled = !isDateInsideContract(convenio, date);
+    const selected = selectedDate === date;
+    const todayClass = date === today ? ' is-today' : '';
+    const selectedClass = selected ? ' is-selected' : '';
+    const disabledClass = disabled ? ' is-disabled' : '';
+    const disabledAttribute = disabled ? ' disabled' : '';
+
+    dayCells.push(`
+      <button type="button" class="custom-date-day${todayClass}${selectedClass}${disabledClass}" data-picker-date="${date}"${disabledAttribute}>
+        ${day}
+      </button>
+    `);
+  }
+
+  picker.innerHTML = `
+    <div class="custom-date-header">
+      <button type="button" aria-label="Mês anterior" data-picker-month="${previousMonth}">‹</button>
+      <strong>${mesesAno[monthNumber - 1]} ${year}</strong>
+      <button type="button" aria-label="Próximo mês" data-picker-month="${nextMonth}">›</button>
+    </div>
+    <div class="custom-date-weekdays">
+      <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+    </div>
+    <div class="custom-date-grid">
+      ${dayCells.join('')}
+    </div>
+  `;
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Abre o calendário customizado abaixo dos campos de início/fim e posiciona o mês de referência.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} fieldId - ID do input oculto que será atualizado (`data-inicio` ou `data-fim`).
+ * @param {object|null} convenio - Convênio selecionado para bloquear datas fora da vigência.
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados persistentes; atualiza estado temporário do datepicker e exibe o componente no DOM.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: gerenciar foco e navegação por teclado completos para acessibilidade avançada.
+ */
+function openCustomDatePicker(fieldId, convenio) {
+  const picker = document.getElementById('custom-date-picker');
+  const dateModeFields = document.getElementById('date-mode-fields');
+  const trigger = document.getElementById(`${fieldId}-display`);
+  const value = document.getElementById(fieldId)?.value || document.getElementById('data-inicio')?.value || today;
+  if (!picker || !dateModeFields || !trigger) return;
+
+  customDatePickerState.fieldId = fieldId;
+  customDatePickerState.month = value.slice(0, 7);
+  customDatePickerState.convenio = convenio;
+  dateModeFields.appendChild(picker);
+  const pickerWidth = Math.min(430, dateModeFields.clientWidth);
+  const maxLeft = Math.max(0, dateModeFields.clientWidth - pickerWidth);
+  const left = Math.min(trigger.offsetLeft, maxLeft);
+  picker.style.setProperty('--picker-left', `${left}px`);
+  picker.style.setProperty('--picker-top', `${trigger.offsetTop + trigger.offsetHeight + 10}px`);
+  picker.classList.remove('is-hidden');
+  renderCustomDatePicker();
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Aplica a data escolhida no calendário customizado ao fluxo de criação por período específico.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} date - Data selecionada no formato YYYY-MM-DD.
+ * @param {object|null} convenio - Convênio selecionado para revalidar o período.
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava LocalStorage; atualiza inputs do DOM e dispara nova renderização da tela operacional.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: validar disponibilidade da data no backend antes de confirmar seleção em produção.
+ */
+function selectCustomDate(date, convenio) {
+  const fieldId = customDatePickerState.fieldId;
+  const startInput = document.getElementById('data-inicio');
+  const endInput = document.getElementById('data-fim');
+  if (!fieldId || !startInput || !endInput || !isDateInsideContract(convenio, date)) return;
+
+  document.getElementById('date-mode').value = 'period';
+  document.getElementById(fieldId).value = date;
+
+  if (fieldId === 'data-inicio' && (!endInput.value || endInput.value < date)) {
+    endInput.value = date;
+  }
+
+  if (fieldId === 'data-fim' && (!startInput.value || startInput.value > date)) {
+    startInput.value = date;
+  }
+
+  document.getElementById('calendar-month').value = startInput.value.slice(0, 7);
+  document.querySelectorAll('[data-date-mode-option]').forEach((item) => item.classList.toggle('active', item.dataset.dateModeOption === 'period'));
+  closeCustomDatePicker();
+  renderOperationalView(convenio);
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
  * Renderiza opções de semanas completas, de segunda a domingo, para a competência selecionada.
  *
  * PARÂMETROS E RETORNO:
@@ -2619,6 +2959,7 @@ function renderDateSelectionMode(convenio) {
 
   updateSelectedDatesCount(convenio);
   updateDateDescriptions();
+  syncDateDisplayFields();
   moveSelectedDatesBox(mode);
 }
 
@@ -2827,6 +3168,175 @@ function getCreationDates(convenio) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
+ * Calcula a quinta-feira em que a vaga deve ser disponibilizada aos policiais.
+ * A regra libera, toda quinta-feira, as vagas da próxima semana operacional de segunda a domingo.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} dataServico - Data do serviço no formato YYYY-MM-DD.
+ * @returns {Date|null} Data de liberação automática ou nulo quando a data é inválida.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não lê nem grava dados; calcula a regra em memória a partir da data da vaga.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: mover esta regra para o backend/GSI para evitar divergência de calendário e permitir exceções oficiais.
+ */
+function getAutomaticOfferDeadline(dataServico) {
+  if (!dataServico) return null;
+
+  const monday = parseLocalDate(getMonday(dataServico));
+  monday.setDate(monday.getDate() - 4);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Verifica se uma vaga já pode ser ofertada automaticamente aos policiais.
+ * A vaga precisa ter sido criada antes da quinta-feira de liberação e a data atual precisa estar dentro ou após essa janela.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object} vaga - Vaga persistida no LocalStorage com data de serviço e data de criação.
+ * @returns {boolean} Verdadeiro quando a vaga pode ser ofertada sem autorização especial do GSI.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Lê apenas propriedades do objeto em memória; não altera LocalStorage.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: considerar protocolo de autorização GSI e auditoria de liberação quando a regra estiver online.
+ */
+function isVagaAutomaticallyOffered(vaga) {
+  const releaseAt = getAutomaticOfferDeadline(vaga.dataServico);
+  const createdAt = vaga.createdAt ? new Date(vaga.createdAt) : new Date(0);
+  return Boolean(releaseAt && createdAt <= releaseAt && new Date() >= releaseAt);
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Formata o intervalo semanal de segunda a domingo de uma vaga para explicar a liberação ao operador.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} dataServico - Data do serviço no formato YYYY-MM-DD.
+ * @returns {string} Intervalo da semana operacional formatado para exibição.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; calcula o intervalo somente em memória.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: permitir semanas operacionais configuráveis por convênio quando houver parametrização no backend.
+ */
+function formatServiceWeekRange(dataServico) {
+  if (!dataServico) return '-';
+
+  const start = getMonday(dataServico);
+  const end = addDays(start, 6);
+  return `${formatDate(start)} a ${formatDate(end)}`;
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Monta os dados de status de oferta exibidos na tabela de vagas criadas.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object} vaga - Vaga persistida localmente.
+ * @returns {object} Estado visual da oferta, incluindo liberação, destaque e texto.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; lê a vaga em memória e deriva o status apresentado ao operador.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: substituir status local por retorno de workflow real do GSI com aprovação, reprovação e motivo.
+ */
+function getVagaOfferStatus(vaga) {
+  const releaseAt = getAutomaticOfferDeadline(vaga.dataServico);
+  const releaseDate = releaseAt ? toDateInputValue(releaseAt) : '';
+  const createdAt = vaga.createdAt ? new Date(vaga.createdAt) : new Date(0);
+  const now = new Date();
+  const createdAfterRelease = Boolean(releaseAt && createdAt > releaseAt);
+  const automatic = isVagaAutomaticallyOffered(vaga);
+  const approvedByGsi = vaga.permissaoGsiStatus === 'aprovada';
+  const requested = vaga.permissaoGsiStatus === 'solicitada';
+
+  if (approvedByGsi) {
+    return {
+      offered: true,
+      late: false,
+      requested: false,
+      needsPermission: false,
+      className: 'authorized',
+      filterValue: 'autorizada-gsi',
+      label: 'Autorizada GSI',
+      note: `Semana ${formatServiceWeekRange(vaga.dataServico)}`,
+      icon: 'V'
+    };
+  }
+
+  if (createdAfterRelease) {
+    return {
+      offered: false,
+      late: true,
+      requested,
+      needsPermission: true,
+      className: 'pending',
+      filterValue: requested ? 'aguardando-gsi' : 'fora-prazo',
+      label: requested ? 'Aguardando GSI' : 'Fora do prazo',
+      note: `Liberação era ${formatDate(releaseDate)}`,
+      icon: '△'
+    };
+  }
+
+  if (automatic) {
+    return {
+      offered: true,
+      late: false,
+      requested: false,
+      needsPermission: false,
+      className: 'offered',
+      filterValue: 'liberada',
+      label: 'Liberada',
+      note: `Semana ${formatServiceWeekRange(vaga.dataServico)}`,
+      icon: 'V'
+    };
+  }
+
+  const daysUntilRelease = releaseAt ? Math.ceil((releaseAt - now) / 86400000) : 0;
+  const scheduledSoon = daysUntilRelease <= 7;
+
+  return {
+    offered: false,
+    late: false,
+    requested: false,
+    needsPermission: false,
+    className: scheduledSoon ? 'scheduled' : 'queued',
+    filterValue: scheduledSoon ? 'programada' : 'aguardando-proxima',
+    label: scheduledSoon ? 'Programada' : 'Aguardando próxima liberação',
+    note: `Libera em ${formatDate(releaseDate)}`,
+    icon: scheduledSoon ? '○' : '□'
+  };
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Formata a situação de policiais escalados para a coluna operacional da tabela.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object} vaga - Vaga persistida localmente.
+ * @returns {string} Nome do policial, contador preenchido ou texto de ausência de escala.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; lê somente campos existentes da vaga em memória.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: vincular esta coluna a uma tabela real de escalas com identificação funcional do policial.
+ */
+function formatPolicialEscalado(vaga) {
+  if (vaga.policialEscalado) return vaga.policialEscalado;
+  if (Number(vaga.preenchidas || 0) > 0) return `${vaga.preenchidas}/${vaga.quantidade || 1} escalado(s)`;
+  return 'Sem policial';
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
  * Coleta os dados do formulário de vaga e calcula o valor unitário no momento da criação.
  *
  * PARÂMETROS E RETORNO:
@@ -2918,6 +3428,7 @@ function resetVagaForm() {
   document.getElementById('data-fim').value = today;
   document.getElementById('date-mode').value = 'period';
   showCreationStep('date-selection-card');
+  hideCreationSummaryModal(false);
   document.getElementById('submit-button').textContent = 'Criar vagas';
   document.querySelectorAll('[data-date-mode-option]').forEach((button) => {
     button.classList.toggle('active', button.dataset.dateModeOption === 'period');
@@ -2982,42 +3493,66 @@ function fillVagaForm(vaga) {
  *
  * PARÂMETROS E RETORNO:
  * @param {object|null} convenio - Convênio selecionado.
- * @param {string} month - Competência no formato YYYY-MM.
  * @returns {void}
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
- * Lê as vagas persistidas no LocalStorage e exibe somente as do convênio e mês informados.
+ * Lê as vagas persistidas no LocalStorage e exibe todas as vagas do convênio informado.
  *
  * NOTAS DE EXPANSÃO:
  * TODO: implementar paginação e filtros por local, classe e situação da escala quando o volume crescer.
  */
-function renderVagasTable(convenio, month) {
+function renderVagasTable(convenio) {
   const body = document.getElementById('vagas-body');
   if (!body || !convenio) return;
 
-  const vagas = applyVagaFilters(getVagasDoMes(convenio.id, month))
+  const monthLabel = document.getElementById('month-label');
+  if (monthLabel) {
+    monthLabel.textContent = 'Exibindo todas as vagas do convênio.';
+  }
+
+  const vagas = applyVagaFilters(getTodasVagasDoConvenio(convenio.id))
     .sort((a, b) => (a.dataServico || '').localeCompare(b.dataServico || ''));
 
   if (!vagas.length) {
-    body.innerHTML = '<tr><td class="empty" colspan="6">Nenhuma vaga encontrada para os filtros selecionados.</td></tr>';
+    body.innerHTML = '<tr><td class="empty" colspan="9">Nenhuma vaga encontrada para os filtros selecionados.</td></tr>';
     return;
   }
 
-  body.innerHTML = vagas.map((vaga) => `
-      <tr>
+  body.innerHTML = vagas.map((vaga) => {
+    const offerStatus = getVagaOfferStatus(vaga);
+    const rowClass = offerStatus.late ? ' class="permission-pending-row"' : '';
+    const permissionButton = offerStatus.needsPermission
+      ? `<button type="button" class="warning-action" data-action="request-gsi-permission" data-id="${vaga.id}"${offerStatus.requested ? ' disabled' : ''}>${offerStatus.requested ? 'Permissão solicitada' : 'Selecionar permissão'}</button>`
+      : '';
+
+    return `
+      <tr${rowClass}>
         <td>${formatDate(vaga.dataServico)}</td>
         <td>${escapeHtml(vaga.nomeServico || '-')}</td>
         <td>${escapeHtml(gruposClasse[vaga.classe] || vaga.classe)}</td>
         <td>${escapeHtml(tiposServico[vaga.tipoServico] || vaga.tipoServico)}</td>
-        <td>${escapeHtml(vaga.horaInicio || '-')}${vaga.horaFim ? ` às ${escapeHtml(vaga.horaFim)}` : ''}</td>
+        <td>${escapeHtml(vaga.horaInicio || '-')}</td>
+        <td>${escapeHtml(vaga.horaFim || '-')}</td>
+        <td>
+          <span class="offer-status ${offerStatus.className}">
+            <span aria-hidden="true">${offerStatus.icon}</span>
+            <span class="offer-status-text">
+              <strong>${escapeHtml(offerStatus.label)}</strong>
+              <small>${escapeHtml(offerStatus.note)}</small>
+            </span>
+          </span>
+        </td>
+        <td>${escapeHtml(formatPolicialEscalado(vaga))}</td>
         <td>
           <div class="actions">
+            ${permissionButton}
             <button type="button" data-action="edit-vaga" data-id="${vaga.id}">Editar</button>
             <button type="button" class="danger" data-action="delete-vaga" data-id="${vaga.id}">Excluir</button>
           </div>
         </td>
       </tr>
-    `).join('');
+    `;
+  }).join('');
 }
 
 /**
@@ -3042,7 +3577,7 @@ function renderOperationalView(convenio) {
   renderOperationalHeader(convenio);
   renderFinancialCards(convenio, monthSource);
   renderDashboard(convenio, monthSource);
-  renderVagasTable(convenio, monthSource);
+  renderVagasTable(convenio);
   renderDateSelectionMode(convenio);
   updateValorPreview(convenio);
 }
@@ -3071,7 +3606,7 @@ function bindServiceFieldValidation() {
     input.addEventListener('input', () => {
       normalizeServiceFieldOnInput(input);
       validateServiceField(id, false, false);
-      document.getElementById('summary-preview-card')?.classList.add('is-hidden');
+      hideCreationSummaryModal(false);
     });
     input.addEventListener('blur', () => {
       validateServiceField(id, Boolean(input.value));
@@ -3085,8 +3620,61 @@ function bindServiceFieldValidation() {
     input.dataset.normalizationBound = 'true';
     input.addEventListener('blur', () => {
       normalizeServiceField(input);
-      document.getElementById('summary-preview-card')?.classList.add('is-hidden');
+      hideCreationSummaryModal(false);
     });
+  });
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Conecta os campos visuais de data ao calendário customizado da criação de vagas.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object|null} convenio - Convênio selecionado para limitar datas disponíveis.
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava LocalStorage; registra listeners no DOM e atualiza inputs ocultos de data durante a interação.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: extrair este datepicker para módulo compartilhado com testes unitários quando houver build frontend.
+ */
+function bindCustomDatePickerEvents(convenio) {
+  const picker = document.getElementById('custom-date-picker');
+  if (!picker || picker.dataset.pickerBound === 'true') return;
+
+  picker.dataset.pickerBound = 'true';
+
+  document.getElementById('data-inicio-display')?.addEventListener('click', () => openCustomDatePicker('data-inicio', convenio));
+  document.getElementById('data-fim-display')?.addEventListener('click', () => openCustomDatePicker('data-fim', convenio));
+
+  picker.addEventListener('click', (event) => {
+    event.stopPropagation();
+
+    const monthButton = event.target.closest('[data-picker-month]');
+    const dateButton = event.target.closest('[data-picker-date]');
+
+    if (monthButton) {
+      customDatePickerState.month = monthButton.dataset.pickerMonth;
+      renderCustomDatePicker();
+      return;
+    }
+
+    if (dateButton) {
+      selectCustomDate(dateButton.dataset.pickerDate, convenio);
+    }
+  });
+
+  document.addEventListener('click', (event) => {
+    if (picker.classList.contains('is-hidden')) return;
+    if (event.target.closest('#custom-date-picker') || event.target.closest('.date-display-input')) return;
+    closeCustomDatePicker();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeCustomDatePicker();
+    }
   });
 }
 
@@ -3105,13 +3693,10 @@ function bindServiceFieldValidation() {
  * TODO: adicionar debounce e filtros persistidos por usuário quando houver autenticação.
  */
 function bindVagaFilterEvents(convenio) {
-  const filterIds = ['vaga-filter-text', 'vaga-filter-date', 'vaga-filter-class', 'vaga-filter-type'];
+  const filterIds = ['vaga-filter-text', 'vaga-filter-date', 'vaga-filter-class', 'vaga-filter-type', 'vaga-filter-offer', 'vaga-filter-policial'];
   if (!document.getElementById('vagas-body')) return;
 
-  const rerender = () => {
-    const monthSource = document.getElementById('data-inicio')?.value?.slice(0, 7) || document.getElementById('calendar-month')?.value || currentMonth;
-    renderVagasTable(convenio, monthSource);
-  };
+  const rerender = () => renderVagasTable(convenio);
 
   filterIds.forEach((id) => {
     const input = document.getElementById(id);
@@ -3157,6 +3742,8 @@ function bindOperationalEvents(convenio) {
 
   if (form) {
     bindServiceFieldValidation();
+    bindCreationSummaryModalEvents();
+    bindCustomDatePickerEvents(convenio);
 
     form.addEventListener('submit', (event) => {
       event.preventDefault();
@@ -3171,23 +3758,19 @@ function bindOperationalEvents(convenio) {
         : [...vagas, ...payloads];
 
       saveList(STORAGE_VAGAS, next);
+      hideCreationSummaryModal(false);
       resetVagaForm();
       renderOperationalView(convenio);
     });
 
-    document.getElementById('preview-button').addEventListener('click', () => {
+    document.getElementById('preview-button')?.addEventListener('click', () => {
       if (validateCreationStep('class-selection-card', convenio) && validateCreationWizard(convenio)) {
         renderCreationSummary(convenio);
       }
     });
 
-    document.getElementById('edit-summary-button').addEventListener('click', () => {
-      showCreationStep('class-selection-card');
-    });
-
-    document.getElementById('clear-button').addEventListener('click', () => {
-      resetVagaForm();
-      renderOperationalView(convenio);
+    document.getElementById('edit-summary-button')?.addEventListener('click', () => {
+      hideCreationSummaryModal();
     });
 
     document.querySelectorAll('[data-step-next]').forEach((button) => {
@@ -3318,7 +3901,7 @@ function bindOperationalEvents(convenio) {
 
       if (!enabled && !turno && !start && !quantity && !course) return;
       syncClassConfig(convenio);
-      document.getElementById('summary-preview-card')?.classList.add('is-hidden');
+      hideCreationSummaryModal(false);
     });
   }
 
@@ -3340,6 +3923,19 @@ function bindOperationalEvents(convenio) {
 
     if (button.dataset.action === 'delete-vaga' && confirm('Excluir esta vaga?')) {
       saveList(STORAGE_VAGAS, getVagas().filter((item) => item.id !== vaga.id));
+      renderOperationalView(convenio);
+    }
+
+    if (button.dataset.action === 'request-gsi-permission') {
+      const updated = getVagas().map((item) => item.id === vaga.id
+        ? {
+            ...item,
+            permissaoGsiStatus: 'solicitada',
+            permissaoGsiSolicitadaAt: new Date().toISOString()
+          }
+        : item);
+
+      saveList(STORAGE_VAGAS, updated);
       renderOperationalView(convenio);
     }
   });

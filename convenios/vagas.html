@@ -11,7 +11,7 @@
     <a class="back-link" id="back-menu-link" href="operacao.html">Voltar ao menu</a>
     <div class="header-copy">
       <h1 id="page-title">Vagas criadas</h1>
-      <p id="page-subtitle">Tabela mensal de vagas geradas para o convênio vigente.</p>
+      <p id="page-subtitle">Tabela geral de vagas geradas para o convênio vigente.</p>
     </div>
   </header>
 
@@ -19,15 +19,15 @@
     <section class="panel">
       <div class="panel-header">
         <div>
-          <h2>Vagas criadas no mês</h2>
-          <p class="hint" id="month-label">Nenhuma competência selecionada.</p>
+          <h2>Todas as vagas criadas</h2>
+          <p class="hint" id="month-label">Exibindo todas as vagas do convênio.</p>
         </div>
       </div>
 
-      <div class="filter-bar" aria-label="Filtros de vagas criadas">
+      <div class="filter-bar vagas-filter-bar" aria-label="Filtros de vagas criadas">
         <label>
           Pesquisar
-          <input id="vaga-filter-text" type="search" placeholder="Nome do serviço">
+          <input id="vaga-filter-text" type="search" placeholder="Serviço, classe, status ou policial">
         </label>
 
         <label>
@@ -55,8 +55,74 @@
           </select>
         </label>
 
+        <label>
+          Serviço ofertado
+          <select id="vaga-filter-offer">
+            <option value="">Todos</option>
+            <option value="liberada">Liberada</option>
+            <option value="programada">Programada</option>
+            <option value="aguardando-proxima">Aguardando próxima liberação</option>
+            <option value="fora-prazo">Fora do prazo</option>
+            <option value="aguardando-gsi">Aguardando GSI</option>
+            <option value="autorizada-gsi">Autorizada GSI</option>
+          </select>
+        </label>
+
+        <label>
+          Policial escalado
+          <select id="vaga-filter-policial">
+            <option value="">Todos</option>
+            <option value="com">Com policial</option>
+            <option value="sem">Sem policial</option>
+          </select>
+        </label>
+
         <div class="form-actions filter-actions">
           <button type="button" class="secondary" id="clear-vaga-filters">Limpar filtros</button>
+        </div>
+      </div>
+
+      <div class="status-legend" aria-label="Legenda de estágios de disponibilização das vagas">
+        <div class="status-legend-copy">
+          <strong>Estágios de disponibilização das vagas</strong>
+          <span>Esses são os status usados para indicar quando uma vaga está programada, liberada ou aguardando autorização para ficar disponível ao policial.</span>
+        </div>
+        <div class="status-legend-items">
+          <span class="offer-status scheduled">
+            <span aria-hidden="true">○</span>
+            <span class="offer-status-text">
+              <strong>Programada</strong>
+              <small>Libera na quinta-feira</small>
+            </span>
+          </span>
+          <span class="offer-status queued">
+            <span aria-hidden="true">□</span>
+            <span class="offer-status-text">
+              <strong>Aguardando próxima liberação</strong>
+              <small>Semana futura</small>
+            </span>
+          </span>
+          <span class="offer-status offered">
+            <span aria-hidden="true">V</span>
+            <span class="offer-status-text">
+              <strong>Liberada</strong>
+              <small>Disponível ao policial</small>
+            </span>
+          </span>
+          <span class="offer-status pending">
+            <span aria-hidden="true">△</span>
+            <span class="offer-status-text">
+              <strong>Aguardando GSI</strong>
+              <small>Precisa de permissão</small>
+            </span>
+          </span>
+          <span class="offer-status authorized">
+            <span aria-hidden="true">V</span>
+            <span class="offer-status-text">
+              <strong>Autorizada GSI</strong>
+              <small>Liberada por exceção</small>
+            </span>
+          </span>
         </div>
       </div>
 
@@ -68,7 +134,10 @@
               <th>Nome do serviço</th>
               <th>Classe</th>
               <th>Tipo</th>
-              <th>Horário</th>
+              <th>Início</th>
+              <th>Término</th>
+              <th>Serviço ofertado</th>
+              <th>Policial escalado</th>
               <th>Ações</th>
             </tr>
           </thead>
