@@ -290,6 +290,27 @@ textarea.invalid {
   visibility: hidden;
 }
 
+.field-hint[data-status="success"] {
+  /*
+   * DESCRIÇÃO DO BLOCO: Indica sucesso no preenchimento automático de endereço pelo CEP sem mudar
+   * a estrutura dos campos da criação de vagas.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica cor conforme estado definido no DOM.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; o JavaScript controla o atributo data-status.
+   * TODO: Em produção, padronizar mensagens de integração externa no design system.
+   */
+  color: #15803d;
+}
+
+.field-hint[data-status="error"] {
+  /*
+   * DESCRIÇÃO DO BLOCO: Exibe falha de consulta de CEP mantendo o preenchimento manual disponível.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica cor conforme estado definido no DOM.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa armazenamento; apenas reflete o resultado da consulta.
+   * TODO: Em produção, registrar indisponibilidade da API e orientar nova tentativa.
+   */
+  color: #b42318;
+}
+
 input[readonly] {
   background: #eef2ff;
   color: #1f2a8a;

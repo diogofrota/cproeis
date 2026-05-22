@@ -312,6 +312,130 @@ const serviceFieldMessages = {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
+ * Atualiza a mensagem auxiliar do CEP para indicar consulta, sucesso ou falha da API sem bloquear o formulário.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} message - Texto que será exibido abaixo do campo CEP.
+ * @param {string} status - Estado visual da consulta: loading, success ou error.
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não lê nem grava LocalStorage; altera somente o texto e atributo visual do hint no DOM.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: centralizar feedback de integrações externas em componente compartilhado quando houver frontend modular.
+ */
+function setCepLookupStatus(message = '', status = '') {
+  const hint = document.querySelector('[data-field-hint="servico-cep"]');
+  if (!hint) return;
+
+  hint.textContent = message || serviceFieldMessages['servico-cep'];
+  hint.dataset.status = status;
+  hint.classList.toggle('hidden', !message);
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Consulta o ViaCEP para obter endereço a partir do CEP informado na criação de vagas.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} cep - CEP com ou sem máscara.
+ * @returns {Promise<object|null>} Endereço normalizado ou null quando o CEP não for encontrado.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; realiza requisição GET para `https://viacep.com.br/ws/{cep}/json/`.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: mover a consulta para backend com cache e tratamento de indisponibilidade da API pública.
+ */
+async function fetchCepAddress(cep) {
+  const digits = onlyDigits(cep);
+  if (digits.length !== 8) return null;
+
+  const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+  if (!response.ok) throw new Error('Falha ao consultar CEP.');
+  const data = await response.json();
+  if (data.erro) return null;
+
+  return {
+    cep: data.cep || digits,
+    logradouro: data.logradouro || '',
+    complemento: data.complemento || '',
+    bairro: data.bairro || '',
+    cidade: data.localidade || '',
+    uf: data.uf || ''
+  };
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Preenche os campos de endereço da criação de vagas com o retorno do ViaCEP.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object} address - Objeto com CEP, logradouro, complemento, bairro, cidade e UF.
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Escreve somente nos inputs do DOM; a persistência continua acontecendo apenas ao criar as vagas.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: registrar a origem do endereço e permitir validação geográfica quando o sistema operar online.
+ */
+function applyCepAddress(address) {
+  const mapping = {
+    'servico-cep': address.cep ? formatCepInput(address.cep) : '',
+    'servico-logradouro': address.logradouro || '',
+    'servico-complemento': address.complemento || '',
+    'servico-bairro': address.bairro || '',
+    'servico-cidade': address.cidade || '',
+    'servico-uf': address.uf || ''
+  };
+
+  Object.entries(mapping).forEach(([id, value]) => {
+    const input = document.getElementById(id);
+    if (!input || !value) return;
+    input.value = value;
+    normalizeServiceField(input);
+    validateServiceField(id, false);
+  });
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Orquestra a consulta de CEP quando o usuário sai do campo, preenchendo automaticamente o endereço.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {Promise<void>}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Lê o valor do campo `servico-cep`, consulta a API e atualiza os inputs de endereço; não grava LocalStorage.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: adicionar cancelamento/debounce para múltiplas consultas e tratamento centralizado de logs.
+ */
+async function autofillServiceAddressByCep() {
+  const cepInput = document.getElementById('servico-cep');
+  const cep = onlyDigits(cepInput?.value || '');
+  if (cep.length !== 8) return;
+
+  setCepLookupStatus('Consultando endereço pelo CEP...', 'loading');
+  try {
+    const address = await fetchCepAddress(cep);
+    if (!address) {
+      setCepLookupStatus('CEP não encontrado. Preencha o endereço manualmente.', 'error');
+      return;
+    }
+
+    applyCepAddress(address);
+    setCepLookupStatus('Endereço preenchido automaticamente pelo CEP.', 'success');
+    hideCreationSummaryModal(false);
+  } catch (error) {
+    setCepLookupStatus('Não foi possível consultar o CEP. Preencha manualmente.', 'error');
+  }
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
  * Cria espaços fixos de mensagem abaixo dos campos de criação de vagas, evitando desalinhamento do formulário.
  *
  * PARÂMETROS E RETORNO:
@@ -580,7 +704,7 @@ function validatePeriodSelection(convenio) {
   const endDisplay = document.getElementById('data-fim-display');
   const start = startInput?.value || '';
   const end = endInput?.value || '';
-  const valid = Boolean(start && end && start <= end && isDateInsideContract(convenio, start) && isDateInsideContract(convenio, end));
+  const valid = Boolean(start && end && start >= today && start <= end && isDateInsideContract(convenio, start) && isDateInsideContract(convenio, end));
 
   startInput?.classList.toggle('invalid', !valid);
   endInput?.classList.toggle('invalid', !valid);
@@ -884,16 +1008,18 @@ function getMonday(value) {
  * PARÂMETROS E RETORNO:
  * @param {object|null} convenio - Convênio selecionado com início e fim de vigência.
  * @param {string} dateValue - Data no formato YYYY-MM-DD.
- * @returns {boolean} Verdadeiro quando a data está dentro da vigência ou quando não há convênio carregado.
+ * @returns {boolean} Verdadeiro quando a data é hoje ou futura e está dentro da vigência.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
- * Não acessa armazenamento; valida datas com base no objeto de contrato já carregado do LocalStorage.
+ * Não acessa armazenamento; valida datas com base na data atual e no contrato carregado do LocalStorage.
  *
  * NOTAS DE EXPANSÃO:
  * TODO: centralizar essa validação no backend para impedir criação fora de vigência via requisição direta.
  */
 function isDateInsideContract(convenio, dateValue) {
-  if (!convenio || !dateValue) return true;
+  if (!dateValue) return true;
+  if (dateValue < today) return false;
+  if (!convenio) return true;
   if (convenio.inicio && dateValue < convenio.inicio) return false;
   if (convenio.fim && dateValue > convenio.fim) return false;
   return true;
@@ -901,26 +1027,28 @@ function isDateInsideContract(convenio, dateValue) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
- * Verifica se uma competência mensal possui pelo menos um dia dentro da vigência do contrato.
+ * Verifica se uma competência mensal possui pelo menos um dia futuro dentro da vigência do contrato.
  *
  * PARÂMETROS E RETORNO:
  * @param {object|null} convenio - Convênio selecionado.
  * @param {string} month - Competência no formato YYYY-MM.
- * @returns {boolean} Verdadeiro quando algum dia do mês cruza a vigência contratual.
+ * @returns {boolean} Verdadeiro quando algum dia do mês está disponível para criação.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
- * Não grava dados; usa datas do contrato carregadas do LocalStorage.
+ * Não grava dados; usa a data atual e as datas do contrato carregadas do LocalStorage.
  *
  * NOTAS DE EXPANSÃO:
  * TODO: usar consulta de calendário operacional do backend quando houver aditivos e bloqueios por competência.
  */
 function isMonthInsideContract(convenio, month) {
-  if (!convenio || !month) return true;
+  if (!month) return true;
 
   const [year, monthNumber] = month.split('-').map(Number);
   const monthStart = `${month}-01`;
   const monthEnd = toDateInputValue(new Date(year, monthNumber, 0));
 
+  if (monthEnd < today) return false;
+  if (!convenio) return true;
   if (convenio.fim && monthStart > convenio.fim) return false;
   if (convenio.inicio && monthEnd < convenio.inicio) return false;
   return true;
@@ -991,12 +1119,12 @@ function getDisplayMonthsList(convenio, fallbackMonth = currentMonth) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
- * Ajusta uma data para ficar dentro da vigência do contrato.
+ * Ajusta uma data para não ficar antes de hoje e para respeitar a vigência do contrato.
  *
  * PARÂMETROS E RETORNO:
  * @param {object|null} convenio - Convênio selecionado.
  * @param {string} dateValue - Data no formato YYYY-MM-DD.
- * @returns {string} Data limitada ao intervalo de vigência.
+ * @returns {string} Data limitada ao dia atual e ao intervalo de vigência.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
  * Não grava dados; corrige campos visuais antes da criação das vagas.
@@ -1005,7 +1133,9 @@ function getDisplayMonthsList(convenio, fallbackMonth = currentMonth) {
  * TODO: exibir mensagem de validação mais detalhada quando a API rejeitar datas fora de vigência.
  */
 function clampDateToContract(convenio, dateValue) {
-  if (!convenio || !dateValue) return dateValue;
+  if (!dateValue) return dateValue;
+  if (dateValue < today) return today;
+  if (!convenio) return dateValue;
   if (convenio.inicio && dateValue < convenio.inicio) return convenio.inicio;
   if (convenio.fim && dateValue > convenio.fim) return convenio.fim;
   return dateValue;
@@ -3124,11 +3254,14 @@ function syncDateModeFields(convenio) {
   }
 
   if (mode === 'contract' && convenio) {
-    startInput.value = convenio.inicio || today;
+    startInput.value = clampDateToContract(convenio, convenio.inicio || today);
     endInput.value = convenio.fim || startInput.value;
   }
 
   endInput.value = clampDateToContract(convenio, endInput.value || startInput.value);
+  if (endInput.value < startInput.value) {
+    endInput.value = startInput.value;
+  }
 }
 
 /**
@@ -3159,7 +3292,7 @@ function initializeOperationalDefaults(convenio) {
     button.classList.toggle('active', button.dataset.dateModeOption === 'period');
   });
   selectedCalendarDates.clear();
-  selectedCalendarDates.add(start);
+  selectedCalendarDates.add(validStart);
   applyTurnoToFields();
   ensureServiceFieldHints();
 }
@@ -3650,6 +3783,9 @@ function bindServiceFieldValidation() {
     });
     input.addEventListener('blur', () => {
       validateServiceField(id, Boolean(input.value));
+      if (id === 'servico-cep') {
+        autofillServiceAddressByCep();
+      }
     });
   });
 
@@ -3913,10 +4049,10 @@ function bindOperationalEvents(convenio) {
       const button = event.target.closest('[data-week-start]');
       if (!button) return;
 
-      document.getElementById('data-inicio').value = button.dataset.weekStart;
-      document.getElementById('data-fim').value = button.dataset.weekEnd;
+      document.getElementById('data-inicio').value = clampDateToContract(convenio, button.dataset.weekStart);
+      document.getElementById('data-fim').value = clampDateToContract(convenio, button.dataset.weekEnd);
       selectedCalendarDates.clear();
-      getDatesBetween(button.dataset.weekStart, button.dataset.weekEnd)
+      getDatesBetween(document.getElementById('data-inicio').value, document.getElementById('data-fim').value)
         .filter((date) => isDateInsideContract(convenio, date))
         .forEach((date) => selectedCalendarDates.add(date));
       renderOperationalView(convenio);
