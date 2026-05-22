@@ -43,11 +43,26 @@
           <label>
             CNPJ
             <input id="cnpj" type="text" inputmode="numeric" placeholder="00.000.000/0000-00" required>
+            <small class="field-hint hidden" id="cnpj-api-status">Consultando dados da pessoa jurídica.</small>
+          </label>
+
+          <label>
+            Tipo de conveniado
+            <select id="tipo-conveniado">
+              <option value="">Selecione</option>
+              <option value="Município">Município</option>
+              <option value="Concessionária">Concessionária</option>
+              <option value="Órgão Público">Órgão Público</option>
+              <option value="Outros">Outros</option>
+              <!-- TODO: Inserir novas categorias de conveniado aqui quando o sistema exigir outros enquadramentos. -->
+            </select>
+            <small class="field-hint hidden" id="tipo-conveniado-spacer">Campo opcional.</small>
           </label>
 
           <label>
             CEP
             <input id="endereco-cep" type="text" inputmode="numeric" placeholder="00000-000">
+            <small class="field-hint hidden" id="cep-api-status">Consultando endereço pelo CEP.</small>
           </label>
 
           <label class="wide">
@@ -318,6 +333,7 @@
               <tr>
                 <th>Convênio</th>
                 <th>CNPJ</th>
+                <th>Tipo</th>
                 <th>Contrato</th>
                 <th>Valor</th>
                 <th>Vigência</th>

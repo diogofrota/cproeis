@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Menu do Policial</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a class="back-link" href="index.html">Voltar para policiais</a>
+    <div class="header-copy">
+      <h1 id="page-title">Menu do policial</h1>
+      <p id="page-subtitle">Selecione uma opção disponível.</p>
+    </div>
+  </header>
+
+  <main>
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu operacional individual do policial, preparado para as páginas futuras
+      de vagas, histórico de serviço, pagamentos e cursos.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; disponibiliza links de navegação.
+      ARMAZENAMENTO E PERSISTÊNCIA: O script ajusta os links usando o ID do policial recebido pela URL.
+      TODO: Em produção, carregar permissões e dados do policial por sessão autenticada em vez de query string.
+    -->
+    <nav class="module-menu" aria-label="Menu do policial">
+      <a id="menu-vagas" href="vagas.html">Ver vagas</a>
+      <a href="#historico-servico">Histórico de serviço</a>
+      <a href="#pagamentos">Pagamentos</a>
+      <a href="#cursos">Cursos</a>
+    </nav>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

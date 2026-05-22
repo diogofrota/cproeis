@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Vagas fora do prazo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a class="back-link" href="index.html">Voltar para GSI</a>
+    <div class="header-copy">
+      <h1>Vagas fora do prazo</h1>
+      <p>Solicitações encaminhadas pelos convênios para avaliação do GSI.</p>
+    </div>
+  </header>
+
+  <main>
+    <!--
+      DESCRIÇÃO DO BLOCO: Painel de análise do GSI para vagas criadas fora do prazo regulamentar.
+      A tabela exibe somente vagas que já receberam solicitação formal de permissão no módulo de convênios.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; disponibiliza filtros e tabela para o script.
+      ARMAZENAMENTO E PERSISTÊNCIA: Os dados são lidos pelo arquivo `vagas-fora-prazo.js` no LocalStorage.
+      TODO: Em produção, trocar esta consulta local por fila de workflow do GSI com protocolo, decisão e auditoria.
+    -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Solicitações aguardando avaliação</h2>
+          <p class="hint">Aparecem aqui apenas as vagas em que o convênio clicou em solicitar permissão ao GSI.</p>
+        </div>
+      </div>
+
+      <div class="filter-bar" aria-label="Filtros de vagas fora do prazo">
+        <label>
+          Pesquisar
+          <input id="filter-text" type="search" placeholder="Convênio, serviço, local ou classe">
+        </label>
+
+        <label>
+          Convênio
+          <select id="filter-convenio">
+            <option value="">Todos</option>
+          </select>
+        </label>
+
+        <label>
+          Classe
+          <select id="filter-classe">
+            <option value="">Todas</option>
+            <option value="A">Classe A</option>
+            <option value="B">Classe B</option>
+            <option value="C">Classe C</option>
+            <option value="D">Classe D</option>
+            <option value="C/D">Classe C/D</option>
+          </select>
+        </label>
+
+        <label>
+          Data do serviço
+          <input id="filter-date" type="date">
+        </label>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Convênio</th>
+              <th>Serviço</th>
+              <th>Classe</th>
+              <th>Tipo</th>
+              <th>Horário</th>
+              <th>Quantidade</th>
+              <th>Local</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="gsi-vagas-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="vagas-fora-prazo.js"></script>
+</body>
+</html>

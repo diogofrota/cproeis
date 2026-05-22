@@ -168,6 +168,45 @@ function onlyDigits(value) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
+ * Reduz o nome do responsável ao primeiro nome para exibição na página de acesso do convênio.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} nome - Nome completo salvo no cadastro de contratos.
+ * @returns {string} Primeiro nome normalizado ou hífen quando não houver nome.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; apenas trata texto lido do LocalStorage antes de renderizar no DOM.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: aplicar regras de privacidade por perfil quando houver autenticação real de usuários.
+ */
+function getResponsavelDisplayName(nome) {
+  const firstName = normalizeTextInput(nome).split(' ').filter(Boolean)[0] || '';
+  return firstName || '-';
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Mascara CPF na tela preservando apenas os três primeiros dígitos para reduzir exposição de dado pessoal.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} value - CPF completo ou parcial salvo no cadastro.
+ * @returns {string} CPF mascarado no padrão 000.***.***-** ou hífen.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não altera LocalStorage; o CPF completo continua disponível para identificação interna e login.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: centralizar mascaramento de documentos em módulo compartilhado e auditar acessos ao valor completo.
+ */
+function maskCpfForDisplay(value) {
+  const digits = onlyDigits(value);
+  if (digits.length < 3) return digits ? `${digits}***` : '-';
+  return `${digits.slice(0, 3)}.***.***-**`;
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
  * Padroniza espaços em campos textuais do formulário de criação de vagas.
  *
  * PARÂMETROS E RETORNO:
@@ -1874,9 +1913,9 @@ function renderConveniosList() {
 
   body.innerHTML = acessos.map(({ convenio, responsavel }) => `
     <tr>
-      <td><strong>${escapeHtml(responsavel.nome || '-')}</strong></td>
+      <td><strong>${escapeHtml(getResponsavelDisplayName(responsavel.nome))}</strong></td>
       <td>${escapeHtml(convenio.nome || '-')}</td>
-      <td>${escapeHtml(responsavel.cpf || '-')}</td>
+      <td>${escapeHtml(maskCpfForDisplay(responsavel.cpf))}</td>
       <td>${escapeHtml(responsavel.email || '-')}</td>
       <td>${escapeHtml(responsavel.telefone || '-')}</td>
       <td>${formatResponsavelFuncoes(responsavel)}</td>
@@ -1975,6 +2014,7 @@ function updateConvenioLinks(convenio) {
     'menu-criar-vagas': `criar-vagas.html?${idParam}`,
     'menu-acompanhamento': `acompanhamento.html?${idParam}`,
     'menu-vagas': `vagas.html?${idParam}`,
+    'menu-cursos': `cursos.html?${idParam}`,
     'back-menu-link': `operacao.html?${idParam}`
   };
 

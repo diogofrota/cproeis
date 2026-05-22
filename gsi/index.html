@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - GSI</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a class="back-link" href="../administracao.html">Voltar para Administração</a>
+    <div class="header-copy">
+      <h1>GSI</h1>
+      <p>Selecione uma funcionalidade do Gabinete de Segurança Institucional.</p>
+    </div>
+  </header>
+
+  <main>
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu central do módulo GSI. Ele organiza os acessos que futuramente
+      poderão virar páginas próprias, mantendo o mesmo padrão visual dos módulos administrativos.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; disponibiliza links de navegação.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os botões apontam para âncoras internas temporárias.
+      TODO: Em produção, substituir as âncoras por rotas reais e controlar permissões conforme o perfil do usuário.
+    -->
+    <nav class="module-menu" aria-label="Opções do GSI">
+      <a href="#planejamento">Planejamento Operacional</a>
+      <a href="#controle-acesso">Controle de Acesso</a>
+      <a href="#credenciamento">Credenciamento</a>
+      <a href="#relatorios">Relatórios GSI</a>
+      <a href="#monitoramento">Monitoramento</a>
+      <a href="#auditoria">Auditoria</a>
+      <a href="../convenios/cursos.html">Cursos</a>
+      <a href="vagas-fora-prazo.html">Vagas fora do prazo</a>
+    </nav>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Painel informativo de estado inicial do módulo, indicando que as opções
+      já estão separadas para evolução incremental sem quebrar a navegação da Administração.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; apresenta conteúdo estático ao usuário.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não utiliza LocalStorage, APIs ou variáveis globais.
+      TODO: Quando cada área do GSI tiver regra de negócio definida, transformar este painel em resumo operacional
+      alimentado por banco de dados e serviços protegidos por autenticação.
+    -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Módulo GSI</h2>
+          <p class="hint">As opções acima foram preparadas como pontos de entrada para as próximas telas do módulo.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

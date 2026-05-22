@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Cursos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a class="back-link" id="back-menu-link" href="operacao.html">Voltar para convênios</a>
+    <div class="header-copy">
+      <h1 id="page-title">Cursos</h1>
+      <p id="page-subtitle">Selecione uma opção para cadastro ou consulta de cursos vinculados ao convênio.</p>
+    </div>
+  </header>
+
+  <main>
+    <!--
+      DESCRIÇÃO DO BLOCO: Barra superior de retorno para consulta do contrato, mantendo a mesma
+      estrutura visual usada no menu operacional dos convênios.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; oferece apenas navegação por link.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; o destino aponta para a tela de contratos existente.
+      TODO: Em produção, preservar o contrato selecionado via sessão autenticada em vez de depender de páginas estáticas.
+    -->
+    <div class="top-bar">
+      <a class="back-link" href="../contratos/index.html">Consultar contrato</a>
+    </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu inicial do módulo de cursos. Ele separa a futura criação de cursos
+      da consulta histórica, permitindo desenvolver cada tela interna em arquivos próprios posteriormente.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; disponibiliza dois pontos de navegação.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não utiliza LocalStorage, arrays locais, variáveis globais ou APIs nesta etapa.
+      TODO: Substituir as âncoras temporárias por páginas reais com cadastro, histórico, validação e persistência em banco.
+    -->
+    <nav class="module-menu convenio-menu" aria-label="Menu de cursos do convênio">
+      <a href="#criar-curso">Criar curso</a>
+      <a href="#historico-curso">Histórico de curso</a>
+    </nav>
+  </main>
+
+  <script>
+    const STORAGE_CONVENIOS = 'cproeis_contratos_convenios';
+
+    /**
+     * DESCRIÇÃO DA FUNÇÃO:
+     * Carrega os convênios cadastrados no navegador para identificar se a tela de cursos foi aberta
+     * a partir de um convênio específico.
+     *
+     * PARÂMETROS E RETORNO:
+     * @returns {Array<object>} Lista de convênios persistidos ou array vazio quando não houver dados válidos.
+     *
+     * ARMAZENAMENTO E PERSISTÊNCIA:
+     * Lê dados do LocalStorage na chave `cproeis_contratos_convenios`; não grava informações.
+     *
+     * NOTAS DE EXPANSÃO:
+     * TODO: substituir esta leitura local por consulta autenticada ao backend quando o módulo de cursos for online.
+     */
+    function loadConvenios() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_CONVENIOS)) || [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    /**
+     * DESCRIÇÃO DA FUNÇÃO:
+     * Formata uma data ISO simples para o padrão brasileiro usado no cabeçalho do convênio.
+     *
+     * PARÂMETROS E RETORNO:
+     * @param {string} value - Data no formato YYYY-MM-DD.
+     * @returns {string} Data formatada como DD/MM/YYYY ou hífen quando o valor não existir.
+     *
+     * ARMAZENAMENTO E PERSISTÊNCIA:
+     * Não acessa armazenamento; transforma apenas o valor recebido.
+     *
+     * NOTAS DE EXPANSÃO:
+     * TODO: centralizar formatação de datas em utilitário compartilhado quando houver build modular.
+     */
+    function formatDate(value) {
+      if (!value) return '-';
+      const [year, month, day] = value.split('-');
+      return `${day}/${month}/${year}`;
+    }
+
+    /**
+     * DESCRIÇÃO DA FUNÇÃO:
+     * Localiza o convênio informado na URL e atualiza a página para refletir o contrato selecionado.
+     *
+     * PARÂMETROS E RETORNO:
+     * @returns {void}
+     *
+     * ARMAZENAMENTO E PERSISTÊNCIA:
+     * Lê o parâmetro `id` da URL e consulta o LocalStorage de convênios; grava apenas textos e links no DOM.
+     *
+     * NOTAS DE EXPANSÃO:
+     * TODO: trocar o uso de query string por sessão segura e carregar permissões do usuário antes de exibir opções.
+     */
+    function hydrateCursoMenu() {
+      const params = new URLSearchParams(window.location.search);
+      const convenioId = params.get('id') || '';
+      const backLink = document.getElementById('back-menu-link');
+
+      if (convenioId && backLink) {
+        backLink.href = `operacao.html?${params.toString()}`;
+      }
+
+      const convenio = loadConvenios().find((item) => item.id === convenioId);
+      if (!convenio) return;
+
+      document.getElementById('page-title').textContent = convenio.nome || 'Cursos';
+      document.getElementById('page-subtitle').textContent = `Contrato ${convenio.numero || '-'} | Vigência de ${formatDate(convenio.inicio)} até ${formatDate(convenio.fim)}`;
+    }
+
+    hydrateCursoMenu();
+  </script>
+</body>
+</html>

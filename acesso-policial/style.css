@@ -1,0 +1,272 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #eef2f7;
+  color: #1f2937;
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Define o cabeçalho padrão do acesso do policial, mantendo consistência
+ * visual com Administração, GSI e Convênios.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica apenas apresentação visual.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados.
+ * TODO: Em produção, mover estilos compartilhados para um design system global.
+ */
+header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 126px;
+  background: #1f2a8a;
+  color: #fff;
+  padding: 34px 180px;
+  text-align: center;
+}
+
+.header-copy {
+  max-width: 980px;
+}
+
+header h1 {
+  margin: 0 0 8px;
+  font-size: 34px;
+}
+
+header p {
+  margin: 0;
+  font-size: 17px;
+  opacity: 0.9;
+}
+
+main {
+  width: min(1800px, calc(100% - 24px));
+  margin: 28px auto 40px;
+}
+
+.back-link {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2a8a;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+}
+
+.back-link:hover {
+  background: #eef2ff;
+}
+
+.module-menu {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.module-menu a {
+  min-height: 112px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2a8a;
+  text-align: center;
+  text-decoration: none;
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.module-menu a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+}
+
+.panel {
+  margin-bottom: 22px;
+  padding: 22px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+}
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+h2 {
+  margin: 0;
+  color: #1f2a8a;
+  font-size: 24px;
+}
+
+.hint {
+  margin: 6px 0 0;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Estrutura os filtros e tabelas do acesso do policial, seguindo a leitura
+ * operacional usada nos demais módulos do sistema.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; estiliza elementos HTML.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa armazenamento; os dados são carregados pelo JavaScript.
+ * TODO: Em produção, compartilhar estes componentes de tabela com os módulos de convênio e GSI.
+ */
+.filter-bar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(180px, 0.35fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+input {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #1f2937;
+  font: inherit;
+  background: #fff;
+}
+
+input:focus {
+  outline: 2px solid rgba(31, 42, 138, 0.25);
+  border-color: #1f2a8a;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+table {
+  width: 100%;
+  min-width: 1040px;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+th,
+td {
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  color: #1f2a8a;
+  font-size: 13px;
+  text-transform: uppercase;
+  background: #f8fafc;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.empty {
+  padding: 18px;
+  color: #64748b;
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.login-action,
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.login-action {
+  background: #15803d;
+  color: #fff;
+}
+
+.login-action:hover {
+  background: #166534;
+}
+
+.badge {
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-note {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+@media (max-width: 980px) {
+  .module-menu {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  header {
+    justify-content: flex-start;
+    min-height: 150px;
+    padding: 72px 18px 26px;
+  }
+
+  header h1 {
+    font-size: 28px;
+  }
+
+  .back-link {
+    top: 18px;
+    transform: none;
+  }
+
+  .module-menu,
+  .filter-bar {
+    grid-template-columns: 1fr;
+  }
+}

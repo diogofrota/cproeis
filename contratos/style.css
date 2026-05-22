@@ -128,6 +128,7 @@ form {
 
 label {
   display: grid;
+  align-content: start;
   gap: 6px;
   font-size: 14px;
   font-weight: 700;
@@ -137,16 +138,18 @@ input,
 select,
 textarea {
   width: 100%;
-  min-height: 42px;
+  height: 42px;
   padding: 10px 12px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   font: inherit;
+  line-height: 20px;
   color: #1f2937;
   background: #fff;
 }
 
 textarea {
+  height: auto;
   min-height: 92px;
   resize: vertical;
 }
@@ -189,6 +192,27 @@ textarea.invalid {
    * TODO: Em produção, revisar estados de acessibilidade para leitores de tela em validações assíncronas.
    */
   visibility: hidden;
+}
+
+.field-hint[data-status="success"] {
+  /*
+   * DESCRIÇÃO DO BLOCO: Destaca retorno positivo das consultas automáticas de CEP/CNPJ sem alterar a
+   * estrutura do formulário.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica cor conforme atributo do DOM.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; o status é definido pelo JavaScript da consulta.
+   * TODO: Em produção, padronizar mensagens assíncronas em componente único do design system.
+   */
+  color: #15803d;
+}
+
+.field-hint[data-status="error"] {
+  /*
+   * DESCRIÇÃO DO BLOCO: Indica falha de consulta externa mantendo a possibilidade de preenchimento manual.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica cor conforme atributo do DOM.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa dados; apenas reflete o estado definido pelo JavaScript.
+   * TODO: Em produção, registrar falhas de API para monitoramento operacional.
+   */
+  color: #b42318;
 }
 
 .wide {

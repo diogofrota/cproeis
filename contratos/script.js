@@ -39,6 +39,13 @@ const responsavelFuncoesColumns = [
   { label: 'Outra', value: 'Outra' }
 ];
 
+const tipoConveniadoLabels = {
+  municipio: 'Município',
+  concessionaria: 'Concessionária',
+  orgaopublico: 'Órgão Público',
+  outros: 'Outros'
+};
+
 const dinheiro = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const today = new Date().toISOString().slice(0, 10);
 
@@ -66,6 +73,7 @@ const responsavelFuncaoInputs = document.querySelectorAll('input[name="responsav
 const fields = {
   nome: document.getElementById('nome'),
   cnpj: document.getElementById('cnpj'),
+  tipoConveniado: document.getElementById('tipo-conveniado'),
   enderecoCep: document.getElementById('endereco-cep'),
   enderecoLogradouro: document.getElementById('endereco-logradouro'),
   enderecoNumero: document.getElementById('endereco-numero'),
@@ -120,6 +128,10 @@ const validationRules = {
   cnpj: {
     message: 'Digite os 14 números do CNPJ. A pontuação será aplicada automaticamente.',
     validate: () => onlyDigits(fields.cnpj.value).length === 14
+  },
+  tipoConveniado: {
+    message: 'Selecione o enquadramento do conveniado ou deixe em branco para registros antigos.',
+    validate: () => true
   },
   enderecoCep: {
     message: 'Digite os 8 números do CEP ou deixe em branco se não houver informação.',
@@ -221,6 +233,9 @@ const activeValidationFields = new Set();
 let selectedConvenioId = '';
 let responsaveisState = [];
 
+const cnpjApiStatus = document.getElementById('cnpj-api-status');
+const cepApiStatus = document.getElementById('cep-api-status');
+
 function loadList(key) {
   try {
     return JSON.parse(localStorage.getItem(key)) || [];
@@ -231,6 +246,21 @@ function loadList(key) {
 
 function saveList(key, list) {
   localStorage.setItem(key, JSON.stringify(list));
+}
+
+function setApiStatus(element, message = '', type = '') {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Atualiza a mensagem auxiliar das consultas externas de CNPJ e CEP sem bloquear
+   * o preenchimento manual do formulário.
+   * PARÂMETROS E RETORNO: Recebe element como HTMLElement, message como string e type como texto de estado;
+   * não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava localStorage; altera somente texto/classes no DOM.
+   * TODO: Em produção, substituir mensagens locais por componente global de feedback assíncrono com logs de falha.
+   */
+  if (!element) return;
+  element.textContent = message;
+  element.classList.toggle('hidden', !message);
+  element.dataset.status = type;
 }
 
 function makeId() {
@@ -266,6 +296,24 @@ function normalizeText(value) {
    * TODO: Em produção, complementar com regras de saneamento no backend para impedir divergência entre clientes.
    */
   return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function normalizeTipoConveniado(value) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Padroniza o tipo do conveniado para exibição e persistência sem quebrar registros
+   * antigos que não possuíam esse campo.
+   * PARÂMETROS E RETORNO: Recebe value como string e retorna o rótulo normalizado ou string vazia.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa armazenamento; o retorno é gravado no payload do convênio.
+   * TODO: Em produção, trocar os rótulos por IDs de uma tabela de domínios administrável.
+   */
+  const normalized = normalizeText(value);
+  if (!normalized) return '';
+  const key = normalized
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z]/g, '');
+  return tipoConveniadoLabels[key] || normalized;
 }
 
 function titleCaseText(value) {
@@ -316,6 +364,31 @@ function formatCpf(value) {
     .replace(/^(\d{3})(\d)/, '$1.$2')
     .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
     .replace(/\.(\d{3})(\d)/, '.$1-$2');
+}
+
+function getResponsavelDisplayName(nome) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Reduz o nome do responsável ao primeiro nome para exibição em telas públicas
+   * ou de consulta, evitando exposição desnecessária do nome completo.
+   * PARÂMETROS E RETORNO: Recebe nome como string e retorna o primeiro termo em formato de título.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não altera localStorage; trata apenas o texto exibido no DOM.
+   * TODO: Em produção, aplicar política de privacidade por perfil de usuário e contexto de acesso.
+   */
+  const firstName = normalizeText(nome).split(' ').filter(Boolean)[0] || '';
+  return titleCaseText(firstName) || '-';
+}
+
+function maskCpfForDisplay(value) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Mascara CPF de responsável para exibição, preservando somente os três primeiros
+   * dígitos e substituindo o restante por asteriscos.
+   * PARÂMETROS E RETORNO: Recebe CPF como string/número e retorna texto mascarado no padrão 000.***.***-**.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não modifica o CPF gravado no localStorage; atua apenas na renderização.
+   * TODO: Em produção, centralizar mascaramento de documentos conforme LGPD e regras de auditoria.
+   */
+  const digits = onlyDigits(value);
+  if (digits.length < 3) return digits ? `${digits}***` : '-';
+  return `${digits.slice(0, 3)}.***.***-**`;
 }
 
 function formatCep(value) {
@@ -468,6 +541,145 @@ function setEnderecoFields(convenio) {
   fields.enderecoBairro.value = endereco.bairro || '';
   fields.enderecoCidade.value = endereco.cidade || '';
   fields.enderecoUf.value = endereco.uf || '';
+}
+
+function applyEnderecoApiData(data, options = {}) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Aplica dados de endereço retornados por APIs externas aos campos do formulário,
+   * mantendo número/complemento editáveis para correção manual quando necessário.
+   * PARÂMETROS E RETORNO: Recebe data como objeto normalizado de endereço e options.overwrite como booleano;
+   * não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Escreve somente nos inputs do DOM; a gravação definitiva ocorre no submit.
+   * TODO: Em produção, validar endereço no backend e registrar a origem da consulta usada para auditoria.
+   */
+  const overwrite = options.overwrite === true;
+  const setValue = (field, value) => {
+    if (!field || !value) return;
+    if (overwrite || !normalizeText(field.value)) {
+      field.value = value;
+    }
+  };
+
+  setValue(fields.enderecoCep, data.cep ? formatCep(data.cep) : '');
+  setValue(fields.enderecoLogradouro, titleCaseText(data.logradouro || ''));
+  setValue(fields.enderecoNumero, normalizeText(data.numero || '').toUpperCase());
+  setValue(fields.enderecoComplemento, titleCaseText(data.complemento || ''));
+  setValue(fields.enderecoBairro, titleCaseText(data.bairro || ''));
+  setValue(fields.enderecoCidade, titleCaseText(data.cidade || ''));
+  setValue(fields.enderecoUf, normalizeText(data.uf || '').toUpperCase().slice(0, 2));
+
+  ['enderecoCep', 'enderecoLogradouro', 'enderecoNumero', 'enderecoComplemento', 'enderecoBairro', 'enderecoCidade', 'enderecoUf']
+    .forEach((key) => runFieldValidation(key));
+}
+
+async function fetchCepData(cep) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Consulta o ViaCEP para recuperar logradouro, bairro, cidade e UF a partir de um CEP.
+   * PARÂMETROS E RETORNO: Recebe cep como string com ou sem máscara e retorna objeto normalizado de endereço
+   * ou null quando a API não encontra o CEP.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; realiza requisição GET para https://viacep.com.br/ws/{cep}/json/.
+   * TODO: Em produção, criar proxy no backend para cache, controle de indisponibilidade e padronização de erros.
+   */
+  const digits = onlyDigits(cep);
+  if (digits.length !== 8) return null;
+
+  const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+  if (!response.ok) throw new Error('Falha ao consultar CEP.');
+  const data = await response.json();
+  if (data.erro) return null;
+
+  return {
+    cep: data.cep || digits,
+    logradouro: data.logradouro || '',
+    complemento: data.complemento || '',
+    bairro: data.bairro || '',
+    cidade: data.localidade || '',
+    uf: data.uf || ''
+  };
+}
+
+async function fetchCnpjData(cnpj) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Consulta a BrasilAPI para recuperar dados cadastrais básicos da pessoa jurídica
+   * e preencher automaticamente o formulário de convênio.
+   * PARÂMETROS E RETORNO: Recebe cnpj como string com ou sem máscara e retorna objeto normalizado de PJ/endereço
+   * ou null quando o CNPJ não for encontrado.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava localStorage; realiza requisição GET para
+   * https://brasilapi.com.br/api/cnpj/v1/{cnpj}.
+   * TODO: Em produção, consultar CNPJ pelo backend para proteger o sistema de limites, CORS e mudanças da API pública.
+   */
+  const digits = onlyDigits(cnpj);
+  if (digits.length !== 14) return null;
+
+  const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${digits}`);
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error('Falha ao consultar CNPJ.');
+  const data = await response.json();
+
+  return {
+    nome: data.razao_social || data.nome_fantasia || '',
+    cep: data.cep || '',
+    logradouro: data.logradouro || data.descricao_tipo_de_logradouro || '',
+    numero: data.numero || '',
+    complemento: data.complemento || '',
+    bairro: data.bairro || '',
+    cidade: data.municipio || '',
+    uf: data.uf || ''
+  };
+}
+
+async function autofillCepFromApi() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Orquestra a consulta de CEP no blur do campo e preenche os campos de endereço
+   * sem impedir a digitação manual quando a API falhar.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna Promise<void>.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê valores do DOM e escreve nos campos do formulário; não grava localStorage.
+   * TODO: Em produção, aplicar debounce/cancelamento de requisições e registrar falhas de integração.
+   */
+  const cep = onlyDigits(fields.enderecoCep.value);
+  if (cep.length !== 8) return;
+
+  setApiStatus(cepApiStatus, 'Consultando endereço pelo CEP...', 'loading');
+  try {
+    const data = await fetchCepData(cep);
+    if (!data) {
+      setApiStatus(cepApiStatus, 'CEP não encontrado. Preencha o endereço manualmente.', 'error');
+      return;
+    }
+
+    applyEnderecoApiData(data, { overwrite: true });
+    setApiStatus(cepApiStatus, 'Endereço preenchido automaticamente pelo CEP.', 'success');
+  } catch (error) {
+    setApiStatus(cepApiStatus, 'Não foi possível consultar o CEP. Preencha manualmente.', 'error');
+  }
+}
+
+async function autofillCnpjFromApi() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Orquestra a consulta de CNPJ no blur do campo, preenchendo razão social e endereço
+   * quando a pessoa jurídica for localizada.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna Promise<void>.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê o CNPJ no DOM e escreve nos campos do formulário; não grava localStorage.
+   * TODO: Em produção, substituir a API pública por serviço interno com cache, autenticação e política de retentativas.
+   */
+  const cnpj = onlyDigits(fields.cnpj.value);
+  if (cnpj.length !== 14) return;
+
+  setApiStatus(cnpjApiStatus, 'Consultando dados da pessoa jurídica...', 'loading');
+  try {
+    const data = await fetchCnpjData(cnpj);
+    if (!data) {
+      setApiStatus(cnpjApiStatus, 'CNPJ não encontrado. Preencha os dados manualmente.', 'error');
+      return;
+    }
+
+    if (data.nome) fields.nome.value = titleCaseText(data.nome);
+    applyEnderecoApiData(data, { overwrite: true });
+    runFieldValidation('nome');
+    setApiStatus(cnpjApiStatus, 'Dados da pessoa jurídica preenchidos automaticamente.', 'success');
+  } catch (error) {
+    setApiStatus(cnpjApiStatus, 'Não foi possível consultar o CNPJ. Preencha manualmente.', 'error');
+  }
 }
 
 function previousDate(value) {
@@ -735,6 +947,7 @@ function validateContractForm(options = {}) {
   const mainKeys = [
     'nome',
     'cnpj',
+    'tipoConveniado',
     'enderecoCep',
     'enderecoLogradouro',
     'enderecoNumero',
@@ -906,6 +1119,7 @@ function collectPayload() {
     id,
     nome: titleCaseText(fields.nome.value),
     cnpj: formatCnpj(fields.cnpj.value),
+    tipoConveniado: normalizeTipoConveniado(fields.tipoConveniado.value),
     endereco: formatEndereco(enderecoDados),
     enderecoDados,
     numero: formatContractNumber(fields.numero.value),
@@ -945,10 +1159,13 @@ function resetForm() {
   activeValidationFields.clear();
   Object.keys(validationRules).forEach((key) => runFieldValidation(key));
   valueValidationRules.forEach((input) => runValueValidation(input));
+  setApiStatus(cnpjApiStatus);
+  setApiStatus(cepApiStatus);
 }
 
 function applyClientData(convenio) {
   fields.nome.value = convenio.nome || '';
+  fields.tipoConveniado.value = normalizeTipoConveniado(convenio.tipoConveniado || '');
   setEnderecoFields(convenio);
 
   const valores = getContractValues(convenio);
@@ -972,6 +1189,7 @@ function fillForm(convenio) {
   editingId.value = convenio.id;
   fields.nome.value = convenio.nome || '';
   fields.cnpj.value = convenio.cnpj || '';
+  fields.tipoConveniado.value = normalizeTipoConveniado(convenio.tipoConveniado || '');
   setEnderecoFields(convenio);
   fields.numero.value = formatContractNumber(convenio.numero || '');
   fields.diarioData.value = convenio.diarioData || '';
@@ -999,6 +1217,7 @@ function renewContract(convenio) {
   resetForm();
   fields.nome.value = convenio.nome || '';
   fields.cnpj.value = convenio.cnpj || '';
+  fields.tipoConveniado.value = normalizeTipoConveniado(convenio.tipoConveniado || '');
   setEnderecoFields(convenio);
   setCurrencyFieldValue(fields.valorContrato, convenio.valorContrato ?? convenio.valorMensal ?? 0);
   fields.classeA && (fields.classeA.value = convenio.classeA || 0);
@@ -1136,7 +1355,7 @@ function bindContractTableFilters() {
 
 function renderTableRows(target, convenios) {
   if (!convenios.length) {
-    target.innerHTML = '<tr><td class="empty" colspan="7">Nenhum contrato encontrado para os filtros selecionados.</td></tr>';
+    target.innerHTML = '<tr><td class="empty" colspan="8">Nenhum contrato encontrado para os filtros selecionados.</td></tr>';
     return;
   }
 
@@ -1147,6 +1366,7 @@ function renderTableRows(target, convenios) {
       <tr>
         <td><strong>${escapeHtml(titleCaseText(convenio.nome))}</strong></td>
         <td>${escapeHtml(formatCnpj(convenio.cnpj) || '-')}</td>
+        <td>${escapeHtml(normalizeTipoConveniado(convenio.tipoConveniado) || 'Não informado')}</td>
         <td>${escapeHtml(convenio.numero || '-')}</td>
         <td>${dinheiro.format(Number(convenio.valorContrato ?? convenio.valorMensal ?? 0))}</td>
         <td>${formatPeriod(convenio.inicio, convenio.fim)}</td>
@@ -1258,8 +1478,8 @@ function renderDetails(id) {
         <tbody>
           ${responsaveis.map((responsavel) => `
             <tr>
-              <td><strong>${escapeHtml(titleCaseText(responsavel.nome))}</strong></td>
-              <td>${escapeHtml(formatCpf(responsavel.cpf) || '-')}</td>
+              <td><strong>${escapeHtml(getResponsavelDisplayName(responsavel.nome))}</strong></td>
+              <td>${escapeHtml(maskCpfForDisplay(responsavel.cpf))}</td>
               <td>${escapeHtml(normalizeText(responsavel.email).toLowerCase() || '-')}</td>
               <td>${escapeHtml(formatPhone(responsavel.telefone) || '-')}</td>
               <td>${formatDateOrBlank(responsavel.inicio)}</td>
@@ -1316,6 +1536,7 @@ function renderDetails(id) {
     <div class="details-grid">
       ${detailItem('Nome', titleCaseText(convenio.nome))}
       ${detailItem('CNPJ', formatCnpj(convenio.cnpj))}
+      ${detailItem('Tipo de conveniado', normalizeTipoConveniado(convenio.tipoConveniado) || 'Não informado')}
       ${detailItem('Situação pela vigência', situacao.label)}
       ${detailItem('Endereço', formatEndereco(convenio.enderecoDados, convenio.endereco))}
       ${detailItem('Nº do contrato', convenio.numero)}
@@ -1398,6 +1619,8 @@ Object.keys(validationRules).forEach((key) => {
     runFieldValidation(key);
     if (key === 'inicio') runFieldValidation('fim');
     if (key === 'responsavelInicio') runFieldValidation('responsavelFim');
+    if (key === 'cnpj') autofillCnpjFromApi();
+    if (key === 'enderecoCep') autofillCepFromApi();
   });
 });
 

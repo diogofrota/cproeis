@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Vagas do Policial</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a class="back-link" id="back-menu-link" href="menu.html">Voltar ao menu</a>
+    <div class="header-copy">
+      <h1 id="page-title">Vagas disponíveis</h1>
+      <p id="page-subtitle">Vagas compatíveis com o cadastro funcional do policial.</p>
+    </div>
+  </header>
+
+  <main>
+    <!--
+      DESCRIÇÃO DO BLOCO: Tabela de vagas disponíveis ao policial logado. A lista só mostra vagas
+      liberadas automaticamente ou autorizadas pelo GSI e compatíveis com a classe funcional.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; a renderização ocorre via JavaScript.
+      ARMAZENAMENTO E PERSISTÊNCIA: `script.js` lê policiais, convênios e vagas do LocalStorage.
+      TODO: Em produção, validar elegibilidade no backend e impedir que o filtro do navegador exponha vagas indevidas.
+    -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Vagas liberadas</h2>
+          <p class="hint" id="vagas-count">Carregando vagas.</p>
+        </div>
+      </div>
+
+      <div class="filter-bar" aria-label="Filtro de vagas disponíveis">
+        <label>
+          Pesquisar
+          <input id="vaga-filter" type="search" placeholder="Convênio, serviço, local ou classe">
+        </label>
+
+        <label>
+          Data
+          <input id="vaga-date-filter" type="date">
+        </label>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Convênio</th>
+              <th>Serviço</th>
+              <th>Classe</th>
+              <th>Tipo</th>
+              <th>Horário</th>
+              <th>Local</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="vagas-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

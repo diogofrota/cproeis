@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Acesso do Policial</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a class="back-link" href="../index.html">Voltar para o início</a>
+    <div class="header-copy">
+      <h1>Acesso do Policial</h1>
+      <p>Selecione o policial cadastrado para acessar as opções individuais.</p>
+    </div>
+  </header>
+
+  <main>
+    <!--
+      DESCRIÇÃO DO BLOCO: Lista inicial de acesso do policial. Ela usa o banco local de policiais
+      já cadastrado pela Administração e cria um ponto de login temporário por linha.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; fornece estrutura para renderização via JavaScript.
+      ARMAZENAMENTO E PERSISTÊNCIA: A tabela é preenchida por `script.js` a partir do LocalStorage.
+      TODO: Em produção, substituir login por linha por autenticação individual com senha, MFA e sessão segura.
+    -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Policiais cadastrados</h2>
+          <p class="hint" id="table-count">Carregando registros.</p>
+        </div>
+      </div>
+
+      <div class="filter-bar" aria-label="Filtro de policiais">
+        <label>
+          Pesquisar
+          <input id="policial-filter" type="search" placeholder="Nome, RG, ID funcional ou unidade">
+        </label>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>RG</th>
+              <th>ID Funcional</th>
+              <th>Nome</th>
+              <th>Posto/Graduação</th>
+              <th>Unidade</th>
+              <th>Situação Sanitária</th>
+              <th>Situação Funcional</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="policiais-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
