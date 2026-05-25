@@ -1,0 +1,288 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #eef2f7;
+  color: #1f2937;
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Cabeçalho fixo visual do módulo do policial, mantendo o mesmo menu
+ * em linha usado nas telas de vagas, histórico, pagamentos e cursos.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; define apenas estilos.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa armazenamento; a sessão é aplicada pelo JavaScript.
+ * TODO: Em produção, mover este bloco para um CSS compartilhado do design system.
+ */
+.module-header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #1f2a8a;
+  color: #fff;
+  padding: 18px 20px 16px;
+  text-align: center;
+}
+
+.module-header .header-top {
+  display: flex;
+  justify-content: center;
+  width: min(1800px, 100%);
+}
+
+.module-header .header-copy {
+  max-width: 980px;
+}
+
+.module-header h1 {
+  margin: 0 0 6px;
+  font-size: 30px;
+  line-height: 1.1;
+}
+
+.module-header p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+.module-header .module-menu {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: min(1800px, 100%);
+  margin-top: 14px;
+}
+
+.module-header .module-menu a {
+  width: 210px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.module-header .module-menu a:hover,
+.module-header .module-menu a:focus-visible {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.54);
+}
+
+.module-header .module-menu .menu-logout-link {
+  background: #f8ecea;
+  color: #8a332b;
+  border-color: rgba(138, 51, 43, 0.18);
+  box-shadow: 0 6px 14px rgba(80, 24, 18, 0.12);
+}
+
+.module-header .module-menu .menu-logout-link:hover,
+.module-header .module-menu .menu-logout-link:focus-visible {
+  background: #f1ddda;
+  border-color: rgba(138, 51, 43, 0.28);
+}
+
+main {
+  width: min(1800px, calc(100% - 24px));
+  margin: 28px auto 40px;
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Estrutura visual da tabela detalhada de serviços assumidos.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; estiliza filtros, tabela e badges.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os registros vêm do LocalStorage via script.
+ * TODO: Em produção, criar componente compartilhado de tabela com paginação e exportação controladas.
+ */
+.panel {
+  padding: 22px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+}
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+h2 {
+  margin: 0;
+  color: #1f2a8a;
+  font-size: 24px;
+}
+
+.hint {
+  margin: 6px 0 0;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.filter-bar {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(160px, 220px) minmax(160px, 220px);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+input {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #1f2937;
+  font: inherit;
+  background: #fff;
+}
+
+input:focus {
+  outline: 2px solid rgba(31, 42, 138, 0.25);
+  border-color: #1f2a8a;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+table {
+  width: 100%;
+  min-width: 1280px;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+th,
+td {
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+  vertical-align: middle;
+}
+
+th {
+  color: #1f2a8a;
+  font-size: 13px;
+  text-transform: uppercase;
+  background: #f8fafc;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.empty {
+  padding: 18px;
+  color: #64748b;
+  text-align: center;
+}
+
+.service-badge,
+.presence-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.presence-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.presence-badge.confirmed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.service-badge.scheduled {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.service-badge.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.service-badge.warning {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-note {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+@media (max-width: 980px) {
+  .module-header .module-menu a {
+    width: min(31%, 230px);
+  }
+
+  .filter-bar {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .module-header {
+    padding: 22px 14px;
+  }
+
+  .module-header h1 {
+    font-size: 28px;
+  }
+
+  .module-header p {
+    font-size: 15px;
+  }
+
+  .module-header .module-menu a {
+    width: min(100%, 320px);
+  }
+
+  main {
+    width: min(100% - 16px, 1800px);
+    margin-top: 18px;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+}

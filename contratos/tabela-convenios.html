@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Contratos</title>
+  <link rel="stylesheet" href="../css/style-contratos-tabela-convenios.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Cabeçalho operacional de contratos. Ele reúne a identificação da
+    página e as opções principais do módulo sempre visíveis dentro do próprio header.
+    PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os botões internos
+    alternam views por data-view e o link Voltar navega para a index da raiz.
+    ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; apenas expõe navegação local e
+    mantém a troca de telas controlada pelo JavaScript existente.
+    TODO: Em produção, substituir a navegação local por rotas autenticadas e registrar o
+    item ativo conforme a rota real do módulo.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>Contratos e Convênios</h1>
+        <p>Cadastro local de convênios, contratos, valores, responsáveis e histórico.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="contratos-menu" aria-label="Funcionalidades de contratos">
+      <a class="tab-button" href="cadastrar-convenio.html">Cadastrar convênio</a>
+      <a class="tab-button active" href="tabela-convenios.html">Tabela Convênios</a>
+      <a class="menu-back-link" href="../index.html" data-history-back="false">Página inicial</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="view active" id="tabela-view">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Contratos cadastrados</h2>
+            <p class="hint" id="contracts-count">Nenhum contrato cadastrado.</p>
+          </div>
+        </div>
+
+        <div class="filter-bar" aria-label="Filtros de contratos">
+          <label>
+            Pesquisar
+            <input id="contract-filter-text" type="search" placeholder="Convênio, CNPJ ou contrato">
+          </label>
+
+          <label>
+            Situação
+            <select id="contract-filter-status">
+              <option value="">Todos</option>
+              <option value="active">Ativos</option>
+              <option value="inactive">Inativos</option>
+            </select>
+          </label>
+
+          <label>
+            Tipo
+            <select id="contract-filter-type">
+              <option value="">Todos</option>
+              <option value="Município">Município</option>
+              <option value="Concessionária">Concessionária</option>
+              <option value="Órgão Público">Órgão Público</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </label>
+
+          <label>
+            Início a partir de
+            <input id="contract-filter-start-from" type="date">
+          </label>
+
+          <label>
+            Início até
+            <input id="contract-filter-start-to" type="date">
+          </label>
+
+          <div class="form-actions filter-actions">
+            <button type="button" class="secondary" id="clear-contract-filters">Limpar filtros</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Convênio</th>
+                <th>CNPJ</th>
+                <th>Tipo</th>
+                <th>Contrato</th>
+                <th>Valor</th>
+                <th>Início</th>
+                <th>Término</th>
+                <th>Situação</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="contratos-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="detalhes-view">
+      <div class="panel" id="details-empty">
+        <h2>Detalhes do convênio</h2>
+        <p class="hint">Selecione um convênio na tabela para visualizar todas as informações cadastradas.</p>
+      </div>
+
+      <div class="panel" id="details-panel" hidden>
+        <div class="panel-header">
+          <div>
+            <h2 id="details-heading">Detalhes do convênio</h2>
+            <p class="hint" id="details-subtitle"></p>
+          </div>
+        </div>
+
+        <div id="details-content"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-contratos-tabela-convenios.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

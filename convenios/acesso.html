@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Convênios</title>
+  <link rel="stylesheet" href="../css/style-convenios-acesso.css">
+</head>
+<body>
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>Acesso do Convênio</h1>
+        <p>Selecione o responsável para entrar no módulo do convênio.</p>
+      </div>
+    </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu hamburger padronizado do projeto. Ele concentra as opções
+      de navegação no cabeçalho para manter a mesma experiência visual usada no GSI.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; cada link encaminha
+      para uma página HTML local ou para o retorno do módulo.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; o estado aberto/fechado é
+      controlado temporariamente no DOM pelo script da página.
+      TODO: Em produção, ligar o item ativo à rota autenticada e aplicar permissões por perfil.
+    -->
+    <nav class="module-menu" id="convenios-menu" aria-label="Menu operacional do convênio">
+      <a class="menu-back-link" href="../index.html" data-history-back="false">Página inicial</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Responsáveis com acesso operacional</h2>
+          <p class="hint">Somente responsáveis vinculados a convênios vigentes aparecem nesta lista.</p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Responsável</th>
+              <th>Convênio</th>
+              <th>CPF</th>
+              <th>Email</th>
+              <th>Telefone</th>
+              <th>Funções</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="convenios-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-convenios-acesso.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

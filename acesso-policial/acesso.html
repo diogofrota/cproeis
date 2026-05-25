@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Acesso do Policial</title>
+  <link rel="stylesheet" href="../css/style-acesso-policial-acesso.css">
+</head>
+<body>
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>Acesso do Policial</h1>
+        <p>Selecione o policial cadastrado para acessar as opções individuais.</p>
+      </div>
+    </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu em linha padronizado do projeto. Ele concentra as opções
+      de navegação no cabeçalho para manter a mesma experiência visual usada no GSI.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; cada link encaminha
+      para uma página HTML local ou para o retorno do módulo.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os links são estáticos ou
+      ajustados pelo script da página conforme a sessão.
+      TODO: Em produção, ligar o item ativo à rota autenticada e aplicar permissões por perfil.
+    -->
+    <nav class="module-menu" id="acesso-policial-menu" aria-label="Menu do policial">
+      <a class="menu-back-link" href="../index.html" data-history-back="false">Página inicial</a>
+    </nav>
+  </header>
+
+  <main>
+    <!--
+      DESCRIÇÃO DO BLOCO: Lista inicial de acesso do policial. Ela usa o banco local de policiais
+      já cadastrado pela Administração e cria um ponto de login temporário por linha.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; fornece estrutura para renderização via JavaScript.
+      ARMAZENAMENTO E PERSISTÊNCIA: A tabela é preenchida por `script.js` a partir do LocalStorage.
+      TODO: Em produção, substituir login por linha por autenticação individual com senha, MFA e sessão segura.
+    -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Policiais cadastrados</h2>
+          <p class="hint" id="table-count">Carregando registros.</p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>RG</th>
+              <th>ID Funcional</th>
+              <th>Nome</th>
+              <th>Posto/Graduação</th>
+              <th>Unidade</th>
+              <th>Situação Sanitária</th>
+              <th>Situação Funcional</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="policiais-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-acesso-policial-acesso.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

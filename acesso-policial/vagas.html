@@ -4,15 +4,34 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CPROEIS - Vagas do Policial</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../css/style-acesso-policial-vagas.css">
 </head>
 <body>
-  <header>
-    <a class="back-link" id="back-menu-link" href="menu.html">Voltar ao menu</a>
-    <div class="header-copy">
-      <h1 id="page-title">Vagas disponíveis</h1>
-      <p id="page-subtitle">Vagas compatíveis com o cadastro funcional do policial.</p>
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="page-title">Acesso do Policial</h1>
+        <p id="page-subtitle">Carregando dados do policial.</p>
+      </div>
     </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu em linha padronizado do projeto. Ele concentra as opções
+      de navegação no cabeçalho para manter a mesma experiência visual usada no GSI.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; cada link encaminha
+      para uma página HTML local ou para o retorno do módulo.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os links são ajustados
+      pelo script da página conforme a sessão do policial.
+      TODO: Em produção, ligar o item ativo à rota autenticada e aplicar permissões por perfil.
+    -->
+    <nav class="module-menu" id="acesso-policial-menu" aria-label="Menu do policial">
+      <a id="menu-vagas" href="vagas.html">Ver vagas</a>
+      <a href="historico-servico.html">Histórico de serviço</a>
+      <a href="tabela-servico.html">Tabela de serviço</a>
+      <a href="pagamentos.html">Pagamentos</a>
+      <a href="cursos.html">Cursos</a>
+      <a class="menu-logout-link" href="acesso.html" data-logout-policial="true">Sair</a>
+    </nav>
   </header>
 
   <main>
@@ -20,7 +39,8 @@
       DESCRIÇÃO DO BLOCO: Tabela de vagas disponíveis ao policial logado. A lista só mostra vagas
       liberadas automaticamente ou autorizadas pelo GSI e compatíveis com a classe funcional.
       PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; a renderização ocorre via JavaScript.
-      ARMAZENAMENTO E PERSISTÊNCIA: `script.js` lê policiais, convênios e vagas do LocalStorage.
+      ARMAZENAMENTO E PERSISTÊNCIA: `script-acesso-policial-vagas.js` lê policiais, convênios
+      e vagas do LocalStorage e monta filtros locais por coluna.
       TODO: Em produção, validar elegibilidade no backend e impedir que o filtro do navegador exponha vagas indevidas.
     -->
     <section class="panel">
@@ -32,15 +52,49 @@
       </div>
 
       <div class="filter-bar" aria-label="Filtro de vagas disponíveis">
-        <label>
-          Pesquisar
-          <input id="vaga-filter" type="search" placeholder="Convênio, serviço, local ou classe">
+        <label class="date-filter-field">
+          Data
+          <input id="vaga-date-filter" type="date" class="native-date-input" aria-hidden="true" tabindex="-1">
+          <input
+            id="vaga-date-filter-display"
+            class="date-display-input"
+            type="text"
+            inputmode="none"
+            readonly
+            aria-label="Selecionar data do filtro de vagas"
+          >
+          <div class="custom-date-picker is-hidden" id="vaga-custom-date-picker" aria-label="Calendário de seleção de data"></div>
         </label>
 
         <label>
-          Data
-          <input id="vaga-date-filter" type="date">
+          Nome do convênio
+          <select id="vaga-convenio-filter">
+            <option value="">Todos</option>
+          </select>
         </label>
+
+        <label>
+          Nome do serviço
+          <select id="vaga-servico-filter">
+            <option value="">Todos</option>
+          </select>
+        </label>
+
+        <label>
+          Carga horária
+          <select id="vaga-tipo-filter">
+            <option value="">Todos</option>
+          </select>
+        </label>
+
+        <label>
+          Horário
+          <select id="vaga-horario-filter">
+            <option value="">Todos</option>
+          </select>
+        </label>
+
+        <button class="filter-submit" id="vaga-apply-filters" type="button">Filtrar</button>
       </div>
 
       <div class="table-wrap">
@@ -51,10 +105,10 @@
               <th>Convênio</th>
               <th>Serviço</th>
               <th>Classe</th>
-              <th>Tipo</th>
-              <th>Horário</th>
-              <th>Local</th>
-              <th>Status</th>
+              <th>Carga horária</th>
+              <th>Início</th>
+              <th>Término</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody id="vagas-body"></tbody>
@@ -63,6 +117,8 @@
     </section>
   </main>
 
-  <script src="script.js"></script>
+  <script src="../js/script-acesso-policial-vagas.js"></script>
+  <script src="../js/script-acesso-policial-session.js"></script>
+  <script src="../js/script-navigation.js"></script>
 </body>
 </html>

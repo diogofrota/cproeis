@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Cursos do Policial</title>
+  <link rel="stylesheet" href="../css/style-acesso-policial-cursos.css">
+</head>
+<body>
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="page-title">Cursos</h1>
+        <p id="page-subtitle">Consulta de cursos vinculados ao policial selecionado.</p>
+      </div>
+    </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu em linha padronizado do projeto. Ele concentra as opções
+      de navegação no cabeçalho para manter a mesma experiência visual usada no GSI.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; cada link encaminha
+      para uma página HTML local ou para o retorno do módulo.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os links são ajustados
+      pelo script da página conforme a sessão do policial.
+      TODO: Em produção, ligar o item ativo à rota autenticada e aplicar permissões por perfil.
+    -->
+    <nav class="module-menu" id="acesso-policial-menu" aria-label="Menu do policial">
+      <a id="menu-vagas" href="vagas.html">Ver vagas</a>
+      <a href="historico-servico.html">Histórico de serviço</a>
+      <a href="tabela-servico.html">Tabela de serviço</a>
+      <a href="pagamentos.html">Pagamentos</a>
+      <a href="cursos.html">Cursos</a>
+      <a class="menu-logout-link" href="acesso.html" data-logout-policial="true">Sair</a>
+    </nav>
+  </header>
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Cursos</h2>
+          <p class="hint">Estrutura preparada para receber cursos concluídos, pendentes e elegíveis.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="../js/script-acesso-policial-cursos.js"></script>
+  <script src="../js/script-acesso-policial-session.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

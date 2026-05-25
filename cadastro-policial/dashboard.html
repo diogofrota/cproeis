@@ -4,23 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CPROEIS - Dashboard de Policiais</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../css/style-cadastro-policial-dashboard.css">
 </head>
 <body>
-  <header class="page-header">
-    <div>
-      <a class="back-link" href="index.html">Voltar ao cadastro</a>
-      <h1>Dashboard de Policiais</h1>
-      <p>Indicadores gerados a partir dos policiais cadastrados localmente.</p>
+  <header class="module-header">
+    <div class="header-top">
+
+      <div class="header-copy">
+        <h1>Dashboard de Policiais</h1>
+        <p>Indicadores gerados a partir dos policiais cadastrados localmente.</p>
+      </div>
     </div>
+
+    <nav class="module-menu" id="cadastro-policial-menu" aria-label="Menu do cadastro de policiais">
+      <a class="tab-button" href="cadastro.html">Adicionar registro</a>
+      <a class="tab-button" href="tabela-policiais.html">Visualizar tabela de policiais</a>
+      <a class="tab-button active" href="dashboard.html">Dashboard</a>
+      <a class="menu-back-link" href="../index.html" data-history-back="false">Página inicial</a>
+    </nav>
   </header>
 
   <main class="page-shell">
-    <nav class="module-menu" aria-label="Menu do dashboard de policiais">
-      <a class="tab-button tab-link" href="index.html#form-view">Adicionar registro</a>
-      <a class="tab-button tab-link" href="index.html#table-view">Visualizar tabela de policiais</a>
-      <a class="tab-button tab-link active" href="dashboard.html">Dashboard</a>
-    </nav>
 
     <section class="dashboard-summary" aria-label="Resumo dos cadastros">
       <div class="summary-item">
@@ -85,6 +89,7 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="dashboard.js"></script>
+  <script src="../js/script-cadastro-policial-dashboard.js"></script>
+  <script src="../js/script-navigation.js"></script>
 </body>
 </html>

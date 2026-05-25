@@ -1,0 +1,671 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #eef2f7;
+  color: #1f2937;
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Define o cabeçalho padrão do módulo GSI, alinhado às páginas administrativas
+ * existentes para preservar identidade visual e navegação consistente.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica regras visuais ao elemento header.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; controla apenas apresentação em CSS.
+ * TODO: Em produção, mover estes estilos compartilhados para um arquivo global versionado do design system.
+ */
+header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 126px;
+  background: #1f2a8a;
+  color: #fff;
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.header-top {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 64px;
+  align-items: center;
+  gap: 18px;
+  width: min(1800px, 100%);
+}
+
+.header-menu-control {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.header-copy {
+  max-width: 980px;
+  justify-self: center;
+}
+
+header h1 {
+  margin: 0 0 8px;
+  font-size: 34px;
+}
+
+header p {
+  margin: 0;
+  font-size: 17px;
+  opacity: 0.9;
+}
+
+main {
+  width: min(1800px, calc(100% - 24px));
+  margin: 28px auto 40px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-self: end;
+  min-height: 42px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2a8a;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+}
+
+.back-link:hover {
+  background: #eef2ff;
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Estrutura o menu hamburger do GSI dentro do cabeçalho, abrindo as opções
+ * em linha para reduzir ruído visual no corpo da página.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica regras visuais ao bloco
+ * de navegação e aos links internos.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não armazena dados; apenas representa o estado aberto/fechado
+ * controlado temporariamente por classe CSS no DOM.
+ * TODO: Em produção, centralizar esse componente no design system e conectar o destaque ativo
+ * à rota autenticada do usuário.
+ */
+.menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.menu-toggle:hover,
+.menu-toggle:focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+  outline: 2px solid rgba(255, 255, 255, 0.35);
+  outline-offset: 2px;
+}
+
+.menu-icon,
+.menu-icon::before,
+.menu-icon::after {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.menu-icon {
+  position: relative;
+}
+
+.menu-icon::before,
+.menu-icon::after {
+  position: absolute;
+  left: 0;
+  content: "";
+}
+
+.menu-icon::before {
+  transform: translateY(-7px);
+}
+
+.menu-icon::after {
+  transform: translateY(7px);
+}
+
+.module-header.is-open .menu-icon {
+  background: transparent;
+}
+
+.module-header.is-open .menu-icon::before {
+  transform: rotate(45deg);
+}
+
+.module-header.is-open .menu-icon::after {
+  transform: rotate(-45deg);
+}
+
+.module-menu {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: min(1800px, 100%);
+  max-height: 0;
+  margin-top: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-8px);
+  visibility: hidden;
+  transition: max-height 0.24s ease, margin-top 0.24s ease, opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+}
+
+.module-header.is-open .module-menu {
+  max-height: 160px;
+  margin-top: 20px;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.module-menu a {
+  width: 210px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.module-menu a:hover,
+.module-menu a:focus-visible {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.54);
+}
+
+.module-menu .menu-back-link {
+  background: #fff;
+  color: #1f2a8a;
+}
+
+.module-menu .menu-back-link:hover,
+.module-menu .menu-back-link:focus-visible {
+  background: #eef2ff;
+  border-color: #fff;
+}
+
+.panel {
+  margin-bottom: 22px;
+  padding: 22px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+}
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+h2 {
+  margin: 0;
+  color: #1f2a8a;
+  font-size: 24px;
+}
+
+.hint {
+  margin: 6px 0 0;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Replica o padrão tabular usado nas telas de convênios para que o GSI
+ * analise solicitações de vagas fora do prazo com leitura operacional consistente.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; estiliza filtros, tabela, badges e estados vazios.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa dados; a leitura das vagas é feita pelo JavaScript da página.
+ * TODO: Em produção, mover este padrão para CSS compartilhado e carregar dados paginados por API.
+ */
+.filter-bar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.2fr) repeat(3, minmax(180px, 0.8fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+input,
+select {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #1f2937;
+  font: inherit;
+  background: #fff;
+}
+
+input:focus,
+select:focus {
+  outline: 2px solid rgba(31, 42, 138, 0.25);
+  border-color: #1f2a8a;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+table {
+  width: 100%;
+  min-width: 1240px;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+th,
+td {
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  color: #1f2a8a;
+  font-size: 13px;
+  text-transform: uppercase;
+  background: #f8fafc;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.empty {
+  padding: 18px;
+  color: #64748b;
+  text-align: center;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-note {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.actions button {
+  min-height: 34px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.approve-action {
+  background: #15803d;
+}
+
+.approve-action:hover {
+  background: #166534;
+}
+
+.deny-action {
+  background: #b42318;
+}
+
+.deny-action:hover {
+  background: #991b1b;
+}
+
+@media (max-width: 800px) {
+  .filter-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .header-top {
+    grid-template-columns: 56px minmax(0, 1fr) 56px;
+  }
+
+  .module-header.is-open .module-menu {
+    max-height: 260px;
+  }
+
+  .module-menu {
+    width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  header {
+    min-height: 0;
+    padding: 22px 14px;
+  }
+
+  header h1 {
+    font-size: 28px;
+  }
+
+  header p {
+    font-size: 15px;
+  }
+
+  .header-top {
+    grid-template-columns: 48px minmax(0, 1fr) 48px;
+    gap: 12px;
+  }
+
+  .filter-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .module-header.is-open .module-menu {
+    max-height: 430px;
+  }
+
+  .module-menu {
+    justify-content: stretch;
+  }
+
+  .module-menu a {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+
+/*
+ * DESCRIÇÃO DO BLOCO: Componente visual compartilhado para o header com menu hamburger,
+ * replicando o padrão adotado no GSI para manter uniformidade entre os módulos.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; define apresentação,
+ * responsividade e estados visuais para header, botão e links do menu.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; apenas responde às classes e atributos
+ * temporários aplicados no DOM pelo JavaScript da página.
+ * TODO: Em produção, extrair este bloco repetido para um CSS global do design system e manter
+ * somente variações de tema por módulo.
+ */
+.module-header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 126px;
+  background: #1f2a8a;
+  color: #fff;
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.module-header .header-top {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 64px;
+  align-items: center;
+  gap: 18px;
+  width: min(1800px, 100%);
+}
+
+.module-header .header-menu-control {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.module-header .header-copy {
+  max-width: 980px;
+  justify-self: center;
+}
+
+.module-header h1 {
+  margin: 0 0 8px;
+  font-size: 34px;
+  line-height: 1.1;
+}
+
+.module-header p {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+.module-header .menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.module-header .menu-toggle:hover,
+.module-header .menu-toggle:focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+  outline: 2px solid rgba(255, 255, 255, 0.35);
+  outline-offset: 2px;
+}
+
+.module-header .menu-icon,
+.module-header .menu-icon::before,
+.module-header .menu-icon::after {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.module-header .menu-icon {
+  position: relative;
+}
+
+.module-header .menu-icon::before,
+.module-header .menu-icon::after {
+  position: absolute;
+  left: 0;
+  content: "";
+}
+
+.module-header .menu-icon::before {
+  transform: translateY(-7px);
+}
+
+.module-header .menu-icon::after {
+  transform: translateY(7px);
+}
+
+.module-header.is-open .menu-icon {
+  background: transparent;
+}
+
+.module-header.is-open .menu-icon::before {
+  transform: rotate(45deg);
+}
+
+.module-header.is-open .menu-icon::after {
+  transform: rotate(-45deg);
+}
+
+.module-header .module-menu {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: min(1800px, 100%);
+  max-height: 0;
+  margin-top: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-8px);
+  visibility: hidden;
+  transition: max-height 0.24s ease, margin-top 0.24s ease, opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+}
+
+.module-header.is-open .module-menu {
+  max-height: 220px;
+  margin-top: 20px;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.module-header .module-menu a {
+  width: 230px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  box-shadow: none;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.module-header .module-menu a:hover,
+.module-header .module-menu a:focus-visible {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.54);
+  transform: none;
+}
+
+.module-header .module-menu .menu-back-link {
+  background: #fff;
+  color: #1f2a8a;
+}
+
+.module-header .module-menu .menu-back-link:hover,
+.module-header .module-menu .menu-back-link:focus-visible {
+  background: #eef2ff;
+  border-color: #fff;
+}
+
+@media (max-width: 760px) {
+  .module-header {
+    padding: 22px 14px;
+  }
+
+  .module-header .header-top {
+    grid-template-columns: 52px minmax(0, 1fr) 52px;
+    gap: 10px;
+  }
+
+  .module-header h1 {
+    font-size: 28px;
+  }
+
+  .module-header p {
+    font-size: 15px;
+  }
+
+  .module-header .module-menu a {
+    width: min(100%, 320px);
+  }
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Padroniza os headers do projeto para manter os menus sempre visíveis,
+ * sem depender do antigo botão hamburger.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; sobrescreve classes de menu
+ * usadas nos HTML estáticos do sistema.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; altera somente a apresentação visual.
+ * TODO: Em produção, consolidar esta regra em um CSS compartilhado de layout para evitar duplicação.
+ */
+.module-header .header-top {
+  display: flex;
+  justify-content: center;
+}
+
+.module-header .header-menu-control,
+.module-header .menu-toggle {
+  display: none;
+}
+
+.module-header .module-menu {
+  max-height: none;
+  margin-top: 20px;
+  overflow: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+  visibility: visible;
+}
+
+@media (max-width: 760px) {
+  .module-header .header-top {
+    display: flex;
+  }
+}

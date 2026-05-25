@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Histórico de Serviço</title>
+  <link rel="stylesheet" href="../css/style-acesso-policial-historico-servico.css">
+</head>
+<body>
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="page-title">Histórico de serviço</h1>
+        <p id="page-subtitle">Registros operacionais vinculados ao policial selecionado.</p>
+      </div>
+    </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu em linha padronizado do projeto. Ele concentra as opções
+      de navegação no cabeçalho para manter a mesma experiência visual usada no GSI.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; cada link encaminha
+      para uma página HTML local ou para o retorno do módulo.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os links são ajustados
+      pelo script da página conforme a sessão do policial.
+      TODO: Em produção, ligar o item ativo à rota autenticada e aplicar permissões por perfil.
+    -->
+    <nav class="module-menu" id="acesso-policial-menu" aria-label="Menu do policial">
+      <a id="menu-vagas" href="vagas.html">Ver vagas</a>
+      <a href="historico-servico.html">Histórico de serviço</a>
+      <a href="tabela-servico.html">Tabela de serviço</a>
+      <a href="pagamentos.html">Pagamentos</a>
+      <a href="cursos.html">Cursos</a>
+      <a class="menu-logout-link" href="acesso.html" data-logout-policial="true">Sair</a>
+    </nav>
+  </header>
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Histórico de serviço</h2>
+          <p class="hint" id="historico-count">Carregando escalas do policial.</p>
+        </div>
+      </div>
+
+      <!--
+        DESCRIÇÃO DO BLOCO: Visão mensal em calendário dos serviços assumidos pelo policial.
+        PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os dias e serviços são
+        montados por JavaScript a partir das vagas escaladas.
+        ARMAZENAMENTO E PERSISTÊNCIA: A leitura é feita na chave cproeis_convenios_vagas do
+        LocalStorage, filtrando o policial ativo salvo na sessão local.
+        TODO: Em produção, alimentar este calendário por uma API de escala individual com paginação
+        por competência e regras oficiais de alteração/cancelamento.
+      -->
+      <div class="calendar-toolbar" aria-label="Navegação do calendário de serviço">
+        <h3 id="calendar-title">Calendário</h3>
+        <div class="calendar-actions">
+          <button type="button" id="calendar-prev" aria-label="Mês anterior">←</button>
+          <button type="button" id="calendar-today">Hoje</button>
+          <button type="button" id="calendar-next" aria-label="Próximo mês">→</button>
+        </div>
+      </div>
+
+      <div class="calendar-weekdays" aria-hidden="true">
+        <span>Seg</span>
+        <span>Ter</span>
+        <span>Qua</span>
+        <span>Qui</span>
+        <span>Sex</span>
+        <span>Sáb</span>
+        <span>Dom</span>
+      </div>
+      <div class="service-calendar" id="service-calendar" aria-label="Calendário de serviços escalados"></div>
+    </section>
+  </main>
+  <script src="../js/script-acesso-policial-historico-servico.js"></script>
+  <script src="../js/script-acesso-policial-session.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

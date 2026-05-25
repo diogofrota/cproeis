@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - GSI</title>
+  <link rel="stylesheet" href="../css/style-gsi-monitoramento.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Cabeçalho operacional do módulo GSI. Ele agrupa o acionador hamburger,
+    a identificação da página e a barra de opções do módulo em uma única
+    área visual, mantendo a navegação mais limpa e profissional.
+    PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; o botão apenas controla
+    a visibilidade da navegação associada ao atributo aria-controls.
+    ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os links continuam apontando para
+    âncoras internas temporárias e páginas locais já existentes.
+    TODO: Em produção, substituir as âncoras por rotas reais, registrar o item ativo pela rota
+    atual e validar permissões conforme perfil de acesso do usuário.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+
+      <div class="header-copy">
+        <h1>GSI</h1>
+        <p>Selecione uma funcionalidade da Gestão do Sistema de Informação.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="gsi-menu" aria-label="Opções do GSI">
+      <a href="planejamento-operacional.html">Planejamento Operacional</a>
+      <a href="controle-acesso.html">Controle de Acesso</a>
+      <a href="credenciamento.html">Credenciamento</a>
+      <a href="relatorios.html">Relatórios GSI</a>
+      <a href="monitoramento.html">Monitoramento</a>
+      <a href="auditoria.html">Auditoria</a>
+      <a href="../convenios/cursos.html">Cursos</a>
+      <a href="vagas-fora-prazo.html">Vagas fora do prazo</a>
+      <a class="menu-back-link" href="../index.html" data-history-back="false">Página inicial</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Vagas criadas pelos convênios</h2>
+          <p class="hint" id="gsi-monitor-count">Carregando vagas operacionais.</p>
+        </div>
+      </div>
+
+      <!--
+        DESCRIÇÃO DO BLOCO: Filtros de monitoramento para o GSI acompanhar vagas criadas
+        por todos os convênios.
+        PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os campos são lidos
+        pelo JavaScript para atualizar a tabela.
+        ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; a leitura ocorre em cproeis_convenios_vagas
+        e cproeis_contratos_convenios no LocalStorage.
+        TODO: Em produção, levar estes filtros para consulta paginada no backend.
+      -->
+      <div class="filter-bar" aria-label="Filtros de monitoramento de vagas">
+        <label>
+          Pesquisar
+          <input id="gsi-monitor-text" type="search" placeholder="Convênio, serviço, policial ou status">
+        </label>
+        <label>
+          Data
+          <input id="gsi-monitor-date" type="date">
+        </label>
+        <label>
+          Situação
+          <select id="gsi-monitor-status">
+            <option value="">Todas</option>
+            <option value="sem-policial">Sem policial</option>
+            <option value="com-policial">Com policial</option>
+            <option value="com-presenca">Com presença</option>
+            <option value="sem-presenca">Sem presença</option>
+          </select>
+        </label>
+        <label>
+          Convênio
+          <select id="gsi-monitor-convenio">
+            <option value="">Todos</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Convênio</th>
+              <th>Serviço</th>
+              <th>Classe</th>
+              <th>Tipo</th>
+              <th>Horário</th>
+              <th>Policial escalado</th>
+              <th>Presença</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="gsi-monitor-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script src="../js/script-gsi-monitoramento.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

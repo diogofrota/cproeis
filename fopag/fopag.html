@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - FOPAG</title>
+  <link rel="stylesheet" href="../css/style-fopag.css">
+</head>
+<body>
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>FOPAG</h1>
+        <p>Relatórios de presença confirmada para processamento da folha.</p>
+      </div>
+    </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu hamburger padronizado do projeto. Ele concentra as opções
+      de navegação no cabeçalho para manter a mesma experiência visual usada no GSI.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; cada link encaminha
+      para uma página HTML local ou para o retorno do módulo.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; o estado aberto/fechado é
+      controlado temporariamente no DOM pelo script da página.
+      TODO: Em produção, ligar o item ativo à rota autenticada e aplicar permissões por perfil.
+    -->
+    <nav class="module-menu" id="fopag-menu" aria-label="Menu de FOPAG">
+      <a class="menu-back-link" href="../index.html" data-history-back="false">Página inicial</a>
+    </nav>
+  </header>
+  <main>
+    <!--
+      DESCRIÇÃO DO BLOCO: Painel de relatório da FOPAG com serviços confirmados pelos convênios.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; filtros e exportações são
+      controlados pelo JavaScript da página.
+      ARMAZENAMENTO E PERSISTÊNCIA: Lê presenças gravadas em cproeis_convenios_vagas no LocalStorage.
+      TODO: Em produção, substituir por relatório oficial emitido por API, com autenticação e assinatura.
+    -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Presenças confirmadas</h2>
+          <p class="hint" id="fopag-count">Carregando registros disponíveis para folha.</p>
+        </div>
+        <div class="report-actions">
+          <button type="button" id="export-fopag-csv">Exportar CSV</button>
+          <button type="button" id="print-fopag-report">Gerar PDF</button>
+        </div>
+      </div>
+
+      <div class="filter-bar fopag-filter-grid" aria-label="Filtros da FOPAG">
+        <label>
+          Data do serviço - início
+          <input id="fopag-filter-start" type="date">
+        </label>
+        <label>
+          Data do serviço - fim
+          <input id="fopag-filter-end" type="date">
+        </label>
+        <label>
+          Policial
+          <input id="fopag-filter-policial" type="search" placeholder="Nome do policial">
+        </label>
+        <label>
+          ID funcional
+          <input id="fopag-filter-id" type="search" placeholder="Ex: 123456-7">
+        </label>
+        <label>
+          Posto/Graduação
+          <input id="fopag-filter-posto" type="search" placeholder="Ex: Capitão">
+        </label>
+        <label>
+          Unidade
+          <input id="fopag-filter-unidade" type="search" placeholder="Ex: 2º BPM">
+        </label>
+        <label>
+          Convênio
+          <input id="fopag-filter-convenio" type="search" placeholder="Nome do convênio">
+        </label>
+        <label>
+          Serviço
+          <input id="fopag-filter-servico" type="search" placeholder="Nome do serviço">
+        </label>
+        <label>
+          Horário
+          <input id="fopag-filter-horario" type="search" placeholder="Ex: 08:00">
+        </label>
+        <label>
+          Data da presença
+          <input id="fopag-filter-presenca" type="date">
+        </label>
+        <div class="filter-actions">
+          <button type="button" id="clear-fopag-filters">Limpar filtros</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Policial</th>
+              <th>ID Funcional</th>
+              <th>Posto/Graduação</th>
+              <th>Unidade</th>
+              <th>Convênio</th>
+              <th>Serviço</th>
+              <th>Horário</th>
+              <th>Presença</th>
+            </tr>
+          </thead>
+          <tbody id="fopag-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script src="../js/script-fopag.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

@@ -4,15 +4,33 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CPROEIS - Acompanhamento do Convênio</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../css/style-convenios-acompanhamento.css">
 </head>
 <body>
-  <header>
-    <a class="back-link" id="back-menu-link" href="operacao.html">Voltar ao menu</a>
-    <div class="header-copy">
-      <h1 id="page-title">Acompanhamento do convênio</h1>
-      <p id="page-subtitle">Controle mensal de vagas ofertadas, vagas preenchidas e limite financeiro.</p>
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="page-title">Acompanhar limite mensal</h1>
+        <p id="page-subtitle">Monitore o consumo mensal e os limites configurados para o convênio.</p>
+      </div>
     </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu hamburger padronizado do projeto. Ele concentra as opções
+      de navegação no cabeçalho para manter a mesma experiência visual usada no GSI.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; cada link encaminha
+      para uma página HTML local ou para o retorno do módulo.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; o estado aberto/fechado é
+      controlado temporariamente no DOM pelo script da página.
+      TODO: Em produção, ligar o item ativo à rota autenticada e aplicar permissões por perfil.
+    -->
+    <nav class="module-menu" id="convenios-menu" aria-label="Menu operacional do convênio">
+      <a id="menu-criar-vagas" href="criar-vagas.html">Criar vagas de serviço</a>
+      <a id="menu-acompanhamento" href="acompanhamento.html">Acompanhar limite mensal</a>
+      <a id="menu-vagas" href="vagas.html">Vagas criadas no mês</a>
+      <a id="menu-cursos" href="cursos.html">Cursos</a>
+      <a class="menu-logout-link" href="acesso.html" data-logout-convenio="true">Sair</a>
+    </nav>
   </header>
 
   <main>
@@ -165,6 +183,8 @@
     </section>
   </main>
 
-  <script src="script.js"></script>
+  <script src="../js/script-convenios-acompanhamento.js"></script>
+  <script src="../js/script-convenios-session.js"></script>
+  <script src="../js/script-navigation.js"></script>
 </body>
 </html>

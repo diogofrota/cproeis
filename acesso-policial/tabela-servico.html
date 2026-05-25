@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Tabela de Serviço</title>
+  <link rel="stylesheet" href="../css/style-acesso-policial-tabela-servico.css">
+</head>
+<body>
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="page-title">Tabela de serviço</h1>
+        <p id="page-subtitle">Lista detalhada dos serviços assumidos pelo policial.</p>
+      </div>
+    </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu operacional do acesso policial. Mantém a navegação entre
+      vagas, calendário, tabela de serviço, pagamentos e cursos com o policial logado.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os links são ajustados
+      pelo script de sessão para preservar o ID do policial.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; o ID de sessão local é mantido no
+      LocalStorage por `script-acesso-policial-session.js`.
+      TODO: Em produção, trocar os links estáticos por rotas autenticadas e permissões por perfil.
+    -->
+    <nav class="module-menu" id="acesso-policial-menu" aria-label="Menu do policial">
+      <a id="menu-vagas" href="vagas.html">Ver vagas</a>
+      <a href="historico-servico.html">Histórico de serviço</a>
+      <a href="tabela-servico.html">Tabela de serviço</a>
+      <a href="pagamentos.html">Pagamentos</a>
+      <a href="cursos.html">Cursos</a>
+      <a class="menu-logout-link" href="acesso.html" data-logout-policial="true">Sair</a>
+    </nav>
+  </header>
+
+  <main>
+    <!--
+      DESCRIÇÃO DO BLOCO: Tabela detalhada dos serviços assumidos pelo policial.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; filtros e linhas são
+      renderizados por JavaScript com base nas vagas escaladas.
+      ARMAZENAMENTO E PERSISTÊNCIA: Lê `cproeis_convenios_vagas`, `cproeis_contratos_convenios`
+      e a sessão `cproeis_acesso_policial_atual` do LocalStorage.
+      TODO: Em produção, emitir esta listagem a partir de API de escala individual com filtros
+      server-side, paginação e trilha de auditoria.
+    -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Tabela de serviço</h2>
+          <p class="hint" id="tabela-servico-count">Carregando serviços assumidos.</p>
+        </div>
+      </div>
+
+      <div class="filter-bar" aria-label="Filtros da tabela de serviço">
+        <label>
+          Pesquisar
+          <input id="service-table-filter" type="search" placeholder="Convênio, serviço, local ou status">
+        </label>
+        <label>
+          Início
+          <input id="service-table-start" type="date">
+        </label>
+        <label>
+          Fim
+          <input id="service-table-end" type="date">
+        </label>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Convênio</th>
+              <th>Serviço</th>
+              <th>Classe</th>
+              <th>Tipo</th>
+              <th>Horário</th>
+              <th>Local</th>
+              <th>Presença</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-servico-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-acesso-policial-tabela-servico.js"></script>
+  <script src="../js/script-acesso-policial-session.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

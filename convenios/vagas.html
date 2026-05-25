@@ -4,15 +4,33 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CPROEIS - Vagas Criadas</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../css/style-convenios-vagas.css">
 </head>
 <body>
-  <header>
-    <a class="back-link" id="back-menu-link" href="operacao.html">Voltar ao menu</a>
-    <div class="header-copy">
-      <h1 id="page-title">Vagas criadas</h1>
-      <p id="page-subtitle">Tabela geral de vagas geradas para o convênio vigente.</p>
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="page-title">Vagas criadas no mês</h1>
+        <p id="page-subtitle">Consulte as vagas mensais vinculadas ao convênio selecionado.</p>
+      </div>
     </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu hamburger padronizado do projeto. Ele concentra as opções
+      de navegação no cabeçalho para manter a mesma experiência visual usada no GSI.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; cada link encaminha
+      para uma página HTML local ou para o retorno do módulo.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; o estado aberto/fechado é
+      controlado temporariamente no DOM pelo script da página.
+      TODO: Em produção, ligar o item ativo à rota autenticada e aplicar permissões por perfil.
+    -->
+    <nav class="module-menu" id="convenios-menu" aria-label="Menu operacional do convênio">
+      <a id="menu-criar-vagas" href="criar-vagas.html">Criar vagas de serviço</a>
+      <a id="menu-acompanhamento" href="acompanhamento.html">Acompanhar limite mensal</a>
+      <a id="menu-vagas" href="vagas.html">Vagas criadas no mês</a>
+      <a id="menu-cursos" href="cursos.html">Cursos</a>
+      <a class="menu-logout-link" href="acesso.html" data-logout-convenio="true">Sair</a>
+    </nav>
   </header>
 
   <main>
@@ -65,6 +83,7 @@
             <option value="fora-prazo">Fora do prazo</option>
             <option value="aguardando-gsi">Aguardando GSI</option>
             <option value="autorizada-gsi">Autorizada GSI</option>
+            <option value="policial-escalado">Policial escalado</option>
           </select>
         </label>
 
@@ -82,45 +101,55 @@
         </div>
       </div>
 
+      <!--
+        DESCRIÇÃO DO BLOCO: Apresenta a legenda visual dos status usados na tabela de vagas,
+        mantendo os mesmos nomes e cores exibidos nas linhas, incluindo vaga já escalada.
+        PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os cards são conteúdo
+        estático de apoio visual para o usuário.
+        ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; a persistência dos status ocorre
+        no LocalStorage pelas rotinas JavaScript de vagas.
+        TODO: Em produção, carregar os nomes dos status a partir da mesma configuração usada
+        pelo backend para evitar divergência entre legenda e dados reais.
+      -->
       <div class="status-legend" aria-label="Legenda de estágios de disponibilização das vagas">
         <div class="status-legend-copy">
           <strong>Estágios de disponibilização das vagas</strong>
-          <span>Esses são os status usados para indicar quando uma vaga está programada, liberada ou aguardando autorização para ficar disponível ao policial.</span>
+          <span>Esses são os status exibidos na tabela para acompanhar a liberação e a autorização das vagas.</span>
         </div>
         <div class="status-legend-items">
           <span class="offer-status scheduled">
-            <span aria-hidden="true">○</span>
+            <span aria-hidden="true"></span>
             <span class="offer-status-text">
-              <strong>Programada</strong>
-              <small>Libera na quinta-feira</small>
-            </span>
-          </span>
-          <span class="offer-status queued">
-            <span aria-hidden="true">□</span>
-            <span class="offer-status-text">
-              <strong>Aguardando próxima liberação</strong>
-              <small>Semana futura</small>
-            </span>
-          </span>
-          <span class="offer-status offered">
-            <span aria-hidden="true">V</span>
-            <span class="offer-status-text">
-              <strong>Liberada</strong>
-              <small>Disponível ao policial</small>
+              <strong>PROGRAMADA</strong>
+              <small></small>
             </span>
           </span>
           <span class="offer-status pending">
-            <span aria-hidden="true">△</span>
+            <span aria-hidden="true"></span>
             <span class="offer-status-text">
-              <strong>Aguardando GSI</strong>
-              <small>Precisa de permissão</small>
+              <strong>SOLICITAR LIBERAÇÃO</strong>
+              <small></small>
+            </span>
+          </span>
+          <span class="offer-status waiting-release">
+            <span aria-hidden="true"></span>
+            <span class="offer-status-text">
+              <strong>AGUARDAR LIBERAÇÃO</strong>
+              <small></small>
             </span>
           </span>
           <span class="offer-status authorized">
-            <span aria-hidden="true">V</span>
+            <span aria-hidden="true"></span>
             <span class="offer-status-text">
-              <strong>Autorizada GSI</strong>
-              <small>Liberada por exceção</small>
+              <strong>AUTORIZADA</strong>
+              <small></small>
+            </span>
+          </span>
+          <span class="offer-status assigned">
+            <span aria-hidden="true"></span>
+            <span class="offer-status-text">
+              <strong>POLICIAL ESCALADO</strong>
+              <small></small>
             </span>
           </span>
         </div>
@@ -136,6 +165,7 @@
               <th>Tipo</th>
               <th>Início</th>
               <th>Término</th>
+              <th>Data da liberação</th>
               <th>Serviço ofertado</th>
               <th>Policial escalado</th>
               <th>Ações</th>
@@ -147,6 +177,33 @@
     </section>
   </main>
 
-  <script src="script.js"></script>
+  <!--
+    DESCRIÇÃO DO BLOCO: Modal operacional usado para concentrar as ações de uma vaga
+    selecionada, evitando excesso de botões dentro da linha da tabela.
+    PARÂMETROS E RETORNO: Não recebe parâmetros no HTML; o conteúdo é preenchido pelo
+    JavaScript conforme a vaga escolhida pelo usuário.
+    ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados diretamente; as ações internas acionam
+    rotinas JavaScript que atualizam o LocalStorage de vagas.
+    TODO: Em produção, substituir por componente compartilhado com permissões por perfil,
+    justificativa obrigatória e retorno assíncrono da API/GSI.
+  -->
+  <div class="vaga-action-modal is-hidden" id="vaga-action-modal" aria-hidden="true">
+    <div class="vaga-action-panel" role="dialog" aria-modal="true" aria-labelledby="vaga-action-title">
+      <div class="vaga-action-header">
+        <div>
+          <h2 id="vaga-action-title">Ações da vaga</h2>
+          <p id="vaga-action-meta"></p>
+        </div>
+        <button type="button" class="modal-close-button" id="close-vaga-action-modal" aria-label="Fechar ações">Fechar</button>
+      </div>
+      <div class="vaga-action-details" id="vaga-action-details"></div>
+      <div class="vaga-action-status" id="vaga-action-status"></div>
+      <div class="vaga-action-list" id="vaga-action-list"></div>
+    </div>
+  </div>
+
+  <script src="../js/script-convenios-vagas.js"></script>
+  <script src="../js/script-convenios-session.js"></script>
+  <script src="../js/script-navigation.js"></script>
 </body>
 </html>

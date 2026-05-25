@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Histórico de Curso</title>
+  <link rel="stylesheet" href="../css/style-convenios-historico-curso.css">
+</head>
+<body>
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="page-title">Histórico de curso</h1>
+        <p id="page-subtitle">Consulte os cursos cadastrados para o convênio selecionado.</p>
+      </div>
+    </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu hamburger padronizado do projeto. Ele concentra as opções
+      de navegação no cabeçalho para manter a mesma experiência visual usada no GSI.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; cada link encaminha
+      para uma página HTML local ou para o retorno do módulo.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; o estado aberto/fechado é
+      controlado temporariamente no DOM pelo script da página.
+      TODO: Em produção, ligar o item ativo à rota autenticada e aplicar permissões por perfil.
+    -->
+    <nav class="module-menu" id="convenios-cursos-menu" aria-label="Menu de cursos do convênio">
+      <a id="menu-criar-curso" href="criar-curso.html">Criar curso</a>
+      <a id="menu-historico-curso" href="historico-curso.html">Histórico de curso</a>
+      <a href="../contratos/tabela-convenios.html">Consultar contrato</a>
+      <a class="menu-logout-link" href="acesso.html" data-logout-convenio="true">Sair</a>
+    </nav>
+  </header>
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Histórico de curso</h2>
+          <p class="hint">Estrutura preparada para receber listagem, filtros e dados históricos da rota.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="../js/script-convenios-historico-curso.js"></script>
+  <script src="../js/script-convenios-session.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

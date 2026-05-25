@@ -4,15 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CPROEIS - Vagas fora do prazo</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../css/style-gsi-vagas-fora-prazo.css">
 </head>
 <body>
-  <header>
-    <a class="back-link" href="index.html">Voltar para GSI</a>
-    <div class="header-copy">
-      <h1>Vagas fora do prazo</h1>
-      <p>Solicitações encaminhadas pelos convênios para avaliação do GSI.</p>
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>Vagas fora do prazo</h1>
+        <p>Solicitações encaminhadas pelos convênios para avaliação do GSI.</p>
+      </div>
     </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu hamburger padronizado do projeto. Ele concentra as opções
+      de navegação no cabeçalho para manter a mesma experiência visual usada no GSI.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; cada link encaminha
+      para uma página HTML local ou para o retorno do módulo.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; o estado aberto/fechado é
+      controlado temporariamente no DOM pelo script da página.
+      TODO: Em produção, ligar o item ativo à rota autenticada e aplicar permissões por perfil.
+    -->
+    <nav class="module-menu" id="gsi-menu" aria-label="Menu do GSI">
+      <a href="planejamento-operacional.html">Planejamento Operacional</a>
+      <a href="controle-acesso.html">Controle de Acesso</a>
+      <a href="credenciamento.html">Credenciamento</a>
+      <a href="relatorios.html">Relatórios GSI</a>
+      <a href="monitoramento.html">Monitoramento</a>
+      <a href="auditoria.html">Auditoria</a>
+      <a href="vagas-fora-prazo.html">Vagas fora do prazo</a>
+      <a class="menu-back-link" href="../index.html" data-history-back="false">Página inicial</a>
+    </nav>
   </header>
 
   <main>
@@ -84,6 +105,7 @@
     </section>
   </main>
 
-  <script src="vagas-fora-prazo.js"></script>
+  <script src="../js/script-gsi-vagas-fora-prazo.js"></script>
+  <script src="../js/script-navigation.js"></script>
 </body>
 </html>

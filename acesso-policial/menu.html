@@ -4,15 +4,34 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CPROEIS - Menu do Policial</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../css/style-acesso-policial-menu.css">
 </head>
 <body>
-  <header>
-    <a class="back-link" href="index.html">Voltar para policiais</a>
-    <div class="header-copy">
-      <h1 id="page-title">Menu do policial</h1>
-      <p id="page-subtitle">Selecione uma opção disponível.</p>
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="page-title">Menu do policial</h1>
+        <p id="page-subtitle">Selecione uma opção disponível.</p>
+      </div>
     </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu em linha padronizado do projeto. Ele concentra as opções
+      de navegação no cabeçalho para manter a mesma experiência visual usada no GSI.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; cada link encaminha
+      para uma página HTML local ou para o retorno do módulo.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os links são ajustados
+      pelo script da página conforme a sessão do policial.
+      TODO: Em produção, ligar o item ativo à rota autenticada e aplicar permissões por perfil.
+    -->
+    <nav class="module-menu" id="acesso-policial-menu" aria-label="Menu do policial">
+      <a id="menu-vagas" href="vagas.html">Ver vagas</a>
+      <a href="historico-servico.html">Histórico de serviço</a>
+      <a href="tabela-servico.html">Tabela de serviço</a>
+      <a href="pagamentos.html">Pagamentos</a>
+      <a href="cursos.html">Cursos</a>
+      <a class="menu-logout-link" href="acesso.html" data-logout-policial="true">Sair</a>
+    </nav>
   </header>
 
   <main>
@@ -23,14 +42,10 @@
       ARMAZENAMENTO E PERSISTÊNCIA: O script ajusta os links usando o ID do policial recebido pela URL.
       TODO: Em produção, carregar permissões e dados do policial por sessão autenticada em vez de query string.
     -->
-    <nav class="module-menu" aria-label="Menu do policial">
-      <a id="menu-vagas" href="vagas.html">Ver vagas</a>
-      <a href="#historico-servico">Histórico de serviço</a>
-      <a href="#pagamentos">Pagamentos</a>
-      <a href="#cursos">Cursos</a>
-    </nav>
   </main>
 
-  <script src="script.js"></script>
+  <script src="../js/script-acesso-policial-menu.js"></script>
+  <script src="../js/script-acesso-policial-session.js"></script>
+  <script src="../js/script-navigation.js"></script>
 </body>
 </html>

@@ -4,142 +4,54 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CPROEIS - Sistema</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #f4f6f8;
-      color: #1f2937;
-    }
-
-    header {
-      background: #1f2a8a;
-      color: #fff;
-      padding: 32px 20px;
-      text-align: center;
-    }
-
-    header h1 {
-      margin: 0 0 8px;
-      font-size: 34px;
-    }
-
-    header p {
-      margin: 0;
-      font-size: 17px;
-      opacity: 0.9;
-    }
-
-    main {
-      width: min(1800px, calc(100% - 24px));
-      margin: 32px auto;
-    }
-
-    nav {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-      margin-bottom: 28px;
-    }
-
-    nav a {
-      min-height: 72px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      border-radius: 8px;
-      background: #fff;
-      color: #1f2a8a;
-      text-align: center;
-      text-decoration: none;
-      font-weight: 700;
-      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    nav a:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
-    }
-
-    section {
-      margin-bottom: 22px;
-      padding: 24px;
-      border-left: 5px solid #1f2a8a;
-      border-radius: 8px;
-      background: #fff;
-      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
-    }
-
-    section h2 {
-      margin: 0 0 10px;
-      color: #1f2a8a;
-      font-size: 24px;
-    }
-
-    section p {
-      margin: 0 0 16px;
-      line-height: 1.5;
-    }
-
-    ul {
-      margin: 0;
-      padding-left: 20px;
-      line-height: 1.8;
-    }
-
-    .back-link {
-      display: inline-block;
-      margin-top: 18px;
-      color: #1f2a8a;
-      font-weight: 700;
-      text-decoration: none;
-    }
-
-    .back-link:hover {
-      text-decoration: underline;
-    }
-
-    @media (max-width: 800px) {
-      nav {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (max-width: 520px) {
-      header h1 {
-        font-size: 28px;
-      }
-
-      nav {
-        grid-template-columns: 1fr;
-      }
-
-      section {
-        padding: 20px;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="css/style-index.css">
 </head>
 <body id="topo">
   <header>
     <h1>Sistema CPROEIS</h1>
-    <p>Selecione um módulo para consultar as opções disponíveis.</p>
+    <p>Selecione uma opção do sistema.</p>
   </header>
 
   <main>
-    <nav aria-label="Módulos do sistema">
-      <a href="administracao.html">Acesso à Administração CPROEIS</a>
-      <a href="convenios/index.html">Acesso do Convênio</a>
-      <a href="acesso-policial/index.html">Acesso do Policial</a>
-      <a href="#p1-unidade">Acesso da P/1 Unidade</a>
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu raiz unificado do sistema. Ele reúne os acessos gerais e as opções
+      administrativas que antes ficavam em página separada, reduzindo uma etapa de navegação.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; cada link direciona para
+      uma página HTML própria já preparada para futura rota.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; funciona apenas como navegação estática.
+      TODO: Em produção, aplicar controle de perfil para ocultar opções administrativas sem permissão.
+    -->
+    <nav aria-label="Módulos e opções do sistema">
+      <a href="cadastro-policial/cadastro.html">Base de Dados</a>
+      <a href="gsi/menu.html">GSI</a>
+      <a href="bloqueio-desbloqueio/bloqueio-desbloqueio.html">Bloqueio / Desbloqueio</a>
+      <a href="fopag/fopag.html">FOPAG</a>
+      <a href="contratos/cadastrar-convenio.html">Contratos</a>
+      <a href="acesso-comandante/acesso-comandante.html">Acesso Comandante</a>
+      <a href="convenios/acesso.html">Acesso do Convênio</a>
+      <a href="acesso-policial/acesso.html">Acesso do Policial</a>
+      <a href="p1-unidade/p1-unidade.html">P/1 Unidade</a>
     </nav>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Ferramentas locais de demonstração para facilitar testes do protótipo.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os botões acionam rotinas
+      JavaScript que carregam cadastros, geram vagas ou limpam o armazenamento local.
+      ARMAZENAMENTO E PERSISTÊNCIA: As ações gravam e removem dados somente em chaves cproeis_* do
+      LocalStorage do navegador atual.
+      TODO: Em produção, remover esta área da página pública e substituir por seeds controlados
+      em ambiente de homologação.
+    -->
+    <section class="demo-tools" aria-label="Ferramentas de teste local">
+      <div class="demo-actions">
+        <button type="button" id="seed-demo-registers">Carregar cadastros</button>
+        <button type="button" id="seed-demo-vagas">Gerar vagas simuladas</button>
+        <button type="button" class="danger-demo" id="clear-demo-cache">Limpar cache</button>
+      </div>
+    </section>
   </main>
+  <script src="js/script-navigation.js"></script>
+  <script src="dados-simulados/dados-demo.js"></script>
+  <script src="js/script-index-demo-data.js"></script>
 </body>
 </html>

@@ -1,0 +1,866 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #eef2f7;
+  color: #1f2937;
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Define o cabeçalho padrão do acesso do policial, mantendo consistência
+ * visual com Administração, GSI e Convênios.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica apenas apresentação visual.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados.
+ * TODO: Em produção, mover estilos compartilhados para um design system global.
+ */
+header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 126px;
+  background: #1f2a8a;
+  color: #fff;
+  padding: 34px 180px;
+  text-align: center;
+}
+
+.header-copy {
+  max-width: 980px;
+}
+
+header h1 {
+  margin: 0 0 8px;
+  font-size: 34px;
+}
+
+header p {
+  margin: 0;
+  font-size: 17px;
+  opacity: 0.9;
+}
+
+main {
+  width: min(1800px, calc(100% - 24px));
+  margin: 28px auto 40px;
+}
+
+.back-link {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2a8a;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+}
+
+.back-link:hover {
+  background: #eef2ff;
+}
+
+.module-menu {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.module-menu a {
+  min-height: 112px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2a8a;
+  text-align: center;
+  text-decoration: none;
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.module-menu a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+}
+
+.panel {
+  margin-bottom: 22px;
+  padding: 22px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+}
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+h2 {
+  margin: 0;
+  color: #1f2a8a;
+  font-size: 24px;
+}
+
+.hint {
+  margin: 6px 0 0;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Estrutura os filtros e tabelas do acesso do policial, seguindo a leitura
+ * operacional usada nos demais módulos do sistema.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; estiliza elementos HTML.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa armazenamento; os dados são carregados pelo JavaScript.
+ * TODO: Em produção, compartilhar estes componentes de tabela com os módulos de convênio e GSI.
+ */
+.filter-bar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(180px, 0.35fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+input {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #1f2937;
+  font: inherit;
+  background: #fff;
+}
+
+input:focus {
+  outline: 2px solid rgba(31, 42, 138, 0.25);
+  border-color: #1f2a8a;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+table {
+  width: 100%;
+  min-width: 1040px;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+th,
+td {
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  color: #1f2a8a;
+  font-size: 13px;
+  text-transform: uppercase;
+  background: #f8fafc;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.empty {
+  padding: 18px;
+  color: #64748b;
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.login-action,
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.login-action {
+  background: #15803d;
+  color: #fff;
+}
+
+.login-action:hover {
+  background: #166534;
+}
+
+.badge {
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-note {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Calendário mensal e tabela de histórico de serviços assumidos pelo
+ * policial, permitindo leitura visual e em lista da escala individual.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; define somente apresentação.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa dados; a leitura e renderização ocorrem no JavaScript.
+ * TODO: Em produção, evoluir para componente compartilhado de calendário operacional com estados
+ * de presença, pagamento e cancelamento.
+ */
+.calendar-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 10px 0 14px;
+}
+
+.calendar-toolbar h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 30px;
+  text-transform: capitalize;
+}
+
+.calendar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.calendar-actions button {
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #fff;
+  color: #111827;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+
+.calendar-actions button:hover {
+  border-color: #1f2a8a;
+  background: #eef2ff;
+  color: #1f2a8a;
+}
+
+.calendar-weekdays,
+.service-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.calendar-weekdays {
+  margin-bottom: 8px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.calendar-day {
+  min-height: 132px;
+  padding: 10px;
+  border: 1px solid #edf2f7;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.calendar-day.has-service {
+  border-color: #e8ddcf;
+  background: #faf6ef;
+}
+
+.calendar-day.is-today {
+  outline: 2px solid rgba(31, 42, 138, 0.18);
+}
+
+.calendar-day.is-muted {
+  background: transparent;
+  border-color: transparent;
+}
+
+.day-number {
+  display: block;
+  margin-bottom: 10px;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.calendar-service {
+  overflow: hidden;
+  margin-top: 6px;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: #fff;
+  color: #1f2937;
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-more {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.history-table-wrap {
+  margin-top: 22px;
+}
+
+.history-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+@media (max-width: 980px) {
+  .module-menu {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .calendar-weekdays,
+  .service-calendar {
+    gap: 6px;
+  }
+
+  .calendar-day {
+    min-height: 108px;
+    padding: 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  header {
+    justify-content: flex-start;
+    min-height: 150px;
+    padding: 72px 18px 26px;
+  }
+
+  header h1 {
+    font-size: 28px;
+  }
+
+  .back-link {
+    top: 18px;
+    transform: none;
+  }
+
+  .module-menu,
+  .filter-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .calendar-weekdays {
+    display: none;
+  }
+
+  .service-calendar {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-day.is-muted {
+    display: none;
+  }
+}
+
+
+/*
+ * DESCRIÇÃO DO BLOCO: Componente visual compartilhado para o header com menu hamburger,
+ * replicando o padrão adotado no GSI para manter uniformidade entre os módulos.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; define apresentação,
+ * responsividade e estados visuais para header, botão e links do menu.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; apenas responde às classes e atributos
+ * temporários aplicados no DOM pelo JavaScript da página.
+ * TODO: Em produção, extrair este bloco repetido para um CSS global do design system e manter
+ * somente variações de tema por módulo.
+ */
+.module-header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 126px;
+  background: #1f2a8a;
+  color: #fff;
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.module-header .header-top {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 64px;
+  align-items: center;
+  gap: 18px;
+  width: min(1800px, 100%);
+}
+
+.module-header .header-menu-control {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.module-header .header-copy {
+  max-width: 980px;
+  justify-self: center;
+}
+
+.module-header h1 {
+  margin: 0 0 8px;
+  font-size: 34px;
+  line-height: 1.1;
+}
+
+.module-header p {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+.module-header .menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.module-header .menu-toggle:hover,
+.module-header .menu-toggle:focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+  outline: 2px solid rgba(255, 255, 255, 0.35);
+  outline-offset: 2px;
+}
+
+.module-header .menu-icon,
+.module-header .menu-icon::before,
+.module-header .menu-icon::after {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.module-header .menu-icon {
+  position: relative;
+}
+
+.module-header .menu-icon::before,
+.module-header .menu-icon::after {
+  position: absolute;
+  left: 0;
+  content: "";
+}
+
+.module-header .menu-icon::before {
+  transform: translateY(-7px);
+}
+
+.module-header .menu-icon::after {
+  transform: translateY(7px);
+}
+
+.module-header.is-open .menu-icon {
+  background: transparent;
+}
+
+.module-header.is-open .menu-icon::before {
+  transform: rotate(45deg);
+}
+
+.module-header.is-open .menu-icon::after {
+  transform: rotate(-45deg);
+}
+
+.module-header .module-menu {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: min(1800px, 100%);
+  max-height: 0;
+  margin-top: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-8px);
+  visibility: hidden;
+  transition: max-height 0.24s ease, margin-top 0.24s ease, opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+}
+
+.module-header.is-open .module-menu {
+  max-height: 220px;
+  margin-top: 20px;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.module-header .module-menu a {
+  width: 210px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  box-shadow: none;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.module-header .module-menu a:hover,
+.module-header .module-menu a:focus-visible {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.54);
+  transform: none;
+}
+
+.module-header .module-menu .menu-back-link {
+  background: #fff;
+  color: #1f2a8a;
+}
+
+.module-header .module-menu .menu-back-link:hover,
+.module-header .module-menu .menu-back-link:focus-visible {
+  background: #eef2ff;
+  border-color: #fff;
+}
+
+@media (max-width: 760px) {
+  .module-header {
+    padding: 22px 14px;
+  }
+
+  .module-header .header-top {
+    grid-template-columns: 52px minmax(0, 1fr) 52px;
+    gap: 10px;
+  }
+
+  .module-header h1 {
+    font-size: 28px;
+  }
+
+  .module-header p {
+    font-size: 15px;
+  }
+
+  .module-header .module-menu a {
+    width: min(100%, 320px);
+  }
+}
+
+
+/*
+ * DESCRIÇÃO DO BLOCO: Estiliza a opção Sair do menu do policial com vermelho discreto,
+ * diferenciando logout das demais navegações sem criar destaque agressivo.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica cor e sombra por classe.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; o logout é tratado pelo JavaScript de sessão.
+ * TODO: Em produção, alinhar a cor de saída aos tokens do design system e às regras de acessibilidade.
+ */
+.module-header .module-menu .menu-logout-link {
+  background: #f8ecea;
+  color: #8a332b;
+  border-color: rgba(138, 51, 43, 0.18);
+  box-shadow: 0 6px 14px rgba(80, 24, 18, 0.12);
+}
+
+.module-header .module-menu .menu-logout-link:hover,
+.module-header .module-menu .menu-logout-link:focus-visible {
+  background: #f1ddda;
+  border-color: rgba(138, 51, 43, 0.28);
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Padroniza os headers do projeto para manter os menus sempre visíveis,
+ * sem depender do antigo botão hamburger.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; sobrescreve classes de menu
+ * usadas nos HTML estáticos do sistema.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; altera somente a apresentação visual.
+ * TODO: Em produção, consolidar esta regra em um CSS compartilhado de layout para evitar duplicação.
+ */
+.module-header .header-top {
+  display: flex;
+  justify-content: center;
+}
+
+.module-header .header-menu-control,
+.module-header .menu-toggle {
+  display: none;
+}
+
+.module-header .module-menu {
+  max-height: none;
+  margin-top: 20px;
+  overflow: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+  visibility: visible;
+}
+
+@media (max-width: 760px) {
+  .module-header .header-top {
+    display: flex;
+  }
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Ajusta a tela de histórico do policial para caber no tamanho visível
+ * da janela, evitando que o calendário empurre o conteúdo para fora do viewport.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; redefine altura, espaçamentos
+ * e áreas roláveis apenas por CSS.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; a persistência continua no JavaScript
+ * por meio das vagas salvas em LocalStorage.
+ * TODO: Em produção, transformar este layout em componente responsivo compartilhado para agendas
+ * e escalas, com preferência de densidade por perfil de usuário.
+ */
+html,
+body {
+  height: 100%;
+}
+
+body {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.module-header {
+  min-height: 0;
+  padding: 18px 20px 16px;
+}
+
+.module-header h1 {
+  margin-bottom: 6px;
+  font-size: 30px;
+}
+
+.module-header p {
+  font-size: 15px;
+}
+
+.module-header .module-menu {
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.module-header .module-menu a {
+  width: 210px;
+  min-height: 36px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+main {
+  width: min(1800px, calc(100% - 18px));
+  height: calc(100% - 18px);
+  min-height: 0;
+  margin: 9px auto;
+  overflow: hidden;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: 16px 18px;
+  overflow: hidden;
+}
+
+.panel-header {
+  flex: 0 0 auto;
+  margin-bottom: 8px;
+}
+
+h2 {
+  font-size: 22px;
+}
+
+.hint {
+  margin-top: 4px;
+}
+
+.calendar-toolbar {
+  flex: 0 0 auto;
+  margin: 6px 0 8px;
+}
+
+.calendar-toolbar h3 {
+  font-size: 26px;
+}
+
+.calendar-actions button {
+  min-height: 34px;
+  padding: 7px 12px;
+}
+
+.calendar-weekdays,
+.service-calendar {
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
+.service-calendar {
+  flex: 1 1 auto;
+  align-content: stretch;
+  max-height: none;
+  overflow: hidden;
+}
+
+.calendar-weekdays {
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.calendar-day {
+  min-height: clamp(58px, 8.2vh, 96px);
+  padding: 7px;
+}
+
+.day-number {
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.calendar-service {
+  margin-top: 4px;
+  padding: 4px 7px;
+  font-size: 11px;
+}
+
+.calendar-more {
+  margin-top: 5px;
+  font-size: 11px;
+}
+
+.history-table-wrap {
+  flex: 0 0 30%;
+  min-height: 142px;
+  margin-top: 12px;
+  overflow: auto;
+}
+
+.history-table-wrap table {
+  min-width: 520px;
+}
+
+.history-table-wrap th:nth-child(1),
+.history-table-wrap td:nth-child(1),
+.history-table-wrap th:nth-child(3),
+.history-table-wrap td:nth-child(3) {
+  width: 150px;
+}
+
+.history-table-wrap th,
+.history-table-wrap td {
+  padding: 9px 10px;
+}
+
+@media (max-width: 760px) {
+  body {
+    display: block;
+    height: auto;
+    min-height: 100dvh;
+    overflow: auto;
+  }
+
+  main,
+  .panel {
+    height: auto;
+    overflow: visible;
+  }
+
+  .module-header .module-menu a {
+    width: min(100%, 320px);
+  }
+
+  .history-table-wrap {
+    max-height: none;
+  }
+}
