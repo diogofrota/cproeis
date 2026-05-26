@@ -2188,7 +2188,9 @@ function updateConvenioLinks(convenio) {
     'menu-criar-vagas': `criar-vagas.html?${idParam}`,
     'menu-acompanhamento': `acompanhamento.html?${idParam}`,
     'menu-vagas': `vagas.html?${idParam}`,
-    'menu-cursos': `cursos.html?${idParam}`,
+    'menu-criar-curso': `criar-curso.html?${idParam}`,
+    'menu-historico-curso': `historico-curso.html?${idParam}`,
+    'menu-detalhes-convenio': `../contratos/detalhes-convenio.html?${idParam}`,
     'back-menu-link': `operacao.html?${idParam}`
   };
 
@@ -3846,8 +3848,8 @@ function renderVagasTable(convenio) {
       <tr${rowClass}>
         <td>${formatDate(vaga.dataServico)}</td>
         <td>${escapeHtml(vaga.nomeServico || '-')}</td>
-        <td>${escapeHtml(gruposClasse[vaga.classe] || vaga.classe)}</td>
-        <td>${escapeHtml(tiposServico[vaga.tipoServico] || vaga.tipoServico)}</td>
+        <td>${escapeHtml(formatClasseTabelaVaga(vaga))}</td>
+        <td>${escapeHtml(formatCargaHorariaTabelaVaga(vaga))}</td>
         <td>${escapeHtml(vaga.horaInicio || '-')}</td>
         <td>${escapeHtml(vaga.horaFim || '-')}</td>
         <td class="release-date-cell">
@@ -3880,6 +3882,32 @@ function renderVagasTable(convenio) {
       </tr>
     `;
   }).join('');
+}
+
+function formatClasseTabelaVaga(vaga) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Reduz a classe exibida na tabela de vagas para a sigla operacional
+   * cadastrada, evitando repetir o prefixo "Classe" em cada linha.
+   * PARÂMETROS E RETORNO: Recebe vaga como object e retorna string com a classe, como A, B, C/D ou D.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava LocalStorage; formata apenas o objeto já carregado
+   * da lista cproeis_convenios_vagas.
+   * TODO: Em produção, persistir a classe como domínio oficial e exibir rótulos por configuração de perfil.
+   */
+  return vaga?.classe || '-';
+}
+
+function formatCargaHorariaTabelaVaga(vaga) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Extrai somente o número de horas do tipo de serviço para exibição compacta
+   * na coluna "Carga horária".
+   * PARÂMETROS E RETORNO: Recebe vaga como object e retorna string numérica, como 6, 8 ou 12.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não altera dados; lê apenas tipoServico/cargaHoraria do objeto em
+   * memória carregado de cproeis_convenios_vagas.
+   * TODO: Em produção, gravar a carga horária em campo numérico próprio para não depender de inferência textual.
+   */
+  const source = String(vaga?.tipoServico || vaga?.cargaHoraria || '');
+  const match = source.match(/\d+/);
+  return match ? match[0] : '-';
 }
 
 /**

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Detalhes do Convênio</title>
+  <link rel="stylesheet" href="../css/style-contratos-tabela-convenios.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página compartilhada de consulta detalhada do convênio. Ela serve tanto
+    ao clique de Detalhes na tabela de contratos quanto ao menu interno do acesso do convênio,
+    preservando o responsável logado quando a origem for a área operacional.
+    PARÂMETROS E RETORNO: Recebe o identificador do convênio pelo parâmetro `id` da URL e não
+    retorna valores; o JavaScript renderiza os dados no painel abaixo.
+    ARMAZENAMENTO E PERSISTÊNCIA: Lê os dados em `cproeis_contratos_convenios`,
+    `cproeis_contratos_valores`, `cproeis_contratos_responsaveis`,
+    `cproeis_convenio_atual` e `cproeis_convenio_responsavel_atual` no LocalStorage.
+    TODO: Em produção, substituir o parâmetro local por rota autenticada e buscar os detalhes em API segura.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="page-title">Detalhes do Convênio</h1>
+        <p id="page-subtitle">Consulta consolidada de contrato, vigência, valores e responsáveis cadastrados.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="convenios-menu" aria-label="Menu operacional do convênio">
+      <a id="menu-criar-vagas" href="../convenios/criar-vagas.html">Criar vagas de serviço</a>
+      <a id="menu-acompanhamento" href="../convenios/acompanhamento.html">Acompanhar limite mensal</a>
+      <a id="menu-vagas" href="../convenios/vagas.html">Vagas criadas</a>
+      <a id="menu-criar-curso" href="../convenios/criar-curso.html">Criar curso</a>
+      <a id="menu-historico-curso" href="../convenios/historico-curso.html">Histórico de curso</a>
+      <a id="menu-detalhes-convenio" href="detalhes-convenio.html">Detalhes do convênio</a>
+      <a class="menu-logout-link" href="../convenios/acesso.html" data-logout-convenio="true">Sair</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="view active" id="detalhes-view">
+      <div class="panel" id="details-empty">
+        <h2>Detalhes do convênio</h2>
+        <p class="hint">Nenhum convênio foi informado para consulta.</p>
+      </div>
+
+      <div class="panel" id="details-panel" hidden>
+        <div class="panel-header">
+          <div>
+            <h2 id="details-heading">Detalhes do convênio</h2>
+            <p class="hint" id="details-subtitle"></p>
+          </div>
+        </div>
+
+        <div id="details-content"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-contratos-tabela-convenios.js"></script>
+  <script src="../js/script-convenios-session.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

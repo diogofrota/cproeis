@@ -389,6 +389,15 @@ function seedDemoRegisters() {
  * TODO: Centralizar cálculo financeiro em serviço de domínio compartilhado.
  */
 function demoGetValorUnitario(convenio, classe, tipoServico) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Resolve o valor unitário sintético usado na geração de vagas de demonstração.
+   * A criação operacional só deve persistir classes A, B e C/D; para C/D, usa C como valor provisório
+   * agregado até a FOPAG calcular pagamento por graduação individual.
+   * PARÂMETROS E RETORNO: Recebe convenio (object), classe (string) e tipoServico (string);
+   * retorna Number com o valor cadastrado para a classe de referência.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; lê somente os valores já carregados do convênio em memória.
+   * TODO: Na FOPAG, pagar C/D por policial: Soldado/Cabo pela classe D e Sargento/Subtenente pela classe C.
+   */
   const lookupClass = classe === 'C/D' ? 'C' : classe;
   const row = (convenio.valores || []).find((valor) => valor.classe === lookupClass) || {};
   return Number(row[tipoServico] || 0);
@@ -431,7 +440,8 @@ function demoShouldCreateVaga(convenioIndex, dayOffset) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
- * Gera as vagas de um convênio para um dia, respeitando a regra de no máximo uma vaga de oficial por dia.
+ * Gera as vagas de um convênio para um dia, respeitando a regra de no máximo uma vaga de oficial por dia
+ * e a norma operacional de criação apenas nas classes A, B e C/D.
  *
  * PARÂMETROS E RETORNO:
  * @param {object} convenio - Convênio de teste.
@@ -443,7 +453,7 @@ function demoShouldCreateVaga(convenioIndex, dayOffset) {
  * Não grava diretamente; a lista retornada é salva por `seedDemoVagas`.
  *
  * NOTAS DE EXPANSÃO:
- * TODO: Parametrizar composição de oficial/praça conforme regra operacional oficial do CPROEIS.
+ * TODO: Quando a FOPAG for evoluída, separar pagamento de C/D por graduação usando valores C e D do contrato.
  */
 function demoBuildVagasForDay(convenio, convenioIndex, dayOffset) {
   if (!demoShouldCreateVaga(convenioIndex, dayOffset)) return [];
@@ -474,11 +484,9 @@ function demoBuildVagasForDay(convenio, convenioIndex, dayOffset) {
     });
   }
 
-  const pracaClasses = ['C/D', 'D', 'C'];
-  const pracaClass = pracaClasses[(convenioIndex + dayOffset) % pracaClasses.length];
   const [horaInicio, horaFim] = turnos[tipoPraca];
   daily.push({
-    classe: pracaClass,
+    classe: 'C/D',
     tipoServico: tipoPraca,
     quantidade: 1 + ((convenioIndex + dayOffset) % 4),
     nomeServico: `Policiamento ${localBase}`,
@@ -488,7 +496,7 @@ function demoBuildVagasForDay(convenio, convenioIndex, dayOffset) {
 
   if ((convenioIndex + dayOffset) % 6 === 0) {
     daily.push({
-      classe: 'D',
+      classe: 'C/D',
       tipoServico: 'servico6',
       quantidade: 1 + (dayOffset % 2),
       nomeServico: `Apoio ${localBase}`,

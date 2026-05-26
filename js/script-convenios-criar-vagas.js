@@ -14,7 +14,23 @@ const gruposClasse = {
   'C/D': 'Classe C/D'
 };
 
+/*
+ * DESCRIÇÃO DO BLOCO: Define as classes que o responsável pode escolher ao criar vagas.
+ * Para criação operacional, a classe D não é disponibilizada isoladamente; praças de C e D
+ * entram pela opção agregada C/D.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros; fornece array de strings usado na montagem do DOM.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; limita apenas as opções que serão persistidas
+ * em cproeis_convenios_vagas durante a criação.
+ * TODO: Na FOPAG, calcular pagamento individual por graduação: Soldado/Cabo usam valor cadastrado
+ * da classe D; Sargento/Subtenente usam valor cadastrado da classe C, mesmo quando a vaga foi criada como C/D.
+ */
 const classesDisponiveis = ['A', 'B', 'C/D'];
+const classesCriacaoPermitidas = new Set(classesDisponiveis);
+const descricoesClasseCriacao = {
+  A: 'Coronel e Tenente-Coronel',
+  B: 'Major, Capitão, Tenente e Aspirante',
+  'C/D': 'Subtenente, Sargento, Cabo e Soldado'
+};
 
 const tiposServico = {
   servico12: 'Serviço 12h',
@@ -1413,7 +1429,10 @@ function renderClassConfigCards(convenio) {
       ${classesDisponiveis.map((classe, index) => `
         <label class="class-pill">
           <input type="radio" name="classe-operacional" value="${escapeHtml(classe)}" data-class-enabled="${escapeHtml(classe)}"${index === 0 ? ' checked' : ''}>
-          <span>${escapeHtml(gruposClasse[classe])}</span>
+          <span class="class-pill-copy">
+            <strong>${escapeHtml(gruposClasse[classe])}</strong>
+            <small>${escapeHtml(descricoesClasseCriacao[classe] || '')}</small>
+          </span>
         </label>
       `).join('')}
     </div>
@@ -1537,7 +1556,7 @@ function collectServiceInfo() {
 function getSelectedClassConfigs(convenio) {
   const selectedInput = document.querySelector('[data-class-enabled]:checked');
   const classe = selectedInput?.value || selectedInput?.dataset.classEnabled || '';
-  if (!classe) return [];
+  if (!classe || !classesCriacaoPermitidas.has(classe)) return [];
 
   const turnoKey = document.querySelector('[data-class-turno]')?.value || 'turno12';
   const turno = turnosServico[turnoKey] || turnosServico.turno12;
@@ -2187,7 +2206,9 @@ function updateConvenioLinks(convenio) {
     'menu-criar-vagas': `criar-vagas.html?${idParam}`,
     'menu-acompanhamento': `acompanhamento.html?${idParam}`,
     'menu-vagas': `vagas.html?${idParam}`,
-    'menu-cursos': `cursos.html?${idParam}`,
+    'menu-criar-curso': `criar-curso.html?${idParam}`,
+    'menu-historico-curso': `historico-curso.html?${idParam}`,
+    'menu-detalhes-convenio': `../contratos/detalhes-convenio.html?${idParam}`,
     'back-menu-link': `operacao.html?${idParam}`
   };
 

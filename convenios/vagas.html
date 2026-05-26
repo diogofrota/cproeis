@@ -10,7 +10,7 @@
   <header class="module-header">
     <div class="header-top">
       <div class="header-copy">
-        <h1 id="page-title">Vagas criadas no mês</h1>
+        <h1 id="page-title">Vagas criadas</h1>
         <p id="page-subtitle">Consulte as vagas mensais vinculadas ao convênio selecionado.</p>
       </div>
     </div>
@@ -27,8 +27,10 @@
     <nav class="module-menu" id="convenios-menu" aria-label="Menu operacional do convênio">
       <a id="menu-criar-vagas" href="criar-vagas.html">Criar vagas de serviço</a>
       <a id="menu-acompanhamento" href="acompanhamento.html">Acompanhar limite mensal</a>
-      <a id="menu-vagas" href="vagas.html">Vagas criadas no mês</a>
-      <a id="menu-cursos" href="cursos.html">Cursos</a>
+      <a id="menu-vagas" href="vagas.html">Vagas criadas</a>
+      <a id="menu-criar-curso" href="criar-curso.html">Criar curso</a>
+      <a id="menu-historico-curso" href="historico-curso.html">Histórico de curso</a>
+      <a id="menu-detalhes-convenio" href="../contratos/detalhes-convenio.html">Detalhes do convênio</a>
       <a class="menu-logout-link" href="acesso.html" data-logout-convenio="true">Sair</a>
     </nav>
   </header>
@@ -64,12 +66,12 @@
         </label>
 
         <label>
-          Tipo de serviço
+          Carga horária
           <select id="vaga-filter-type">
             <option value="">Todos</option>
-            <option value="servico12">Serviço 12h</option>
-            <option value="servico8">Serviço 8h</option>
-            <option value="servico6">Serviço 6h</option>
+            <option value="servico12">12</option>
+            <option value="servico8">8</option>
+            <option value="servico6">6</option>
           </select>
         </label>
 
@@ -162,7 +164,7 @@
               <th>Data</th>
               <th>Nome do serviço</th>
               <th>Classe</th>
-              <th>Tipo</th>
+              <th>Carga horária</th>
               <th>Início</th>
               <th>Término</th>
               <th>Data da liberação</th>

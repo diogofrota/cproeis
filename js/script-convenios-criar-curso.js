@@ -59,8 +59,6 @@ function hydrateCursoMenu() {
   const params = new URLSearchParams(window.location.search);
   const convenioId = params.get('id') || '';
   const backLink = document.getElementById('back-menu-link');
-  const criarCursoLink = document.getElementById('menu-criar-curso');
-  const historicoCursoLink = document.getElementById('menu-historico-curso');
   const query = params.toString();
   const currentPage = window.location.pathname.split('/').pop();
 
@@ -70,14 +68,6 @@ function hydrateCursoMenu() {
 
   if (convenioId && backLink && currentPage !== 'cursos.html') {
     backLink.href = `cursos.html?${query}`;
-  }
-
-  if (query && criarCursoLink) {
-    criarCursoLink.href = `criar-curso.html?${query}`;
-  }
-
-  if (query && historicoCursoLink) {
-    historicoCursoLink.href = `historico-curso.html?${query}`;
   }
 
   const convenio = loadConvenios().find((item) => item.id === convenioId);

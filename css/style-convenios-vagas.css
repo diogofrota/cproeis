@@ -1195,6 +1195,25 @@ th {
   white-space: nowrap;
 }
 
+/*
+ * DESCRIÇÃO DO BLOCO: Centraliza as colunas operacionais da tabela de vagas, mantendo
+ * Data e Nome do serviço à esquerda para leitura rápida e alinhando Classe até Ações.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; usa seletores de coluna
+ * para formatar a tabela renderizada pelo JavaScript.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; altera somente alinhamento visual.
+ * TODO: Em produção, avaliar classes semânticas por coluna para evitar dependência da ordem da tabela.
+ */
+th:nth-child(n+3),
+td:nth-child(n+3) {
+  text-align: center;
+}
+
+td:nth-child(n+3) .actions,
+td:nth-child(n+3) .offer-status {
+  margin-right: auto;
+  margin-left: auto;
+}
+
 tbody tr:last-child td {
   border-bottom: 0;
 }

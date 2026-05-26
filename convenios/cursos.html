@@ -24,32 +24,32 @@
       controlado temporariamente no DOM pelo script da página.
       TODO: Em produção, ligar o item ativo à rota autenticada e aplicar permissões por perfil.
     -->
-    <nav class="module-menu" id="convenios-cursos-menu" aria-label="Menu de cursos do convênio">
+    <nav class="module-menu" id="convenios-menu" aria-label="Menu operacional do convênio">
+      <a id="menu-criar-vagas" href="criar-vagas.html">Criar vagas de serviço</a>
+      <a id="menu-acompanhamento" href="acompanhamento.html">Acompanhar limite mensal</a>
+      <a id="menu-vagas" href="vagas.html">Vagas criadas</a>
       <a id="menu-criar-curso" href="criar-curso.html">Criar curso</a>
       <a id="menu-historico-curso" href="historico-curso.html">Histórico de curso</a>
-      <a href="../contratos/tabela-convenios.html">Consultar contrato</a>
+      <a id="menu-detalhes-convenio" href="../contratos/detalhes-convenio.html">Detalhes do convênio</a>
       <a class="menu-logout-link" href="acesso.html" data-logout-convenio="true">Sair</a>
     </nav>
   </header>
 
   <main>
     <!--
-      DESCRIÇÃO DO BLOCO: Barra superior de retorno para consulta do contrato, mantendo a mesma
-      estrutura visual usada no menu operacional dos convênios.
-      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; oferece apenas navegação por link.
-      ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; o destino aponta para a tela de contratos existente.
-      TODO: Em produção, preservar o contrato selecionado via sessão autenticada em vez de depender de páginas estáticas.
+      DESCRIÇÃO DO BLOCO: Área interna do módulo de cursos. Ela mantém cada função em arquivo HTML
+      próprio sem trocar o menu principal do responsável logado.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os links levam para páginas HTML separadas.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; o script de sessão injeta id/responsável nos hrefs.
+      TODO: Em produção, controlar permissões de criação e consulta de curso por perfil do responsável.
     -->
-    <div class="top-bar">
-      <a class="back-link" href="../contratos/tabela-convenios.html">Consultar contrato</a>
-    </div>
-
     <!--
-      DESCRIÇÃO DO BLOCO: Menu inicial do módulo de cursos. Ele separa a futura criação de cursos
-      da consulta histórica, permitindo desenvolver cada tela interna em arquivos próprios posteriormente.
-      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; disponibiliza dois pontos de navegação.
-      ARMAZENAMENTO E PERSISTÊNCIA: Não utiliza LocalStorage, arrays locais, variáveis globais ou APIs nesta etapa.
-      TODO: Substituir as âncoras temporárias por páginas reais com cadastro, histórico, validação e persistência em banco.
+      DESCRIÇÃO DO BLOCO: Área reservada do agrupador de cursos. As rotinas principais foram
+      promovidas ao menu fixo do responsável para evitar navegação intermediária.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; mantém o HTML separado para
+      compatibilidade com links antigos.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados nesta área.
+      TODO: Em produção, redirecionar esta rota para a rotina padrão de cursos conforme perfil autenticado.
     -->
   </main>
 

@@ -1516,6 +1516,15 @@ function removeContract(id) {
 }
 
 function renderDetails(id) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Renderiza a ficha completa de um convênio selecionado, consolidando dados
+   * contratuais, valores por classe, responsáveis e histórico de contratos do mesmo CNPJ.
+   * PARÂMETROS E RETORNO: Recebe id como string do convênio e não retorna valores; atualiza o DOM
+   * com os dados encontrados ou mantém o estado vazio quando não há registro.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê cproeis_contratos_convenios, cproeis_contratos_valores e
+   * cproeis_contratos_responsaveis no LocalStorage por meio das funções getConvenios/getValores/getResponsaveis.
+   * TODO: Em produção, buscar os detalhes por endpoint autenticado e aplicar controle de acesso por perfil.
+   */
   if (!detailsHeading || !detailsSubtitle || !detailsContent || !detailsEmpty || !detailsPanel) {
     return;
   }
@@ -1658,6 +1667,17 @@ function renderDetails(id) {
   setActiveView('detalhes-view');
 }
 
+function openDetailsPage(id) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Encaminha a consulta de detalhes para a página compartilhada, permitindo
+   * que a tabela de contratos e o acesso do convênio usem o mesmo destino.
+   * PARÂMETROS E RETORNO: Recebe id como string do convênio e não retorna valores; altera window.location.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava LocalStorage; apenas preserva o identificador na URL.
+   * TODO: Em produção, trocar query string por rota nomeada com validação de autorização no backend.
+   */
+  window.location.href = `detalhes-convenio.html?id=${encodeURIComponent(id)}`;
+}
+
 function renderAll() {
   renderTables();
 
@@ -1696,6 +1716,25 @@ function carregarAcaoInicialDoFormulario() {
   if (renewId) {
     const convenio = getConvenios().find((item) => item.id === renewId);
     if (convenio) renewContract(convenio);
+  }
+}
+
+function carregarDetalheInicialDaURL() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Inicializa a página dedicada de detalhes a partir do parâmetro `id` recebido
+   * na URL ou da sessão local do convênio, mantendo compatibilidade com o painel antigo da tabela.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valores; lê window.location.search.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê a URL e a chave cproeis_convenio_atual no LocalStorage; quando há id,
+   * aciona renderDetails para consultar os dados persistidos nas chaves de contratos.
+   * TODO: Em produção, validar o identificador recebido antes de consultar a API de contratos.
+   */
+  if (!detailsPanel || !detailsContent) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const detailId = params.get('id') || params.get('details') || localStorage.getItem('cproeis_convenio_atual') || '';
+
+  if (detailId) {
+    renderDetails(detailId);
   }
 }
 
@@ -1812,7 +1851,7 @@ document.addEventListener('click', (event) => {
   const convenio = getConvenios().find((item) => item.id === button.dataset.id);
   if (!convenio) return;
 
-  if (button.dataset.action === 'details') renderDetails(convenio.id);
+  if (button.dataset.action === 'details') openDetailsPage(convenio.id);
   if (button.dataset.action === 'renew') {
     if (form) {
       renewContract(convenio);
@@ -1836,3 +1875,4 @@ createFieldHints();
 renderResponsaveisForm();
 carregarAcaoInicialDoFormulario();
 renderAll();
+carregarDetalheInicialDaURL();

@@ -2187,7 +2187,9 @@ function updateConvenioLinks(convenio) {
     'menu-criar-vagas': `criar-vagas.html?${idParam}`,
     'menu-acompanhamento': `acompanhamento.html?${idParam}`,
     'menu-vagas': `vagas.html?${idParam}`,
-    'menu-cursos': `cursos.html?${idParam}`,
+    'menu-criar-curso': `criar-curso.html?${idParam}`,
+    'menu-historico-curso': `historico-curso.html?${idParam}`,
+    'menu-detalhes-convenio': `../contratos/detalhes-convenio.html?${idParam}`,
     'back-menu-link': `operacao.html?${idParam}`
   };
 

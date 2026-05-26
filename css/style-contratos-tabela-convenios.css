@@ -1035,6 +1035,28 @@ tr:hover td {
   border-color: #fff;
 }
 
+/*
+ * DESCRIÇÃO DO BLOCO: Estiliza a opção Sair quando a página de detalhes é aberta pelo
+ * acesso do convênio, mantendo logout visualmente separado das consultas operacionais.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica estilo à classe
+ * .menu-logout-link usada no HTML compartilhado.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; a limpeza da sessão ocorre no
+ * JavaScript de sessão somente após clique do usuário.
+ * TODO: Em produção, mover este padrão para CSS compartilhado do menu autenticado.
+ */
+.module-header .module-menu .menu-logout-link {
+  background: #f8ecea;
+  color: #8a332b;
+  border-color: rgba(138, 51, 43, 0.18);
+  box-shadow: 0 6px 14px rgba(80, 24, 18, 0.12);
+}
+
+.module-header .module-menu .menu-logout-link:hover,
+.module-header .module-menu .menu-logout-link:focus-visible {
+  background: #f1ddda;
+  border-color: rgba(138, 51, 43, 0.28);
+}
+
 @media (max-width: 760px) {
   .module-header {
     padding: 22px 14px;
