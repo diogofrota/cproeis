@@ -162,10 +162,11 @@ function demoBuildValores(convenioId, offset) {
  */
 function demoBuildResponsavel(convenioId, convenioNome, index) {
   const base = convenioNome.split(' ')[0];
+  const nomeResponsavel = DEMO_DATA.responsaveisConvenio?.[index - 1] || `Responsável Operacional ${index}`;
   return {
     id: `${convenioId}-resp-01`,
     convenioId,
-    nome: `${base} Operacional`,
+    nome: nomeResponsavel,
     cpf: `123.45${index}.${String(600 + index).padStart(3, '0')}-${String(10 + index).slice(-2)}`,
     email: `${base.toLowerCase()}.operacional@demo.cproeis.local`,
     telefone: `(21) 99${index}10-${String(4500 + index).padStart(4, '0')}`,

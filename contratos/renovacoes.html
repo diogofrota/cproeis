@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Renovações</title>
+  <link rel="stylesheet" href="../css/style-contratos-tabela-convenios.css">
+  <link rel="stylesheet" href="../css/style-renovacao-contrato.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página da seção de contratos para análise das solicitações de
+    renovação abertas pelos responsáveis dos convênios.
+    PARÂMETROS E RETORNO: Não recebe parâmetros obrigatórios; o JavaScript lê as solicitações
+    do armazenamento local e permite salvar análise, pendências, aprovação e finalização.
+    ARMAZENAMENTO E PERSISTÊNCIA: Lê `cproeis_contratos_renovacoes`,
+    `cproeis_contratos_convenios`, `cproeis_contratos_valores` e
+    `cproeis_contratos_responsaveis`; grava alterações nessas mesmas chaves e registra o
+    fechamento em `cproeis_contratos_historicos`.
+    TODO: Em produção, proteger esta rota por perfil da seção de contratos e registrar
+    auditoria de cada aprovação, reprovação e criação de novo contrato.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>Contratos e Convênios</h1>
+        <p>Análise de documentos, observações e finalização de renovações contratuais.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="contratos-menu" aria-label="Funcionalidades de contratos">
+      <a class="tab-button" href="cadastrar-convenio.html">Cadastrar convênio</a>
+      <a class="tab-button" href="tabela-convenios.html">Tabela Convênios</a>
+      <a class="tab-button active" href="renovacoes.html">Renovações</a>
+      <a class="menu-back-link" href="../index.html" data-history-back="false">Página inicial</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Solicitações de renovação</h2>
+          <p class="hint" id="renewal-count">Nenhuma solicitação cadastrada.</p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="compact-table">
+          <thead>
+            <tr>
+              <th>Convênio</th>
+              <th>Contrato atual</th>
+              <th>Status</th>
+              <th>Atualização</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="renewals-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" id="analysis-panel" hidden>
+      <div class="panel-header">
+        <div>
+          <h2 id="analysis-title">Análise da renovação</h2>
+          <p class="hint" id="analysis-subtitle"></p>
+        </div>
+        <span class="renewal-status" id="analysis-status">Em análise</span>
+      </div>
+
+      <div class="renewal-grid" id="analysis-documents"></div>
+
+      <form id="analysis-form" class="renewal-form">
+        <h3 class="section-title">Dados do novo contrato</h3>
+
+        <label>
+          Nº do novo contrato
+          <input id="new-contract-number" type="text" placeholder="SEI-000000/000000/0000">
+        </label>
+
+        <label>
+          Início da nova vigência
+          <input id="new-contract-start" type="date">
+        </label>
+
+        <label>
+          Fim da nova vigência
+          <input id="new-contract-end" type="date">
+        </label>
+
+        <label>
+          Valor do contrato
+          <input id="new-contract-value" type="number" min="0" step="0.01">
+        </label>
+
+        <label>
+          Data da publicação
+          <input id="new-contract-diario-data" type="date">
+        </label>
+
+        <label>
+          Página do Diário Oficial
+          <input id="new-contract-diario-pagina" type="text">
+        </label>
+
+        <div class="form-actions">
+          <button type="button" class="secondary" id="save-analysis">Salvar análise</button>
+          <button type="button" id="approve-documents">Aprovar documentação</button>
+          <button type="button" id="finish-renewal">Finalizar renovação</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="../js/script-contratos-renovacoes.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

@@ -956,6 +956,14 @@ function openInitialViewFromHash() {
 }
 
 function render() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Renderiza a tabela principal de policiais cadastrados, incluindo a coluna
+   * Comportamento apenas como dado exibido; oficiais e aspirante aparecem sem comportamento por regra.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valor; monta linhas HTML no tbody.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê policiais e históricos do localStorage por meio das funções load*;
+   * grava somente no DOM da tabela, sem alterar os dados persistidos.
+   * TODO: Em produção, buscar a listagem paginada em API e aplicar a regra de comportamento no backend.
+   */
   const policiais = loadPoliciais().map(normalizePolicial);
   policiaisBody.innerHTML = '';
   tableCount.textContent = policiais.length === 0
@@ -966,7 +974,7 @@ function render() {
     const row = document.createElement('tr');
     const cell = document.createElement('td');
     cell.className = 'empty';
-    cell.colSpan = 8;
+    cell.colSpan = 9;
     cell.textContent = 'Nenhum policial cadastrado. Use o formulário acima para adicionar o primeiro registro.';
     row.appendChild(cell);
     policiaisBody.appendChild(row);
@@ -978,12 +986,16 @@ function render() {
     const currentSituacaoSanitaria = getCurrentSituacaoSanitaria(policial);
     const currentFunctional = getCurrentFunctional(policial);
     const currentUnit = getCurrentUnit(policial);
+    const currentBehavior = requiresBehaviorByPosto(currentFunctional.postoGraduacao)
+      ? getCurrentBehavior(policial)
+      : '';
     [
       policial.rg,
       policial.idFuncional,
-      policial.nomeCompleto,
       currentFunctional.postoGraduacao,
+      policial.nomeCompleto,
       currentUnit,
+      currentBehavior,
       currentSituacaoSanitaria,
       getCurrentStatus(policial)
     ].forEach((value) => {

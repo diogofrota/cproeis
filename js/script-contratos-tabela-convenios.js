@@ -1591,7 +1591,7 @@ function renderDetails(id) {
         <tbody>
           ${responsaveis.map((responsavel) => `
             <tr>
-              <td><strong>${escapeHtml(getResponsavelDisplayName(responsavel.nome))}</strong></td>
+              <td><strong>${escapeHtml(titleCaseText(responsavel.nome) || '-')}</strong></td>
               <td>${escapeHtml(maskCpfForDisplay(responsavel.cpf))}</td>
               <td>${escapeHtml(normalizeText(responsavel.email).toLowerCase() || '-')}</td>
               <td>${escapeHtml(formatPhone(responsavel.telefone) || '-')}</td>

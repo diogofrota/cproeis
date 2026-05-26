@@ -170,11 +170,11 @@ function onlyDigits(value) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
- * Reduz o nome do responsável ao primeiro nome para exibição na página de acesso do convênio.
+ * Mantém o nome completo do responsável para exibição na página de acesso do convênio.
  *
  * PARÂMETROS E RETORNO:
  * @param {string} nome - Nome completo salvo no cadastro de contratos.
- * @returns {string} Primeiro nome normalizado ou hífen quando não houver nome.
+ * @returns {string} Nome completo normalizado ou hífen quando não houver nome.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
  * Não grava dados; apenas trata texto lido do LocalStorage antes de renderizar no DOM.
@@ -183,8 +183,7 @@ function onlyDigits(value) {
  * TODO: aplicar regras de privacidade por perfil quando houver autenticação real de usuários.
  */
 function getResponsavelDisplayName(nome) {
-  const firstName = normalizeTextInput(nome).split(' ').filter(Boolean)[0] || '';
-  return firstName || '-';
+  return normalizeTextInput(nome) || '-';
 }
 
 /**

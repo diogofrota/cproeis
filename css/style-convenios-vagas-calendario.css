@@ -1,0 +1,290 @@
+/*
+ * DESCRIÇÃO DO BLOCO: Componentes visuais da página de calendário de vagas do convênio,
+ * reaproveitando a leitura operacional já usada no calendário do acesso policial.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; estiliza calendário,
+ * cartões de vagas e estados de seleção.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; o JavaScript aplica classes conforme
+ * as vagas carregadas do LocalStorage.
+ * TODO: Em produção, consolidar este calendário em componente compartilhado entre convênio,
+ * policial e GSI.
+ */
+.calendar-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 10px 0 14px;
+}
+
+.calendar-toolbar h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 30px;
+  text-transform: capitalize;
+}
+
+.calendar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.calendar-actions button {
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #fff;
+  color: #111827;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+
+.calendar-actions button:hover {
+  border-color: #1f2a8a;
+  background: #eef2ff;
+  color: #1f2a8a;
+}
+
+.calendar-status-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.calendar-status-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+}
+
+.legend-dot.is-filled {
+  border-color: #86efac;
+  background: #dcfce7;
+}
+
+.legend-dot.is-warning {
+  border-color: #fde68a;
+  background: #fef3c7;
+}
+
+.legend-dot.is-clear {
+  border-color: #cbd5e1;
+  background: #fff;
+}
+
+.calendar-weekdays,
+.service-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.calendar-weekdays {
+  margin-bottom: 8px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.calendar-day {
+  min-height: 132px;
+  padding: 10px;
+  border: 1px solid #edf2f7;
+  border-radius: 8px;
+  background: #f8fafc;
+  cursor: pointer;
+  text-align: left;
+}
+
+.calendar-day:hover,
+.calendar-day:focus-visible {
+  border-color: #1f2a8a;
+  outline: 2px solid rgba(31, 42, 138, 0.16);
+}
+
+.calendar-day.has-vagas {
+  border-color: #dbeafe;
+  background: #eff6ff;
+}
+
+.calendar-day.is-selected {
+  border-color: #1f2a8a;
+  box-shadow: inset 0 0 0 1px #1f2a8a;
+}
+
+.calendar-day.is-today {
+  outline: 2px solid rgba(31, 42, 138, 0.18);
+}
+
+.calendar-day.is-muted {
+  cursor: default;
+  background: transparent;
+  border-color: transparent;
+}
+
+.day-number {
+  display: block;
+  margin-bottom: 10px;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.calendar-service {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: #fff;
+  color: #1f2937;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.calendar-service.is-filled {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.calendar-service.is-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.calendar-service.is-clear {
+  background: #fff;
+  color: #1f2937;
+}
+
+.calendar-service span {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-service strong {
+  flex: 0 0 auto;
+  min-width: 22px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #1f2a8a;
+  font-size: 11px;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.calendar-service.is-filled strong {
+  background: #bbf7d0;
+  color: #166534;
+}
+
+.calendar-service.is-warning strong {
+  background: #fde68a;
+  color: #92400e;
+}
+
+.calendar-more {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.calendar-day-details {
+  display: grid;
+  gap: 12px;
+}
+
+.calendar-vaga-card {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.85fr) minmax(220px, 1fr) repeat(4, minmax(100px, 0.4fr));
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.calendar-vaga-card strong {
+  display: block;
+  color: #1f2a8a;
+}
+
+.calendar-vaga-card span {
+  display: block;
+  margin-top: 3px;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.calendar-empty {
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #64748b;
+}
+
+@media (max-width: 980px) {
+  .calendar-weekdays,
+  .service-calendar {
+    gap: 6px;
+  }
+
+  .calendar-day {
+    min-height: 108px;
+    padding: 8px;
+  }
+
+  .calendar-vaga-card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .calendar-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .calendar-weekdays {
+    display: none;
+  }
+
+  .service-calendar,
+  .calendar-vaga-card {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-day.is-muted {
+    display: none;
+  }
+}

@@ -94,6 +94,32 @@ function garantirEstiloAlertaVencimentoConvenio() {
 }
 
 /*
+  DESCRIÇÃO DA FUNÇÃO: Injeta ajuste visual do menu do responsável para acomodar todas as
+  opções diretas, incluindo renovação de contrato, sem depender de editar cada CSS legado.
+  PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valores; cria uma tag style única.
+  ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava LocalStorage; altera somente o DOM da página.
+  TODO: Em produção, mover esta largura responsiva para o CSS compartilhado oficial do módulo.
+*/
+function garantirEstiloMenuResponsavelConvenio() {
+  if (document.getElementById('convenio-session-menu-style')) return;
+
+  const style = document.createElement('style');
+  style.id = 'convenio-session-menu-style';
+  style.textContent = `
+    .module-header .module-menu a {
+      width: clamp(178px, 12vw, 215px);
+    }
+
+    @media (max-width: 760px) {
+      .module-header .module-menu a {
+        width: min(100%, 320px);
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+/*
   DESCRIÇÃO DA FUNÇÃO: Localiza ou cria o contêiner do alerta global logo após o header,
   mantendo compatibilidade com a tela de criação de vagas que já possuía esse elemento.
   PARÂMETROS E RETORNO: Não recebe parâmetros e retorna HTMLElement|null com o alerta disponível.
@@ -238,8 +264,10 @@ function aplicarSessaoConvenioNoHeader(convenio, responsavel) {
     'menu-criar-vagas': `${convenioPath}criar-vagas.html?${idParam}`,
     'menu-acompanhamento': `${convenioPath}acompanhamento.html?${idParam}`,
     'menu-vagas': `${convenioPath}vagas.html?${idParam}`,
+    'menu-vagas-calendario': `${convenioPath}vagas-calendario.html?${idParam}`,
     'menu-criar-curso': `${convenioPath}criar-curso.html?${idParam}`,
     'menu-historico-curso': `${convenioPath}historico-curso.html?${idParam}`,
+    'menu-renovacao-contrato': `${convenioPath}renovacao-contrato.html?${idParam}`,
     'menu-detalhes-convenio': `${contratosPath}detalhes-convenio.html?${idParam}`,
     'course-details-link': `${contratosPath}detalhes-convenio.html?${idParam}`
   };
@@ -270,5 +298,6 @@ function inicializarSairConvenio() {
 
 const sessaoConvenio = obterSessaoConvenio();
 aplicarSessaoConvenioNoHeader(sessaoConvenio.convenio, sessaoConvenio.responsavel);
+garantirEstiloMenuResponsavelConvenio();
 renderizarAlertaVencimentoConvenio(sessaoConvenio.convenio);
 inicializarSairConvenio();

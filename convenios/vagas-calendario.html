@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Vagas Calendário</title>
+  <link rel="stylesheet" href="../css/style-convenios-criar-vagas.css">
+  <link rel="stylesheet" href="../css/style-convenios-vagas-calendario.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página de calendário das vagas criadas pelo convênio logado.
+    PARÂMETROS E RETORNO: Recebe `id` e `responsavel` pela URL ou sessão local; não retorna
+    valores, pois o JavaScript renderiza os dados no próprio DOM.
+    ARMAZENAMENTO E PERSISTÊNCIA: Lê `cproeis_convenios_vagas`, `cproeis_contratos_convenios`,
+    `cproeis_convenio_atual` e `cproeis_convenio_responsavel_atual` no LocalStorage.
+    TODO: Em produção, alimentar o calendário por API filtrada por convênio, competência e permissões.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="page-title">Vagas calendário</h1>
+        <p id="page-subtitle">Visualização mensal das vagas criadas pelo convênio.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="convenios-menu" aria-label="Menu operacional do convênio">
+      <a id="menu-criar-vagas" href="criar-vagas.html">Criar vagas de serviço</a>
+      <a id="menu-acompanhamento" href="acompanhamento.html">Acompanhar limite mensal</a>
+      <a id="menu-vagas" href="vagas.html">Vagas criadas</a>
+      <a id="menu-vagas-calendario" href="vagas-calendario.html">Vagas calendário</a>
+      <a id="menu-criar-curso" href="criar-curso.html">Criar curso</a>
+      <a id="menu-historico-curso" href="historico-curso.html">Histórico de curso</a>
+      <a id="menu-renovacao-contrato" href="renovacao-contrato.html">Renovação de contrato</a>
+      <a id="menu-detalhes-convenio" href="../contratos/detalhes-convenio.html">Detalhes do convênio</a>
+      <a class="menu-logout-link" href="acesso.html" data-logout-convenio="true">Sair</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Calendário de vagas</h2>
+          <p class="hint" id="calendar-count">Carregando vagas do convênio.</p>
+        </div>
+      </div>
+
+      <div class="calendar-toolbar" aria-label="Navegação do calendário de vagas">
+        <h3 id="calendar-title">Calendário</h3>
+        <div class="calendar-actions">
+          <button type="button" id="calendar-prev" aria-label="Mês anterior">←</button>
+          <button type="button" id="calendar-today">Hoje</button>
+          <button type="button" id="calendar-next" aria-label="Próximo mês">→</button>
+        </div>
+      </div>
+
+      <div class="calendar-status-legend" aria-label="Legenda de status das vagas">
+        <span><i class="legend-dot is-filled"></i> Vaga preenchida</span>
+        <span><i class="legend-dot is-warning"></i> Precisa de autorização do GSI</span>
+        <span><i class="legend-dot is-clear"></i> Liberada ou programada</span>
+      </div>
+
+      <div class="calendar-weekdays" aria-hidden="true">
+        <span>Seg</span>
+        <span>Ter</span>
+        <span>Qua</span>
+        <span>Qui</span>
+        <span>Sex</span>
+        <span>Sáb</span>
+        <span>Dom</span>
+      </div>
+      <div class="service-calendar" id="service-calendar" aria-label="Calendário de vagas criadas"></div>
+    </section>
+
+    <section class="panel" id="selected-day-panel">
+      <div class="panel-header">
+        <div>
+          <h2 id="selected-day-title">Vagas do dia</h2>
+          <p class="hint" id="selected-day-subtitle">Clique em um dia do calendário para consultar as vagas criadas.</p>
+        </div>
+      </div>
+      <div class="calendar-day-details" id="selected-day-details"></div>
+    </section>
+  </main>
+
+  <script src="../js/script-convenios-vagas-calendario.js"></script>
+  <script src="../js/script-convenios-session.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>
