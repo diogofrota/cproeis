@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Criar Serviço</title>
+  <link rel="stylesheet" href="../css/style-convenios-criar-vagas.css">
+  <link rel="stylesheet" href="../css/style-forms.css">
+</head>
+<body>
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="page-title">Criar serviço</h1>
+        <p id="page-subtitle">Cadastre um ponto de apresentação para usar na criação de vagas.</p>
+      </div>
+    </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu do acesso do convênio com as novas rotas de serviços.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os links são normalizados pelo script de sessão.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; navega entre páginas HTML locais.
+      TODO: Em produção, gerar este menu a partir de rotas autenticadas e permissões do responsável.
+    -->
+    <nav class="module-menu" id="convenios-menu" aria-label="Menu operacional do convênio">
+      <a id="menu-criar-vagas" href="criar-vagas.html">Criar vagas de serviço</a>
+      <a id="menu-acompanhamento" href="acompanhamento.html">Acompanhar limite mensal</a>
+      <a id="menu-vagas" href="vagas.html">Vagas criadas</a>
+      <a id="menu-vagas-calendario" href="vagas-calendario.html">Vagas calendário</a>
+      <a id="menu-perfil-convenio" href="perfil.html">Perfil</a>
+      <a id="menu-dados-contrato" href="dados-contrato.html">Dados do contrato</a>
+      <a id="menu-servicos" href="servicos.html">Serviços cadastrados</a>
+      <a id="menu-criar-servico" href="criar-servico.html">Criar serviço</a>
+      <a id="menu-criar-curso" href="criar-curso.html">Criar curso</a>
+      <a id="menu-historico-curso" href="historico-curso.html">Histórico de curso</a>
+      <a id="menu-inscritos-curso" href="inscritos-curso.html">Inscritos em cursos</a>
+      <a id="menu-renovacao-contrato" href="renovacao-contrato.html">Renovação de contrato</a>
+      <a class="menu-logout-link" href="acesso.html" data-logout-convenio="true">Sair</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Novo serviço de apresentação</h2>
+        </div>
+      </div>
+
+      <form id="servico-form" class="wizard-form">
+        <section class="wizard-card">
+          <div class="wizard-card-header">
+            <span>01</span>
+            <div>
+              <h3>Dados do serviço</h3>
+              <p class="hint">Defina o nome operacional e o local de apresentação.</p>
+            </div>
+          </div>
+
+          <div class="service-grid">
+            <label class="wide">
+              Nome do serviço
+              <input id="nome-servico" type="text" placeholder="Ex.: Reforço Aeroporto Executivo" required>
+            </label>
+
+            <label class="wide">
+              Local de apresentação
+              <input id="local-servico" type="text" placeholder="Ex.: Portaria principal, base operacional..." required>
+            </label>
+          </div>
+        </section>
+
+        <section class="wizard-card">
+          <div class="wizard-card-header">
+            <span>02</span>
+            <div>
+              <h3>Endereço de apresentação</h3>
+              <p class="hint">Cadastre o endereço que ficará disponível para as próximas vagas.</p>
+            </div>
+          </div>
+
+          <div class="service-grid">
+            <label>
+              CEP
+              <input id="servico-cep" type="text" inputmode="numeric" placeholder="00000-000">
+            </label>
+
+            <label class="wide">
+              Logradouro
+              <input id="servico-logradouro" type="text" placeholder="Rua, avenida, praça..." required>
+            </label>
+
+            <label>
+              Número
+              <input id="servico-numero" type="text" required>
+            </label>
+
+            <label>
+              Complemento
+              <input id="servico-complemento" type="text">
+            </label>
+
+            <label>
+              Bairro
+              <input id="servico-bairro" type="text" required>
+            </label>
+
+            <label>
+              Cidade
+              <input id="servico-cidade" type="text" required>
+            </label>
+
+            <label>
+              UF
+              <input id="servico-uf" type="text" maxlength="2" placeholder="RJ" required>
+            </label>
+
+            <label class="wide">
+              Ponto de referência
+              <input id="ponto-referencia" type="text" placeholder="Ex.: Ao lado do terminal, entrada pela rua lateral...">
+            </label>
+          </div>
+        </section>
+
+        <div class="form-actions page-actions">
+          <a class="button-link ghost" id="voltar-servicos-link" href="servicos.html">Voltar</a>
+          <button type="submit">Salvar serviço</button>
+        </div>
+
+        <p id="servico-status" class="form-status" role="status"></p>
+      </form>
+    </section>
+  </main>
+
+  <script src="../js/script-convenios-criar-servico.js"></script>
+  <script src="../js/script-convenios-session.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

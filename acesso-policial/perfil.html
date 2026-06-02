@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Perfil do Policial</title>
+  <link rel="stylesheet" href="../css/style-acesso-policial-cursos.css">
+  <link rel="stylesheet" href="../css/style-forms.css">
+</head>
+<body>
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="page-title">Perfil do policial</h1>
+        <p id="page-subtitle">Consulta cadastral sem edição.</p>
+      </div>
+    </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu direto do policial com acesso ao perfil e às rotas operacionais.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; cada link abre uma página HTML separada.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; o script de sessão ajusta os links com o ID do policial.
+      TODO: Em produção, montar o menu conforme permissões e sessão autenticada.
+    -->
+    <nav class="module-menu" id="acesso-policial-menu" aria-label="Menu do policial">
+      <a id="menu-vagas" href="vagas.html">Ver vagas</a>
+      <a href="perfil.html">Perfil</a>
+      <a href="historico-servico.html">Histórico de serviço</a>
+      <a href="tabela-servico.html">Tabela de serviço</a>
+      <a href="pagamentos.html">Pagamentos</a>
+      <a href="cursos.html">Cursos</a>
+      <a href="cursos-disponiveis.html">Cursos disponíveis</a>
+      <a href="boletim-curso.html">Publicação de curso</a>
+      <a href="habilitacao.html">Habilitação de moto</a>
+      <a class="menu-logout-link" href="acesso.html" data-logout-policial="true">Sair</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Dados cadastrais</h2>
+          <p class="hint" id="profile-hint">Informações carregadas da base de policiais.</p>
+        </div>
+      </div>
+      <div class="details-grid" id="profile-grid"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Cursos da Polícia Militar</h2>
+          <p class="hint" id="profile-bulletin-count">Cursos concluídos e informados por publicação em boletim.</p>
+        </div>
+      </div>
+      <!--
+        DESCRIÇÃO DO BLOCO: Tabela de cursos da Polícia Militar consolidados por publicação em BOL PM.
+        PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; o script renderiza somente registros concluídos/validados.
+        ARMAZENAMENTO E PERSISTÊNCIA: Lê `cproeis_policiais_cursos_boletins` no LocalStorage.
+        TODO: Em produção, validar automaticamente a publicação em boletim antes de habilitar o curso no perfil.
+      -->
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Curso</th><th>BOL PM</th><th>Data BOL PM</th><th>Página</th><th>Situação</th></tr></thead>
+          <tbody id="profile-bulletin-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Cursos de capacitação dos convênios</h2>
+          <p class="hint" id="profile-enrollment-count">Capacitações concluídas em turmas criadas pelos convênios.</p>
+        </div>
+      </div>
+      <!--
+        DESCRIÇÃO DO BLOCO: Tabela de capacitações concluídas pelo policial em turmas de convênios.
+        PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; o script filtra inscrições concluídas.
+        ARMAZENAMENTO E PERSISTÊNCIA: Lê `cproeis_policiais_cursos_inscricoes` e `cproeis_convenios_cursos_capacitacao`.
+        TODO: Em produção, gravar conclusão em tabela oficial com certificado, frequência e auditoria.
+      -->
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Capacitação</th><th>Convênio</th><th>Período</th><th>Carga horária</th><th>Situação</th></tr></thead>
+          <tbody id="profile-enrollment-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Habilitação de moto</h2>
+          <p class="hint" id="profile-license-count">Dados da habilitação vinculada ao policial.</p>
+        </div>
+      </div>
+      <!--
+        DESCRIÇÃO DO BLOCO: Tabela da habilitação de moto vinculada ao policial.
+        PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; o script renderiza registros locais.
+        ARMAZENAMENTO E PERSISTÊNCIA: Lê `cproeis_policiais_habilitacoes` no LocalStorage.
+        TODO: Em produção, exibir apenas CNHs validadas por OCR/IA e conferência documental.
+      -->
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Número CNH</th><th>Categoria</th><th>Data de vencimento</th><th>Situação</th><th>Origem</th></tr></thead>
+          <tbody id="profile-license-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-acesso-policial-perfil.js"></script>
+  <script src="../js/script-acesso-policial-session.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

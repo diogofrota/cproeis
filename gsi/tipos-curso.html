@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Tipos de Curso</title>
+  <link rel="stylesheet" href="../css/style-gsi-credenciamento.css">
+  <link rel="stylesheet" href="../css/style-forms.css">
+</head>
+<body>
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>GSI</h1>
+        <p>Cadastro de tipos de curso usados na habilitação operacional dos policiais.</p>
+      </div>
+    </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu do GSI com a nova rota de tipos de curso.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os links direcionam para
+      páginas HTML separadas do módulo.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; a persistência ocorre apenas no formulário da página.
+      TODO: Em produção, aplicar permissões do GSI para restringir manutenção de listas oficiais.
+    -->
+    <nav class="module-menu" id="gsi-menu" aria-label="Opções do GSI">
+      <a href="planejamento-operacional.html">Planejamento Operacional</a>
+      <a href="controle-acesso.html">Controle de Acesso</a>
+      <a href="credenciamento.html">Credenciamento</a>
+      <a href="relatorios.html">Relatórios GSI</a>
+      <a href="monitoramento.html">Monitoramento</a>
+      <a href="auditoria.html">Auditoria</a>
+      <a href="tipos-curso.html">Tipos de curso</a>
+      <a href="../convenios/cursos.html">Cursos</a>
+      <a href="vagas-fora-prazo.html">Vagas fora do prazo</a>
+      <a class="menu-back-link" href="../index.html" data-history-back="false">Página inicial</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Tipos de curso</h2>
+          <p class="hint">Mantenha a lista oficial usada por convênios e pelo envio de boletim do policial.</p>
+        </div>
+      </div>
+
+      <!--
+        DESCRIÇÃO DO BLOCO: Formulário de manutenção da lista oficial de cursos do GSI.
+        PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; o script lê os campos no submit.
+        ARMAZENAMENTO E PERSISTÊNCIA: Grava `cproeis_gsi_tipos_curso_capacitacao` no LocalStorage.
+        TODO: Em produção, persistir em banco com auditoria, versionamento e status de vigência.
+      -->
+      <form id="course-type-form" class="course-form">
+        <label>
+          Nome do curso
+          <input id="course-type-name" type="text" required placeholder="Ex.: Patrulha Escolar">
+        </label>
+        <label>
+          Código interno
+          <input id="course-type-code" type="text" placeholder="Ex.: PATRULHA_ESCOLAR">
+        </label>
+        <label>
+          Status
+          <select id="course-type-status">
+            <option value="Ativo">Ativo</option>
+            <option value="Inativo">Inativo</option>
+          </select>
+        </label>
+        <label class="wide">
+          Observações
+          <input id="course-type-notes" type="text" placeholder="Critérios, área responsável ou regra de validação.">
+        </label>
+        <div class="form-actions">
+          <button type="submit">Salvar tipo</button>
+        </div>
+      </form>
+      <p class="hint" id="course-type-feedback" aria-live="polite"></p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Lista oficial</h2>
+          <p class="hint" id="course-type-count">Carregando tipos.</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Curso</th>
+              <th>Código</th>
+              <th>Status</th>
+              <th>Observações</th>
+            </tr>
+          </thead>
+          <tbody id="course-type-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-gsi-tipos-curso.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

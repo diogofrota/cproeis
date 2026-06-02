@@ -1172,6 +1172,77 @@ button:hover {
   border-radius: 8px;
 }
 
+.course-type-table-wrap {
+  /*
+   * DESCRIÇÃO DO BLOCO: Separa a tabela de tipos de capacitação do formulário de cadastro
+   * para reforçar que tipo e turma são cadastros distintos do convênio.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica somente espaçamento visual.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; o script controla os registros renderizados.
+   * TODO: Em produção, mover este espaçamento para componente compartilhado de formulário+tabela.
+   */
+  margin-top: 16px;
+}
+
+.target-rank-field {
+  /*
+   * DESCRIÇÃO DO BLOCO: Organiza a seleção de múltiplos postos/graduações por checkbox,
+   * deixando claro que o convênio pode marcar mais de uma opção.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; altera apenas apresentação.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; o JavaScript coleta os checkboxes marcados.
+   * TODO: Em produção, avaliar componente com busca quando houver lista maior de postos.
+   */
+  min-width: 0;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+#course-type {
+  min-height: 44px;
+  height: 44px;
+  padding: 10px 12px;
+  line-height: 1.25;
+}
+
+.target-rank-field legend {
+  padding: 0 6px;
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.target-rank-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.target-rank-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid #dbe4f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-weight: 700;
+}
+
+.target-rank-option input {
+  width: 16px;
+  min-height: 16px;
+  margin: 0;
+  padding: 0;
+}
+
+.target-rank-option:has(input:checked) {
+  border-color: #1f2a8a;
+  background: #eef2ff;
+  color: #1f2a8a;
+}
+
 table {
   width: 100%;
   min-width: 1320px;
@@ -1557,6 +1628,10 @@ tr:hover td {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .target-rank-grid {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+  }
+
   .dashboard-panel.span-2 {
     grid-column: span 2;
   }
@@ -1645,6 +1720,10 @@ tr:hover td {
   .metric-row,
   .metric-row.single,
   .creation-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .target-rank-grid {
     grid-template-columns: 1fr;
   }
 

@@ -3,29 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CPROEIS - Renovação de Contrato</title>
+  <title>CPROEIS - Perfil do Responsável</title>
   <link rel="stylesheet" href="../css/style-convenios-criar-vagas.css">
-  <link rel="stylesheet" href="../css/style-renovacao-contrato.css">
+  <link rel="stylesheet" href="../css/style-forms.css">
 </head>
 <body>
-  <!--
-    DESCRIÇÃO DO BLOCO: Página do responsável do convênio para abertura e acompanhamento
-    do processo de renovação contratual.
-    PARÂMETROS E RETORNO: Recebe `id` e `responsavel` pela URL ou pela sessão local; não
-    retorna valores, pois o JavaScript grava a solicitação no armazenamento do navegador.
-    ARMAZENAMENTO E PERSISTÊNCIA: Lê o contrato em `cproeis_contratos_convenios` e grava
-    documentos, observações e status em `cproeis_contratos_renovacoes` no LocalStorage.
-    TODO: Em produção, substituir a gravação local por upload autenticado, antivírus,
-    controle de tamanho e armazenamento seguro de arquivos.
-  -->
   <header class="module-header">
     <div class="header-top">
       <div class="header-copy">
-        <h1 id="page-title">Renovação de contrato</h1>
-        <p id="page-subtitle">Envie a documentação necessária para análise da seção de contratos.</p>
+        <h1 id="page-title">Perfil do responsável</h1>
+        <p id="page-subtitle">Consulta do usuário vinculado ao convênio.</p>
       </div>
     </div>
 
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu do acesso do convênio com rota de perfil somente leitura.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; o script de sessão ajusta os links.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; navega entre páginas locais do responsável.
+      TODO: Em produção, montar este menu por permissões retornadas pela autenticação.
+    -->
     <nav class="module-menu" id="convenios-menu" aria-label="Menu operacional do convênio">
       <a id="menu-criar-vagas" href="criar-vagas.html">Criar vagas de serviço</a>
       <a id="menu-acompanhamento" href="acompanhamento.html">Acompanhar limite mensal</a>
@@ -47,17 +43,27 @@
     <section class="panel">
       <div class="panel-header">
         <div>
-          <h2>Renovação do contrato</h2>
-          <p class="hint" id="renewal-summary">Carregando dados do convênio.</p>
+          <h2>Perfil do responsável</h2>
+          <p class="hint" id="responsavel-profile-hint">Informações cadastradas no contrato.</p>
         </div>
-        <span class="renewal-status" id="renewal-status">Rascunho</span>
       </div>
 
-      <div class="renewal-grid" id="documents-list" aria-label="Documentos para renovação"></div>
+      <div class="details-grid" id="responsavel-profile-grid"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Vínculo com o contrato</h2>
+          <p class="hint">Consulta sem alteração dos dados de acesso e vigência.</p>
+        </div>
+      </div>
+
+      <div class="details-grid" id="responsavel-contract-grid"></div>
     </section>
   </main>
 
-  <script src="../js/script-convenios-renovacao-contrato.js"></script>
+  <script src="../js/script-convenios-perfil.js"></script>
   <script src="../js/script-convenios-session.js"></script>
   <script src="../js/script-navigation.js"></script>
 </body>

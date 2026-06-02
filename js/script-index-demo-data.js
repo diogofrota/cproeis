@@ -12,13 +12,72 @@ const DEMO_KEYS = {
   unidade: 'cproeis_historico_unidade',
   status: 'cproeis_historico_situacao_funcional',
   vagas: 'cproeis_convenios_vagas',
+  servicos: 'cproeis_convenios_servicos',
+  gsiTiposCurso: 'cproeis_gsi_tipos_curso_capacitacao',
+  convenioTiposCurso: 'cproeis_convenios_tipos_curso_capacitacao',
+  convenioCursos: 'cproeis_convenios_cursos_capacitacao',
+  cursoInscricoes: 'cproeis_policiais_cursos_inscricoes',
+  cursoBoletins: 'cproeis_policiais_cursos_boletins',
+  habilitacoes: 'cproeis_policiais_habilitacoes',
   convenioAtual: 'cproeis_convenio_atual',
   convenioResponsavelAtual: 'cproeis_convenio_responsavel_atual',
   policialAtual: 'cproeis_acesso_policial_atual'
 };
 
 const DEMO_TODAY = new Date().toISOString().slice(0, 10);
-const DEMO_DATA = window.CPROEIS_DADOS_SIMULADOS || { convenios: [], policiais: [] };
+/*
+ * DESCRIÇÃO DO BLOCO:
+ * Resolve as massas simuladas por domínio, priorizando os arquivos separados de contratos e
+ * policiais e mantendo compatibilidade com o arquivo antigo `dados-demo.js`.
+ *
+ * PARÂMETROS E RETORNO:
+ * Não recebe parâmetros nem retorna valores; apenas define constantes usadas pelas funções de seed.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Lê objetos globais em memória (`window.CPROEIS_CONTRATOS_SIMULADOS`,
+ * `window.CPROEIS_POLICIAIS_SIMULADOS`, configurações mensais de vagas ou
+ * `window.CPROEIS_DADOS_SIMULADOS`) e não grava dados.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Quando houver backend, substituir estes objetos globais por chamadas assíncronas com
+ * tratamento de erro e validação de origem dos dados.
+ */
+const DEMO_CONTRATOS_DATA = window.CPROEIS_CONTRATOS_SIMULADOS
+  || window.CPROEIS_DADOS_SIMULADOS
+  || { convenios: [], responsaveisConvenio: [] };
+const DEMO_POLICIAIS_DATA = window.CPROEIS_POLICIAIS_SIMULADOS
+  || window.CPROEIS_DADOS_SIMULADOS
+  || { policiais: [] };
+const DEMO_DEFAULT_VAGAS_DATA = {
+  classesOficiais: ['A', 'B'],
+  turnos: {
+    servico12: ['08:00', '20:00'],
+    servico8: ['08:00', '16:00'],
+    servico6: ['14:00', '20:00']
+  },
+  labelsServico: {
+    oficial: 'Supervisão',
+    praca: 'Policiamento',
+    apoio: 'Apoio'
+  },
+  pontoReferencia: 'Portaria principal'
+};
+const DEMO_VAGAS_DATA_BY_PERIOD = {
+  current: window.CPROEIS_VAGAS_MES_ATUAL_SIMULADAS || window.CPROEIS_VAGAS_SIMULADAS || DEMO_DEFAULT_VAGAS_DATA,
+  previous: window.CPROEIS_VAGAS_MES_ANTERIOR_SIMULADAS || window.CPROEIS_VAGAS_SIMULADAS || DEMO_DEFAULT_VAGAS_DATA
+};
+const DEMO_CURSOS_DATA = window.CPROEIS_CURSOS_SIMULADOS || {
+  gsiTipos: [],
+  convenioTipos: [],
+  convenioCursos: [],
+  conclusoesConvenio: [],
+  publicacoesGsi: [],
+  habilitacoes: []
+};
+const DEMO_VAGAS_COM_CURSO_DATA = window.CPROEIS_VAGAS_COM_CURSO_SIMULADAS || {
+  periodoDias: 14,
+  requisitos: []
+};
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
@@ -103,6 +162,103 @@ function demoAddDays(value, days) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
+ * Calcula a diferença inteira de dias entre duas datas em formato YYYY-MM-DD.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} start - Data inicial em YYYY-MM-DD.
+ * @param {string} end - Data final em YYYY-MM-DD.
+ * @returns {number} Quantidade de dias entre as datas.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não lê nem grava dados; calcula tudo em memória.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Centralizar cálculo de calendário em módulo compartilhado quando o sistema tiver backend.
+ */
+function demoDiffDays(start, end) {
+  const startDate = new Date(`${start}T00:00:00`);
+  const endDate = new Date(`${end}T00:00:00`);
+  return Math.round((endDate - startDate) / 86400000);
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Calcula módulo sempre positivo para manter a variação sintética estável em datas futuras e passadas.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {number} value - Valor numérico de entrada.
+ * @param {number} divisor - Divisor usado no cálculo de módulo.
+ * @returns {number} Resto positivo entre zero e divisor menos um.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não lê nem grava dados; apenas normaliza números em memória.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Substituir esta lógica sintética por regras oficiais de escala quando houver backend.
+ */
+function demoPositiveModulo(value, divisor) {
+  return ((value % divisor) + divisor) % divisor;
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Retorna o período completo do mês atual ou do mês anterior para geração de vagas simuladas.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {'current'|'previous'} period - Período desejado: mês atual ou mês anterior.
+ * @returns {{label: string, start: string, end: string}} Datas inicial/final em YYYY-MM-DD e rótulo do período.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não acessa LocalStorage; usa somente a data atual em memória.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, receber competências fechadas do backend para evitar divergência de fuso e calendário.
+ */
+function demoGetMonthPeriod(period) {
+  const today = new Date(`${DEMO_TODAY}T00:00:00`);
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const targetStart = period === 'previous'
+    ? new Date(year, month - 1, 1)
+    : new Date(year, month, 1);
+  const targetEnd = period === 'previous'
+    ? new Date(year, month, 0)
+    : new Date(year, month + 1, 0);
+  const formatDate = (date) => [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0')
+  ].join('-');
+
+  return {
+    label: period === 'previous' ? 'mês anterior' : 'mês atual',
+    start: formatDate(targetStart),
+    end: formatDate(targetEnd)
+  };
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Seleciona a configuração de demo correspondente ao botão de vagas acionado.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {'current'|'previous'} period - Período associado ao botão de criação de vagas.
+ * @returns {object} Configuração de classes, turnos, rótulos e ponto de referência.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Lê constantes em memória carregadas dos arquivos `dados-vagas-mes-atual-demo.js` e
+ * `dados-vagas-mes-anterior-demo.js`; não grava dados.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, buscar a configuração da competência em API própria, com tratamento de erro
+ * para arquivo/endpoint indisponível.
+ */
+function demoGetVagasData(period) {
+  return DEMO_VAGAS_DATA_BY_PERIOD[period] || DEMO_DEFAULT_VAGAS_DATA;
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
  * Formata número sequencial como identificador estável para registros de teste.
  *
  * PARÂMETROS E RETORNO:
@@ -162,7 +318,7 @@ function demoBuildValores(convenioId, offset) {
  */
 function demoBuildResponsavel(convenioId, convenioNome, index) {
   const base = convenioNome.split(' ')[0];
-  const nomeResponsavel = DEMO_DATA.responsaveisConvenio?.[index - 1] || `Responsável Operacional ${index}`;
+  const nomeResponsavel = DEMO_CONTRATOS_DATA.responsaveisConvenio?.[index - 1] || `Responsável Operacional ${index}`;
   return {
     id: `${convenioId}-resp-01`,
     convenioId,
@@ -184,13 +340,13 @@ function demoBuildResponsavel(convenioId, convenioNome, index) {
  * @returns {{convenios: Array<object>, responsaveis: Array<object>, valores: Array<object>}} Base sintética.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
- * Não grava diretamente; a função `seedDemoRegisters` persiste o retorno no LocalStorage.
+ * Não grava diretamente; a função `seedDemoContratos` persiste o retorno no LocalStorage.
  *
  * NOTAS DE EXPANSÃO:
  * TODO: Substituir dados fictícios por fixtures oficiais de homologação quando disponíveis.
  */
 function demoBuildConvenios() {
-  const names = DEMO_DATA.convenios;
+  const names = DEMO_CONTRATOS_DATA.convenios;
 
   const convenios = [];
   const responsaveis = [];
@@ -247,13 +403,13 @@ function demoBuildConvenios() {
  * @returns {Array<object>} Lista de policiais pronta para persistência.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
- * Não grava diretamente; `seedDemoRegisters` salva o retorno em `cproeis_cadastro_policiais`.
+ * Não grava diretamente; `seedDemoPoliciais` salva o retorno em `cproeis_cadastro_policiais`.
  *
  * NOTAS DE EXPANSÃO:
  * TODO: Remover dados sintéticos fora de ambiente de teste.
  */
 function demoBuildPoliciais() {
-  const rows = DEMO_DATA.policiais;
+  const rows = DEMO_POLICIAIS_DATA.policiais;
 
   return rows.map((row, index) => {
     const [rg, idFuncional, nomeCompleto, nomeGuerra, postoGraduacao, grupoHierarquico, grupoOficial, comportamento, unidade] = row;
@@ -287,7 +443,7 @@ function demoBuildPoliciais() {
  * @returns {object} Coleção de históricos por tipo.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
- * Não grava diretamente; os arrays retornados são salvos por `seedDemoRegisters`.
+ * Não grava diretamente; os arrays retornados são salvos por `seedDemoPoliciais`.
  *
  * NOTAS DE EXPANSÃO:
  * TODO: Em ambiente online, esses históricos devem ser transacionais e auditados.
@@ -342,27 +498,52 @@ function demoBuildHistoricos(policiais) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
- * Carrega contratos, responsáveis, valores e policiais de teste no armazenamento local.
+ * Carrega contratos, responsáveis, valores e histórico contratual de teste no armazenamento local.
  *
  * PARÂMETROS E RETORNO:
  * @returns {void}
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
- * Grava várias chaves `cproeis_*` no LocalStorage para popular as telas do sistema.
+ * Grava `cproeis_contratos_schema_version`, `cproeis_contratos_convenios`,
+ * `cproeis_contratos_responsaveis`, `cproeis_contratos_valores` e
+ * `cproeis_contratos_historicos` no LocalStorage.
  *
  * NOTAS DE EXPANSÃO:
- * TODO: Remover este recurso do ambiente de produção ou protegê-lo por perfil técnico.
+ * TODO: Em produção, carregar contratos por API administrativa com autenticação, auditoria e
+ * validação de vigência antes da persistência.
  */
-function seedDemoRegisters() {
+function seedDemoContratos() {
   const { convenios, responsaveis, valores } = demoBuildConvenios();
-  const policiais = demoBuildPoliciais();
-  const historicos = demoBuildHistoricos(policiais);
 
   localStorage.setItem(DEMO_KEYS.contratosSchema, '2026-05-15-endereco-separado');
   demoSaveList(DEMO_KEYS.convenios, convenios);
   demoSaveList(DEMO_KEYS.responsaveis, responsaveis);
   demoSaveList(DEMO_KEYS.valores, valores);
   demoSaveList(DEMO_KEYS.contratosHistoricos, []);
+  demoFeedback('Contratos carregados: 10 convênios e 10 responsáveis.');
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Carrega policiais de teste e seus históricos operacionais no armazenamento local.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Grava `cproeis_cadastro_policial_reset_version`, `cproeis_cadastro_policiais`,
+ * `cproeis_historico_sanitario`, `cproeis_historico_funcional`,
+ * `cproeis_historico_comportamento`, `cproeis_historico_unidade` e
+ * `cproeis_historico_situacao_funcional` no LocalStorage.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, importar policiais por integração segura com a base oficial de efetivo,
+ * preservando trilha de auditoria para cada alteração cadastral.
+ */
+function seedDemoPoliciais() {
+  const policiais = demoBuildPoliciais();
+  const historicos = demoBuildHistoricos(policiais);
+
   localStorage.setItem(DEMO_KEYS.policialReset, '2026-05-15-input-ajustes');
   demoSaveList(DEMO_KEYS.policiais, policiais);
   demoSaveList(DEMO_KEYS.sanitario, historicos.sanitario);
@@ -370,7 +551,157 @@ function seedDemoRegisters() {
   demoSaveList(DEMO_KEYS.comportamento, historicos.comportamento);
   demoSaveList(DEMO_KEYS.unidade, historicos.unidade);
   demoSaveList(DEMO_KEYS.status, historicos.status);
+  demoFeedback('Policiais carregados: 20 registros e históricos iniciais.');
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Mantém uma rotina agregadora para carregar contratos e policiais em uma única chamada quando
+ * algum teste antigo ainda usar o comportamento anterior.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Grava as mesmas chaves de LocalStorage manipuladas por `seedDemoContratos` e `seedDemoPoliciais`.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Remover esta compatibilidade quando os testes e fluxos internos usarem somente os botões
+ * separados por domínio.
+ */
+function seedDemoRegisters() {
+  seedDemoContratos();
+  seedDemoPoliciais();
   demoFeedback('Cadastros carregados: 10 convênios, 10 responsáveis e 20 policiais.');
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Monta o endereço textual do serviço demo a partir do endereço estruturado do convênio.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object} endereco - Endereço estruturado do convênio.
+ * @returns {string} Endereço formatado para gravação no serviço.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não lê nem grava dados; apenas transforma o objeto recebido em texto.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, manter endereço em tabela normalizada e usar geocodificação/validação oficial.
+ */
+function demoFormatServicoEndereco(endereco = {}) {
+  const linha1 = [endereco.logradouro, endereco.numero].filter(Boolean).join(', ');
+  const linha2 = [endereco.complemento, endereco.bairro].filter(Boolean).join(' - ');
+  const linha3 = [endereco.cidade, endereco.uf].filter(Boolean).join('/');
+  const cep = endereco.cep ? `CEP ${endereco.cep}` : '';
+  return [linha1, linha2, linha3, cep].filter(Boolean).join(' | ');
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Cria três serviços de apresentação para cada convênio demo, um para Classe A, um para Classe B
+ * e um para Classe C/D, simulando o cadastro feito pelo responsável do convênio.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object} convenio - Convênio de demonstração.
+ * @param {number} convenioIndex - Índice usado para variar local e ponto de referência.
+ * @returns {Array<object>} Serviços prontos para gravação em `cproeis_convenios_servicos`.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava diretamente; o retorno é salvo por `seedDemoServicos`.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, serviços devem ser criados pelo responsável autenticado e auditados por contrato.
+ */
+function demoBuildServicosConvenio(convenio, convenioIndex) {
+  const enderecoDados = {
+    cep: convenio.enderecoDados?.cep || `20000-0${String(convenioIndex).padStart(2, '0')}`,
+    logradouro: convenio.enderecoDados?.logradouro || 'Rua Operacional',
+    numero: convenio.enderecoDados?.numero || String(100 + convenioIndex),
+    complemento: convenio.enderecoDados?.complemento || '',
+    bairro: convenio.enderecoDados?.bairro || 'Centro',
+    cidade: convenio.enderecoDados?.cidade || 'Rio de Janeiro',
+    uf: convenio.enderecoDados?.uf || 'RJ'
+  };
+  const enderecoServico = demoFormatServicoEndereco(enderecoDados);
+  const baseId = `servico-demo-${convenio.id}`;
+  const nomeBase = convenio.nome || `Convênio ${convenioIndex + 1}`;
+
+  return [
+    {
+      id: `${baseId}-classe-a`,
+      convenioId: convenio.id,
+      convenioNome: nomeBase,
+      classeReferencia: 'A',
+      nomeServico: `Supervisão Classe A - ${nomeBase}`,
+      localServico: `Base de supervisão - ${nomeBase}`,
+      enderecoDados,
+      enderecoServico,
+      pontoReferencia: 'Apresentação com o coordenador operacional.',
+      status: 'Ativo',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: `${baseId}-classe-b`,
+      convenioId: convenio.id,
+      convenioNome: nomeBase,
+      classeReferencia: 'B',
+      nomeServico: `Coordenação Classe B - ${nomeBase}`,
+      localServico: `Sala de coordenação - ${nomeBase}`,
+      enderecoDados,
+      enderecoServico,
+      pontoReferencia: 'Apresentação na recepção administrativa.',
+      status: 'Ativo',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: `${baseId}-classe-cd`,
+      convenioId: convenio.id,
+      convenioNome: nomeBase,
+      classeReferencia: 'C/D',
+      nomeServico: `Policiamento Classe C/D - ${nomeBase}`,
+      localServico: `Ponto de policiamento - ${nomeBase}`,
+      enderecoDados,
+      enderecoServico,
+      pontoReferencia: 'Apresentação na portaria principal.',
+      status: 'Ativo',
+      createdAt: new Date().toISOString()
+    }
+  ];
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Carrega serviços de apresentação demo para todos os convênios cadastrados.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {Array<object>} Lista de serviços gravada no LocalStorage.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Lê `cproeis_contratos_convenios` e grava `cproeis_convenios_servicos`, substituindo apenas
+ * serviços com ID iniciado por `servico-demo-`.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, remover seed e criar serviços por tela autenticada do responsável.
+ */
+function seedDemoServicos() {
+  let convenios = demoLoadList(DEMO_KEYS.convenios);
+  if (!convenios.length) {
+    seedDemoContratos();
+    convenios = demoLoadList(DEMO_KEYS.convenios);
+  }
+
+  const servicos = convenios.flatMap((convenio, index) => demoBuildServicosConvenio(convenio, index));
+  const existing = demoLoadList(DEMO_KEYS.servicos)
+    .filter((servico) => !String(servico.id || '').startsWith('servico-demo-'));
+  const merged = [...existing, ...servicos].sort((a, b) => (
+    String(a.convenioNome || '').localeCompare(String(b.convenioNome || ''), 'pt-BR')
+    || String(a.nomeServico || '').localeCompare(String(b.nomeServico || ''), 'pt-BR')
+  ));
+
+  demoSaveList(DEMO_KEYS.servicos, merged);
+  demoFeedback(`Serviços demo criados: ${servicos.length} serviços, 3 para cada convênio.`);
+  return merged;
 }
 
 /**
@@ -441,37 +772,67 @@ function demoShouldCreateVaga(convenioIndex, dayOffset) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
- * Gera as vagas de um convênio para um dia, respeitando a regra de no máximo uma vaga de oficial por dia
- * e a norma operacional de criação apenas nas classes A, B e C/D.
+ * Localiza um serviço demo compatível com a classe da vaga dentro do convênio informado.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {Array<object>} servicos - Lista de serviços carregados de `cproeis_convenios_servicos`.
+ * @param {string} convenioId - ID do convênio da vaga.
+ * @param {string} classe - Classe operacional da vaga.
+ * @returns {object|null} Serviço correspondente ou nulo quando não houver cadastro.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; consulta somente a lista em memória carregada previamente do LocalStorage.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, a vaga deve persistir `servicoId` e resolver nome/endereço por relacionamento no backend.
+ */
+function demoFindServicoForClasse(servicos, convenioId, classe) {
+  const classeReferencia = classe === 'C/D' ? 'C/D' : classe;
+  return servicos.find((servico) => (
+    servico.convenioId === convenioId &&
+    servico.classeReferencia === classeReferencia &&
+    servico.status !== 'Inativo'
+  )) || null;
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Gera as vagas de um convênio para um dia, respeitando a regra de no máximo uma vaga de oficial por dia,
+ * a norma operacional de criação apenas nas classes A, B e C/D, e usando serviços previamente cadastrados.
  *
  * PARÂMETROS E RETORNO:
  * @param {object} convenio - Convênio de teste.
  * @param {number} convenioIndex - Índice do convênio.
  * @param {number} dayOffset - Dia relativo a partir de hoje.
+ * @param {object} vagasData - Configuração sintética do arquivo demo do botão acionado.
+ * @param {Array<object>} servicos - Serviços de apresentação já cadastrados para os convênios.
  * @returns {Array<object>} Vagas geradas para o dia.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
- * Não grava diretamente; a lista retornada é salva por `seedDemoVagas`.
+ * Não grava diretamente; lê serviços em memória e a lista retornada é salva por `seedDemoVagasForPeriod`.
  *
  * NOTAS DE EXPANSÃO:
  * TODO: Quando a FOPAG for evoluída, separar pagamento de C/D por graduação usando valores C e D do contrato.
  */
-function demoBuildVagasForDay(convenio, convenioIndex, dayOffset) {
+function demoBuildVagasForDay(convenio, convenioIndex, dayOffset, vagasData = DEMO_DEFAULT_VAGAS_DATA, servicos = []) {
   if (!demoShouldCreateVaga(convenioIndex, dayOffset)) return [];
 
   const dataServico = demoAddDays(DEMO_TODAY, dayOffset);
   const localBase = convenio.nome || 'Convênio';
   const daily = [];
-  const officialClasses = ['A', 'B'];
-  const officialClass = officialClasses[(convenioIndex + dayOffset) % officialClasses.length];
+  const officialClasses = vagasData.classesOficiais || ['A', 'B'];
+  const officialClass = officialClasses[demoPositiveModulo(convenioIndex + dayOffset, officialClasses.length)];
   const addOfficial = dayOffset % (3 + (convenioIndex % 3)) === 0;
   const tipoOficial = dayOffset % 2 === 0 ? 'servico12' : 'servico8';
-  const tipoPraca = dayOffset % 3 === 0 ? 'servico12' : (dayOffset % 3 === 1 ? 'servico8' : 'servico6');
+  const pracaModulo = demoPositiveModulo(dayOffset, 3);
+  const tipoPraca = pracaModulo === 0 ? 'servico12' : (pracaModulo === 1 ? 'servico8' : 'servico6');
   const turnos = {
     servico12: ['08:00', '20:00'],
     servico8: ['08:00', '16:00'],
-    servico6: ['14:00', '20:00']
+    servico6: ['14:00', '20:00'],
+    ...(vagasData.turnos || {})
   };
+  const labels = vagasData.labelsServico || {};
 
   if (addOfficial) {
     const [horaInicio, horaFim] = turnos[tipoOficial];
@@ -479,7 +840,7 @@ function demoBuildVagasForDay(convenio, convenioIndex, dayOffset) {
       classe: officialClass,
       tipoServico: tipoOficial,
       quantidade: 1,
-      nomeServico: `Supervisão ${localBase}`,
+      nomeServico: `${labels.oficial || 'Supervisão'} ${localBase}`,
       horaInicio,
       horaFim
     });
@@ -489,8 +850,8 @@ function demoBuildVagasForDay(convenio, convenioIndex, dayOffset) {
   daily.push({
     classe: 'C/D',
     tipoServico: tipoPraca,
-    quantidade: 1 + ((convenioIndex + dayOffset) % 4),
-    nomeServico: `Policiamento ${localBase}`,
+    quantidade: 1 + demoPositiveModulo(convenioIndex + dayOffset, 4),
+    nomeServico: `${labels.praca || 'Policiamento'} ${localBase}`,
     horaInicio,
     horaFim
   });
@@ -499,23 +860,26 @@ function demoBuildVagasForDay(convenio, convenioIndex, dayOffset) {
     daily.push({
       classe: 'C/D',
       tipoServico: 'servico6',
-      quantidade: 1 + (dayOffset % 2),
-      nomeServico: `Apoio ${localBase}`,
+      quantidade: 1 + demoPositiveModulo(dayOffset, 2),
+      nomeServico: `${labels.apoio || 'Apoio'} ${localBase}`,
       horaInicio: '18:00',
       horaFim: '00:00'
     });
   }
 
   return daily.map((item, index) => {
+    const servico = demoFindServicoForClasse(servicos, convenio.id, item.classe);
     const valorUnitario = demoGetValorUnitario(convenio, item.classe, item.tipoServico);
     return {
       id: `vaga-demo-${convenio.id}-${dataServico}-${index + 1}`,
       convenioId: convenio.id,
       dataServico,
-      nomeServico: item.nomeServico,
-      localServico: localBase,
-      enderecoServico: convenio.endereco,
-      pontoReferencia: 'Portaria principal',
+      servicoId: servico?.id || '',
+      nomeServico: servico?.nomeServico || item.nomeServico,
+      localServico: servico?.localServico || localBase,
+      enderecoServico: servico?.enderecoServico || convenio.endereco,
+      enderecoDados: servico?.enderecoDados || convenio.enderecoDados || {},
+      pontoReferencia: servico?.pontoReferencia || vagasData.pontoReferencia || 'Portaria principal',
       classe: item.classe,
       tipoServico: item.tipoServico,
       horaInicio: item.horaInicio,
@@ -533,33 +897,340 @@ function demoBuildVagasForDay(convenio, convenioIndex, dayOffset) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
- * Gera vagas simuladas por até três meses a partir da data atual.
+ * Gera vagas simuladas para todos os dias do mês atual ou do mês anterior, usando o arquivo
+ * de demo específico do botão acionado.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {'current'|'previous'} period - Define se a competência gerada é o mês atual ou o mês anterior.
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Lê convênios de `cproeis_contratos_convenios`, lê vagas existentes em `cproeis_convenios_vagas`
+ * e grava a mesma chave substituindo somente vagas de demonstração dentro do mês escolhido.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, bloquear geração automática fora de ambiente de homologação, validar a
+ * competência no backend e registrar usuário executor.
+ */
+function seedDemoVagasForPeriod(period) {
+  let convenios = demoLoadList(DEMO_KEYS.convenios);
+  if (!convenios.length) {
+    seedDemoContratos();
+    convenios = demoLoadList(DEMO_KEYS.convenios);
+  }
+
+  let servicos = demoLoadList(DEMO_KEYS.servicos).filter((servico) => String(servico.id || '').startsWith('servico-demo-'));
+  if (!servicos.length) {
+    seedDemoServicos();
+    servicos = demoLoadList(DEMO_KEYS.servicos).filter((servico) => String(servico.id || '').startsWith('servico-demo-'));
+  }
+
+  const monthPeriod = demoGetMonthPeriod(period);
+  const vagasData = demoGetVagasData(period);
+  const vagas = [];
+  convenios.forEach((convenio, convenioIndex) => {
+    const startOffset = demoDiffDays(DEMO_TODAY, monthPeriod.start);
+    const endOffset = demoDiffDays(DEMO_TODAY, monthPeriod.end);
+    for (let dayOffset = startOffset; dayOffset <= endOffset; dayOffset += 1) {
+      vagas.push(...demoBuildVagasForDay(convenio, convenioIndex, dayOffset, vagasData, servicos));
+    }
+  });
+
+  const existingVagas = demoLoadList(DEMO_KEYS.vagas);
+  const otherPeriods = existingVagas.filter((vaga) => (
+    !String(vaga.id || '').startsWith('vaga-demo-')
+    || vaga.dataServico < monthPeriod.start
+    || vaga.dataServico > monthPeriod.end
+  ));
+  const mergedVagas = [...otherPeriods, ...vagas].sort((a, b) => (
+    String(a.dataServico || '').localeCompare(String(b.dataServico || ''))
+    || String(a.convenioId || '').localeCompare(String(b.convenioId || ''))
+    || String(a.nomeServico || '').localeCompare(String(b.nomeServico || ''))
+  ));
+
+  demoSaveList(DEMO_KEYS.vagas, mergedVagas);
+  demoFeedback(`Vagas do ${monthPeriod.label} geradas: ${vagas.length} vagas entre ${monthPeriod.start} e ${monthPeriod.end}.`);
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Gera vagas simuladas para o mês atual.
  *
  * PARÂMETROS E RETORNO:
  * @returns {void}
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
- * Lê convênios de `cproeis_contratos_convenios` e grava vagas em `cproeis_convenios_vagas`.
+ * Usa `seedDemoVagasForPeriod` para ler contratos e gravar vagas em `cproeis_convenios_vagas`.
  *
  * NOTAS DE EXPANSÃO:
- * TODO: Em produção, bloquear geração automática fora de ambiente de homologação e registrar usuário executor.
+ * TODO: Em produção, substituir por criação de competência operacional validada no backend.
+ */
+function seedDemoVagasMesAtual() {
+  seedDemoVagasForPeriod('current');
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Gera vagas simuladas para todos os dias do mês anterior.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Usa `seedDemoVagasForPeriod` para ler contratos e gravar vagas em `cproeis_convenios_vagas`.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, exigir fechamento/reabertura de competência antes de alterar mês anterior.
+ */
+function seedDemoVagasMesAnterior() {
+  seedDemoVagasForPeriod('previous');
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Mantém compatibilidade com a rotina antiga de vagas, carregando mês anterior e mês atual em sequência.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Grava `cproeis_convenios_vagas` por meio das rotinas mensais separadas.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Remover esta compatibilidade quando todas as telas chamarem apenas as ações mensais.
  */
 function seedDemoVagas() {
+  seedDemoVagasMesAnterior();
+  seedDemoVagasMesAtual();
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Localiza um tipo de curso de convênio dentro da fixture de demonstração.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} typeId - Identificador do tipo de capacitação do convênio.
+ * @returns {object} Tipo de capacitação encontrado ou objeto vazio.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não lê nem grava LocalStorage; consulta somente `DEMO_CURSOS_DATA` em memória.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, resolver tipos de curso por chave de banco com validação do convênio proprietário.
+ */
+function demoFindCursoConvenioTipo(typeId) {
+  return (DEMO_CURSOS_DATA.convenioTipos || []).find((type) => type.id === typeId) || {};
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Monta as turmas de capacitação dos convênios com prazos calculados a partir da data atual.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {Array<object>} convenios - Convênios carregados no demo.
+ * @returns {Array<object>} Cursos prontos para gravação em `cproeis_convenios_cursos_capacitacao`.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados diretamente; lê fixtures em memória e o retorno é persistido por `seedDemoCursos`.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, separar turma, tipo, instrutor, inscrições e conclusão em entidades próprias.
+ */
+function demoBuildCursosConvenio(convenios) {
+  return (DEMO_CURSOS_DATA.convenioCursos || []).map((course, index) => {
+    const type = demoFindCursoConvenioTipo(course.tipoId);
+    const convenio = convenios.find((item) => item.id === course.convenioId) || {};
+    const inscricaoInicio = index === 0 ? demoAddDays(DEMO_TODAY, -2) : demoAddDays(DEMO_TODAY, index);
+    const inscricaoFim = demoAddDays(DEMO_TODAY, 10 + index);
+    const inicio = demoAddDays(DEMO_TODAY, 15 + (index * 3));
+    const fim = demoAddDays(inicio, 1);
+
+    return {
+      id: course.id,
+      convenioId: course.convenioId,
+      convenioNome: convenio.nome || '',
+      tipoId: course.tipoId,
+      tipoNome: type.nome || '',
+      origemTipo: 'Convênio',
+      titulo: course.titulo || '',
+      inscricaoInicio,
+      inscricaoFim,
+      inicio,
+      fim,
+      cargaHoraria: Number(course.cargaHoraria || 0),
+      vagas: Number(course.vagas || 0),
+      targetMode: course.targetMode || 'todos',
+      targetClasses: course.targetClasses || [],
+      targetPostos: course.targetPostos || [],
+      targetLabel: course.targetLabel || 'Todos os policiais',
+      local: course.local || '',
+      status: 'Aberto',
+      createdAt: new Date().toISOString()
+    };
+  });
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Cria inscrições, publicações em boletim e habilitações usadas para validar requisitos das vagas demo.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {{inscricoes: Array<object>, boletins: Array<object>, habilitacoes: Array<object>}} Bases locais.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava diretamente; o retorno é persistido em LocalStorage por `seedDemoCursos`.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, validar conclusões por workflow oficial, evitando que o frontend declare aptidão.
+ */
+function demoBuildQualificacoesPoliciais() {
+  const gsiTypes = DEMO_CURSOS_DATA.gsiTipos || [];
+  const inscricoes = (DEMO_CURSOS_DATA.conclusoesConvenio || []).map((item, index) => ({
+    id: `demo-inscricao-curso-${index + 1}`,
+    courseId: item.courseId,
+    policialId: item.policialId,
+    status: item.status || 'Concluído',
+    createdAt: demoAddDays(DEMO_TODAY, -45 + index),
+    concludedAt: item.status === 'Inscrito' ? '' : demoAddDays(DEMO_TODAY, -20 + index)
+  }));
+  const boletins = (DEMO_CURSOS_DATA.publicacoesGsi || []).map((item, index) => {
+    const type = gsiTypes.find((curso) => curso.id === item.tipoId) || {};
+    return {
+      id: `demo-boletim-curso-${index + 1}`,
+      policialId: item.policialId,
+      tipoId: item.tipoId,
+      tipoNome: type.nome || item.tipoNome || '',
+      bolNumero: item.bolNumero || `BOL PM ${120 + index}/2026`,
+      bolData: demoAddDays(DEMO_TODAY, -30 + index),
+      pagina: item.pagina || String(10 + index),
+      observacoes: 'Registro validado para demonstração.',
+      status: item.status || 'Validado',
+      createdAt: new Date().toISOString()
+    };
+  });
+  const habilitacoes = (DEMO_CURSOS_DATA.habilitacoes || []).map((item, index) => ({
+    id: `demo-habilitacao-${index + 1}`,
+    policialId: item.policialId,
+    numero: item.numero || '',
+    categoria: item.categoria || '',
+    vencimento: demoAddDays(DEMO_TODAY, Number(item.vencimentoOffsetDias || 365)),
+    origem: item.origem || 'Demo',
+    status: item.status || 'Validada',
+    updatedAt: new Date().toISOString()
+  }));
+
+  return { inscricoes, boletins, habilitacoes };
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Carrega tipos do GSI, tipos de capacitação dos convênios, turmas e qualificações concluídas.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Garante contratos e policiais quando necessário e grava `cproeis_gsi_tipos_curso_capacitacao`,
+ * `cproeis_convenios_tipos_curso_capacitacao`, `cproeis_convenios_cursos_capacitacao`,
+ * `cproeis_policiais_cursos_inscricoes`, `cproeis_policiais_cursos_boletins` e
+ * `cproeis_policiais_habilitacoes` no LocalStorage.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, executar seeds apenas em ambiente controlado e bloquear atualização manual
+ * de conclusões, boletins e habilitações pelo navegador.
+ */
+function seedDemoCursos() {
   let convenios = demoLoadList(DEMO_KEYS.convenios);
   if (!convenios.length) {
-    seedDemoRegisters();
+    seedDemoContratos();
     convenios = demoLoadList(DEMO_KEYS.convenios);
   }
 
-  const vagas = [];
-  convenios.forEach((convenio, convenioIndex) => {
-    for (let dayOffset = 0; dayOffset <= 90; dayOffset += 1) {
-      vagas.push(...demoBuildVagasForDay(convenio, convenioIndex, dayOffset));
-    }
-  });
+  if (!demoLoadList(DEMO_KEYS.policiais).length) {
+    seedDemoPoliciais();
+  }
 
-  demoSaveList(DEMO_KEYS.vagas, vagas);
-  demoFeedback(`Vagas simuladas geradas: ${vagas.length} vagas entre hoje e os próximos 90 dias.`);
+  const gsiTypes = DEMO_CURSOS_DATA.gsiTipos || [];
+  const convenioTypes = DEMO_CURSOS_DATA.convenioTipos || [];
+  const courses = demoBuildCursosConvenio(convenios);
+  const qualificacoes = demoBuildQualificacoesPoliciais();
+
+  demoSaveList(DEMO_KEYS.gsiTiposCurso, gsiTypes);
+  demoSaveList(DEMO_KEYS.convenioTiposCurso, convenioTypes);
+  demoSaveList(DEMO_KEYS.convenioCursos, courses);
+  demoSaveList(DEMO_KEYS.cursoInscricoes, qualificacoes.inscricoes);
+  demoSaveList(DEMO_KEYS.cursoBoletins, qualificacoes.boletins);
+  demoSaveList(DEMO_KEYS.habilitacoes, qualificacoes.habilitacoes);
+  demoFeedback(`Cursos demo carregados: ${gsiTypes.length} tipos GSI, ${courses.length} turmas e qualificações para policiais.`);
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Gera vagas futuras com requisitos específicos de curso GSI, curso de convênio ou habilitação de moto.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Lê convênios e cursos do LocalStorage, cria registros futuros e grava `cproeis_convenios_vagas`,
+ * substituindo apenas vagas anteriores da mesma família demo (`vaga-demo-curso-`).
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, validar requisitos por tabela parametrizada e aplicar a mesma regra no endpoint
+ * de listagem e aceite da vaga pelo policial.
+ */
+function seedDemoVagasComCurso() {
+  let convenios = demoLoadList(DEMO_KEYS.convenios);
+  if (!convenios.length || !demoLoadList(DEMO_KEYS.convenioCursos).length) {
+    seedDemoCursos();
+    convenios = demoLoadList(DEMO_KEYS.convenios);
+  }
+
+  const requisitos = DEMO_VAGAS_COM_CURSO_DATA.requisitos || [];
+  const totalDias = Number(DEMO_VAGAS_COM_CURSO_DATA.periodoDias || 14);
+  const vagas = [];
+
+  for (let dayOffset = 0; dayOffset <= totalDias; dayOffset += 1) {
+    const requisito = requisitos[demoPositiveModulo(dayOffset, requisitos.length || 1)];
+    if (!requisito) continue;
+
+    const convenio = convenios.find((item) => item.id === requisito.convenioId) || convenios[0] || {};
+    const dataServico = demoAddDays(DEMO_TODAY, dayOffset);
+    const valorUnitario = demoGetValorUnitario(convenio, requisito.classe, requisito.tipoServico);
+
+    vagas.push({
+      id: `vaga-demo-curso-${dataServico}-${requisito.tipo}-${requisito.id}`,
+      convenioId: convenio.id,
+      dataServico,
+      nomeServico: requisito.nomeServico || `Serviço com requisito - ${requisito.nome}`,
+      localServico: convenio.nome || 'Convênio demo',
+      enderecoServico: convenio.endereco || '',
+      pontoReferencia: 'Ponto de apresentação informado no demo',
+      classe: requisito.classe || 'C/D',
+      tipoServico: requisito.tipoServico || 'servico8',
+      horaInicio: requisito.horaInicio || '08:00',
+      horaFim: requisito.horaFim || '16:00',
+      quantidade: Number(requisito.quantidade || 1),
+      valorUnitario,
+      valorTotal: valorUnitario * Number(requisito.quantidade || 1),
+      preenchidas: 0,
+      policialEscalado: '',
+      cursoObrigatorio: requisito.nome || '',
+      requisitoTipo: requisito.tipo,
+      requisitoId: requisito.id,
+      requisitoNome: requisito.nome,
+      liberadaParaPolicial: true,
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  const existingVagas = demoLoadList(DEMO_KEYS.vagas)
+    .filter((vaga) => !String(vaga.id || '').startsWith('vaga-demo-curso-'));
+  demoSaveList(DEMO_KEYS.vagas, [...existingVagas, ...vagas].sort((a, b) => (
+    String(a.dataServico || '').localeCompare(String(b.dataServico || ''))
+    || String(a.nomeServico || '').localeCompare(String(b.nomeServico || ''))
+  )));
+  demoFeedback(`Vagas futuras com curso/habilitação geradas: ${vagas.length} vagas a partir de ${DEMO_TODAY}.`);
 }
 
 /**
@@ -584,20 +1255,26 @@ function clearDemoCache() {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
- * Liga os botões de teste da página inicial às rotinas de seed e limpeza.
+ * Liga os botões de teste da página inicial às rotinas separadas de seed e limpeza.
  *
  * PARÂMETROS E RETORNO:
  * @returns {void}
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
- * Não grava diretamente; apenas conecta eventos que executam as funções de persistência.
+ * Não grava diretamente; apenas conecta eventos que executam as funções de persistência
+ * de contratos, policiais, vagas e limpeza de cache.
  *
  * NOTAS DE EXPANSÃO:
  * TODO: Remover bind de ferramentas de teste em builds de produção.
  */
 function bindDemoTools() {
-  document.getElementById('seed-demo-registers')?.addEventListener('click', seedDemoRegisters);
-  document.getElementById('seed-demo-vagas')?.addEventListener('click', seedDemoVagas);
+  document.getElementById('seed-demo-contratos')?.addEventListener('click', seedDemoContratos);
+  document.getElementById('seed-demo-policiais')?.addEventListener('click', seedDemoPoliciais);
+  document.getElementById('seed-demo-servicos')?.addEventListener('click', seedDemoServicos);
+  document.getElementById('seed-demo-cursos')?.addEventListener('click', seedDemoCursos);
+  document.getElementById('seed-demo-vagas-mes-atual')?.addEventListener('click', seedDemoVagasMesAtual);
+  document.getElementById('seed-demo-vagas-mes-anterior')?.addEventListener('click', seedDemoVagasMesAnterior);
+  document.getElementById('seed-demo-vagas-com-curso')?.addEventListener('click', seedDemoVagasComCurso);
   document.getElementById('clear-demo-cache')?.addEventListener('click', clearDemoCache);
 }
 

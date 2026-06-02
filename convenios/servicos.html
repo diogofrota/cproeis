@@ -3,29 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CPROEIS - Renovação de Contrato</title>
+  <title>CPROEIS - Serviços Cadastrados</title>
   <link rel="stylesheet" href="../css/style-convenios-criar-vagas.css">
-  <link rel="stylesheet" href="../css/style-renovacao-contrato.css">
+  <link rel="stylesheet" href="../css/style-forms.css">
 </head>
 <body>
-  <!--
-    DESCRIÇÃO DO BLOCO: Página do responsável do convênio para abertura e acompanhamento
-    do processo de renovação contratual.
-    PARÂMETROS E RETORNO: Recebe `id` e `responsavel` pela URL ou pela sessão local; não
-    retorna valores, pois o JavaScript grava a solicitação no armazenamento do navegador.
-    ARMAZENAMENTO E PERSISTÊNCIA: Lê o contrato em `cproeis_contratos_convenios` e grava
-    documentos, observações e status em `cproeis_contratos_renovacoes` no LocalStorage.
-    TODO: Em produção, substituir a gravação local por upload autenticado, antivírus,
-    controle de tamanho e armazenamento seguro de arquivos.
-  -->
   <header class="module-header">
     <div class="header-top">
       <div class="header-copy">
-        <h1 id="page-title">Renovação de contrato</h1>
-        <p id="page-subtitle">Envie a documentação necessária para análise da seção de contratos.</p>
+        <h1 id="page-title">Serviços cadastrados</h1>
+        <p id="page-subtitle">Consulte os pontos de apresentação disponíveis para criar vagas.</p>
       </div>
     </div>
 
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu do acesso do convênio, mantendo serviços e criação de vagas no mesmo nível.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; o script de sessão injeta os parâmetros do convênio.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; apenas disponibiliza navegação local.
+      TODO: Em produção, renderizar itens conforme permissões do responsável autenticado.
+    -->
     <nav class="module-menu" id="convenios-menu" aria-label="Menu operacional do convênio">
       <a id="menu-criar-vagas" href="criar-vagas.html">Criar vagas de serviço</a>
       <a id="menu-acompanhamento" href="acompanhamento.html">Acompanhar limite mensal</a>
@@ -47,17 +43,32 @@
     <section class="panel">
       <div class="panel-header">
         <div>
-          <h2>Renovação do contrato</h2>
-          <p class="hint" id="renewal-summary">Carregando dados do convênio.</p>
+          <h2>Serviços cadastrados</h2>
+          <p class="hint">Esses serviços aparecem na primeira etapa da criação de vagas.</p>
         </div>
-        <span class="renewal-status" id="renewal-status">Rascunho</span>
+        <a class="button-link" id="novo-servico-link" href="criar-servico.html">Criar serviço</a>
       </div>
 
-      <div class="renewal-grid" id="documents-list" aria-label="Documentos para renovação"></div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Serviço</th>
+              <th>Local de apresentação</th>
+              <th>Endereço</th>
+              <th>Ponto de referência</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="servicos-body">
+            <tr><td class="empty" colspan="5">Nenhum serviço cadastrado.</td></tr>
+          </tbody>
+        </table>
+      </div>
     </section>
   </main>
 
-  <script src="../js/script-convenios-renovacao-contrato.js"></script>
+  <script src="../js/script-convenios-servicos.js"></script>
   <script src="../js/script-convenios-session.js"></script>
   <script src="../js/script-navigation.js"></script>
 </body>

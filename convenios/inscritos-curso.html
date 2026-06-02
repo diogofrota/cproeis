@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Inscritos em Cursos</title>
+  <link rel="stylesheet" href="../css/style-convenios-criar-curso.css">
+  <link rel="stylesheet" href="../css/style-forms.css">
+</head>
+<body>
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="page-title">Inscritos em cursos</h1>
+        <p id="page-subtitle">Consulta de policiais inscritos nas capacitações do convênio.</p>
+      </div>
+    </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu do acesso do convênio com a consulta de inscritos por curso.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; o script de sessão normaliza os links.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; a navegação preserva convênio e responsável via URL.
+      TODO: Em produção, gerar itens por permissão do responsável autenticado.
+    -->
+    <nav class="module-menu" id="convenios-menu" aria-label="Menu operacional do convênio">
+      <a id="menu-criar-vagas" href="criar-vagas.html">Criar vagas de serviço</a>
+      <a id="menu-acompanhamento" href="acompanhamento.html">Acompanhar limite mensal</a>
+      <a id="menu-vagas" href="vagas.html">Vagas criadas</a>
+      <a id="menu-vagas-calendario" href="vagas-calendario.html">Vagas calendário</a>
+      <a id="menu-perfil-convenio" href="perfil.html">Perfil</a>
+      <a id="menu-dados-contrato" href="dados-contrato.html">Dados do contrato</a>
+      <a id="menu-servicos" href="servicos.html">Serviços cadastrados</a>
+      <a id="menu-criar-servico" href="criar-servico.html">Criar serviço</a>
+      <a id="menu-criar-curso" href="criar-curso.html">Criar curso</a>
+      <a id="menu-historico-curso" href="historico-curso.html">Histórico de curso</a>
+      <a id="menu-inscritos-curso" href="inscritos-curso.html">Inscritos em cursos</a>
+      <a id="menu-renovacao-contrato" href="renovacao-contrato.html">Renovação de contrato</a>
+      <a class="menu-logout-link" href="acesso.html" data-logout-convenio="true">Sair</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Policiais inscritos por curso</h2>
+          <p class="hint" id="enrollment-course-count">Selecione uma capacitação para consultar os inscritos.</p>
+        </div>
+      </div>
+
+      <!--
+        DESCRIÇÃO DO BLOCO: Filtro de curso para consulta de inscritos do convênio.
+        PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; o JavaScript usa o select para filtrar a tabela.
+        ARMAZENAMENTO E PERSISTÊNCIA: Lê cursos em `cproeis_convenios_cursos_capacitacao` e inscrições em
+        `cproeis_policiais_cursos_inscricoes`.
+        TODO: Em produção, consultar inscritos por endpoint paginado e exportável.
+      -->
+      <form class="course-form">
+        <label class="wide">
+          Curso de capacitação
+          <select id="enrollment-course-select"></select>
+        </label>
+      </form>
+
+      <div class="table-wrap course-type-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Policial</th>
+              <th>Posto/Graduação</th>
+              <th>Unidade</th>
+              <th>Data da inscrição</th>
+              <th>Situação</th>
+            </tr>
+          </thead>
+          <tbody id="enrollment-course-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-convenios-inscritos-curso.js"></script>
+  <script src="../js/script-convenios-session.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

@@ -148,7 +148,9 @@ label {
   font-weight: 700;
 }
 
-input {
+input,
+select,
+textarea {
   width: 100%;
   min-height: 42px;
   padding: 10px 12px;
@@ -159,9 +161,113 @@ input {
   background: #fff;
 }
 
-input:focus {
+textarea {
+  min-height: 82px;
+  resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
   outline: 2px solid rgba(31, 42, 138, 0.25);
   border-color: #1f2a8a;
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Organiza formulários de cursos, boletins e habilitação do policial em
+ * páginas separadas, mantendo leitura densa e profissional.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; estiliza campos e ações.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa armazenamento; os scripts de cada página gravam LocalStorage.
+ * TODO: Em produção, mover estes estilos para componente global de formulários operacionais.
+ */
+.course-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.wide {
+  grid-column: span 2;
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+button {
+  min-height: 42px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #1f2a8a;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #17206a;
+}
+
+button:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Exibe dados do perfil do policial em blocos compactos, seguindo o padrão
+ * visual das telas de detalhes sem apresentar botões de edição.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; estiliza somente a leitura.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa armazenamento; o JavaScript injeta os dados no DOM.
+ * TODO: Em produção, consolidar este layout com o componente de detalhes da base de policiais.
+ */
+.profile-grid,
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 28px;
+  row-gap: 18px;
+  padding: 6px 0 22px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.profile-item,
+.detail-item {
+  min-width: 0;
+  min-height: 42px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.profile-item span,
+.detail-item span {
+  display: block;
+  margin-bottom: 4px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.profile-item strong,
+.detail-item strong {
+  display: block;
+  color: #1f2937;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
 }
 
 .table-wrap {
@@ -244,7 +350,8 @@ tbody tr:last-child td {
 }
 
 @media (max-width: 980px) {
-  .module-menu {
+  .module-menu,
+  .details-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -266,8 +373,15 @@ tbody tr:last-child td {
   }
 
   .module-menu,
-  .filter-bar {
+  .filter-bar,
+  .course-form,
+  .profile-grid,
+  .details-grid {
     grid-template-columns: 1fr;
+  }
+
+  .wide {
+    grid-column: 1;
   }
 }
 

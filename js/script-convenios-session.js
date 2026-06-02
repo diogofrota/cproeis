@@ -265,8 +265,13 @@ function aplicarSessaoConvenioNoHeader(convenio, responsavel) {
     'menu-acompanhamento': `${convenioPath}acompanhamento.html?${idParam}`,
     'menu-vagas': `${convenioPath}vagas.html?${idParam}`,
     'menu-vagas-calendario': `${convenioPath}vagas-calendario.html?${idParam}`,
+    'menu-perfil-convenio': `${convenioPath}perfil.html?${idParam}`,
+    'menu-dados-contrato': `${convenioPath}dados-contrato.html?${idParam}`,
+    'menu-servicos': `${convenioPath}servicos.html?${idParam}`,
+    'menu-criar-servico': `${convenioPath}criar-servico.html?${idParam}`,
     'menu-criar-curso': `${convenioPath}criar-curso.html?${idParam}`,
     'menu-historico-curso': `${convenioPath}historico-curso.html?${idParam}`,
+    'menu-inscritos-curso': `${convenioPath}inscritos-curso.html?${idParam}`,
     'menu-renovacao-contrato': `${convenioPath}renovacao-contrato.html?${idParam}`,
     'menu-detalhes-convenio': `${contratosPath}detalhes-convenio.html?${idParam}`,
     'course-details-link': `${contratosPath}detalhes-convenio.html?${idParam}`

@@ -1,5 +1,6 @@
 const STORAGE_CONVENIOS = 'cproeis_contratos_convenios';
 const STORAGE_VAGAS = 'cproeis_convenios_vagas';
+const STORAGE_SERVICOS = 'cproeis_convenios_servicos';
 const STORAGE_CONVENIO_ATUAL = 'cproeis_convenio_atual';
 const STORAGE_CONVENIO_RESPONSAVEL_ATUAL = 'cproeis_convenio_responsavel_atual';
 const today = new Date().toISOString().slice(0, 10);
@@ -77,10 +78,9 @@ const customDatePickerState = {
   convenio: null
 };
 const creationStepIds = [
-  'date-selection-card',
-  'service-name-card',
-  'service-info-card',
-  'class-selection-card'
+  'service-selection-card',
+  'class-selection-card',
+  'date-selection-card'
 ];
 let selectedConvenioCache = null;
 
@@ -662,29 +662,8 @@ function bindCreationSummaryModalEvents() {
  * TODO: trocar alertas por mensagens de validação vindas de serviço de domínio no backend.
  */
 function validateCreationStep(stepId, convenio) {
-  if (stepId === 'date-selection-card') {
-    document.getElementById('date-mode').value = 'period';
-    if (!validatePeriodSelection(convenio)) {
-      alert('Informe uma data inicial e uma data final válidas dentro da vigência do convênio.');
-      return false;
-    }
-  }
-
-  if (stepId === 'service-name-card' && !validateServiceField('nome-servico', true)) {
-    alert('Informe o nome do serviço antes de continuar.');
-    return false;
-  }
-
-  if (stepId === 'service-info-card') {
-    const requiredAddressFields = ['local-servico', 'servico-cep', 'servico-logradouro', 'servico-numero', 'servico-bairro', 'servico-cidade', 'servico-uf'];
-    const validAddress = requiredAddressFields
-      .map((id) => validateServiceField(id, true))
-      .every(Boolean);
-
-    if (!validAddress) {
-      alert('Corrija os campos destacados do local de apresentação antes de continuar.');
-      return false;
-    }
+  if (stepId === 'service-selection-card') {
+    return validateSelectedService(true);
   }
 
   if (stepId === 'class-selection-card') {
@@ -694,6 +673,14 @@ function validateCreationStep(stepId, convenio) {
     if (selectedClasses.length !== 1 || quantity <= 0) {
       syncClassConfig(convenio);
       alert('Selecione uma classe e informe uma quantidade de vagas maior que zero.');
+      return false;
+    }
+  }
+
+  if (stepId === 'date-selection-card') {
+    document.getElementById('date-mode').value = 'period';
+    if (!validatePeriodSelection(convenio)) {
+      alert('Informe uma data inicial e uma data final válidas dentro da vigência do convênio.');
       return false;
     }
   }
@@ -1266,6 +1253,28 @@ function getVagas() {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
+ * Carrega os serviços de apresentação cadastrados pelo responsável do convênio.
+ * Esses serviços centralizam nome e endereço para que a criação de vagas use pontos
+ * previamente padronizados.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} convenioId - ID do convênio usado para filtrar os serviços disponíveis.
+ * @returns {Array<object>} Lista de serviços ativos vinculados ao convênio informado.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Lê a chave `cproeis_convenios_servicos` no LocalStorage, criada pela tela de cadastro de serviço.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: buscar serviços por endpoint autenticado e aplicar autorização por responsável do convênio.
+ */
+function getServicosConvenio(convenioId) {
+  return loadList(STORAGE_SERVICOS)
+    .filter((servico) => servico.convenioId === convenioId && servico.status !== 'Inativo')
+    .sort((a, b) => (a.nomeServico || '').localeCompare(b.nomeServico || ''));
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
  * Calcula o limite financeiro mensal dividindo o valor total do contrato pela vigência em meses.
  *
  * PARÂMETROS E RETORNO:
@@ -1508,6 +1517,140 @@ function syncClassConfig(convenio) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
+ * Monta uma linha de endereço legível a partir dos dados do serviço cadastrado.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object} servico - Serviço persistido com local, endereço e ponto de referência.
+ * @returns {string} Texto resumido para prévia visual da criação de vagas.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; lê apenas o objeto de serviço carregado do LocalStorage.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: substituir esta composição local por campo calculado da API quando houver tabela de serviços.
+ */
+function formatSelectedServicePreview(servico) {
+  if (!servico) return 'Cadastre um serviço para usar nome, local e endereço nas vagas.';
+
+  const address = servico.enderecoServico || formatServiceAddress(servico.enderecoDados || {});
+  return [
+    servico.localServico,
+    address,
+    servico.pontoReferencia ? `Referência: ${servico.pontoReferencia}` : ''
+  ].filter(Boolean).join(' | ');
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Copia os dados do serviço escolhido para os campos internos usados pela geração de vagas.
+ * Isso mantém compatibilidade com a rotina antiga de criação, mas agora a origem é um cadastro separado.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object|null} servico - Serviço selecionado na lista do convênio.
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Lê o objeto em memória e grava somente nos inputs ocultos do DOM; a vaga será persistida depois em `cproeis_convenios_vagas`.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: persistir apenas `servicoId` na vaga e resolver dados relacionais pelo backend para evitar duplicidade.
+ */
+function applySelectedServiceToForm(servico) {
+  const mapping = {
+    'nome-servico': servico?.nomeServico || '',
+    'local-servico': servico?.localServico || '',
+    'servico-cep': servico?.enderecoDados?.cep || '',
+    'servico-logradouro': servico?.enderecoDados?.logradouro || '',
+    'servico-numero': servico?.enderecoDados?.numero || '',
+    'servico-complemento': servico?.enderecoDados?.complemento || '',
+    'servico-bairro': servico?.enderecoDados?.bairro || '',
+    'servico-cidade': servico?.enderecoDados?.cidade || '',
+    'servico-uf': servico?.enderecoDados?.uf || '',
+    'ponto-referencia': servico?.pontoReferencia || ''
+  };
+
+  Object.entries(mapping).forEach(([id, value]) => {
+    const input = document.getElementById(id);
+    if (input) input.value = value;
+  });
+
+  const preview = document.getElementById('selected-service-preview');
+  if (preview) {
+    preview.innerHTML = servico
+      ? `<strong>${escapeHtml(servico.nomeServico || 'Serviço sem nome')}</strong><span>${escapeHtml(formatSelectedServicePreview(servico))}</span>`
+      : '<strong>Nenhum serviço selecionado</strong><span>Cadastre um serviço para usar nome, local e endereço nas vagas.</span>';
+  }
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Preenche o seletor de serviços da criação de vagas com os registros do convênio logado.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object|null} convenio - Convênio ativo usado para filtrar os serviços.
+ * @param {string} selectedId - ID opcional que deve ficar selecionado, usado na edição de vaga.
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Lê `cproeis_convenios_servicos` no LocalStorage e atualiza somente o DOM.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: carregar serviços por demanda via API e tratar indisponibilidade com mensagem não bloqueante.
+ */
+function hydrateServiceSelect(convenio, selectedId = '') {
+  const select = document.getElementById('servico-cadastrado');
+  const createLink = document.getElementById('create-service-link');
+  if (!select || !convenio) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const responsavel = params.get('responsavel') || localStorage.getItem(STORAGE_CONVENIO_RESPONSAVEL_ATUAL) || '';
+  const query = `id=${encodeURIComponent(convenio.id)}${responsavel ? `&responsavel=${encodeURIComponent(responsavel)}` : ''}`;
+  if (createLink) createLink.href = `criar-servico.html?${query}`;
+
+  const servicos = getServicosConvenio(convenio.id);
+  select.innerHTML = servicos.length
+    ? '<option value="">Selecione</option>'
+    : '<option value="">Nenhum serviço cadastrado</option>';
+
+  servicos.forEach((servico) => {
+    const option = document.createElement('option');
+    option.value = servico.id;
+    option.textContent = servico.nomeServico || 'Serviço sem nome';
+    select.appendChild(option);
+  });
+
+  select.value = selectedId && servicos.some((servico) => servico.id === selectedId) ? selectedId : '';
+  applySelectedServiceToForm(servicos.find((servico) => servico.id === select.value) || null);
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Valida se um serviço cadastrado foi escolhido antes de liberar as demais etapas.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {boolean} showMessage - Define se deve exibir alerta para o usuário.
+ * @returns {boolean} Verdadeiro quando há serviço selecionado e copiado para os campos internos.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; lê o select e os inputs ocultos preenchidos a partir do LocalStorage.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: validar no backend se o serviço ainda pertence ao convênio antes da criação definitiva.
+ */
+function validateSelectedService(showMessage = false) {
+  const select = document.getElementById('servico-cadastrado');
+  const valid = Boolean(select?.value && collectServiceInfo().nomeServico && collectServiceInfo().localServico);
+  select?.classList.toggle('invalid', !valid);
+
+  if (!valid && showMessage) {
+    alert('Selecione um serviço cadastrado antes de continuar. Se não houver serviço, cadastre um novo.');
+  }
+
+  return valid;
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
  * Coleta os dados de endereço e apresentação do serviço informados no terceiro card.
  *
  * PARÂMETROS E RETORNO:
@@ -1531,6 +1674,7 @@ function collectServiceInfo() {
   };
 
   return {
+    servicoId: document.getElementById('servico-cadastrado')?.value || '',
     nomeServico: normalizeServiceField(document.getElementById('nome-servico')) || '',
     localServico: normalizeServiceField(document.getElementById('local-servico')) || '',
     enderecoDados,
@@ -1595,13 +1739,17 @@ function getSelectedClassConfigs(convenio) {
 function validateCreationWizard(convenio) {
   document.getElementById('date-mode').value = 'period';
 
+  if (!validateSelectedService(true)) {
+    return false;
+  }
+
   if (!validatePeriodSelection(convenio) || !getCreationDates(convenio).length) {
     alert('Informe uma data inicial e uma data final válidas dentro da vigência do convênio.');
     return false;
   }
 
-  if (!validateServiceFields(true)) {
-    alert('Corrija os campos destacados antes de revisar ou criar as vagas.');
+  if (!validateServiceFields(false)) {
+    alert('O serviço selecionado está incompleto. Edite ou cadastre novamente o serviço antes de criar vagas.');
     return false;
   }
 
@@ -3394,7 +3542,8 @@ function initializeOperationalDefaults(convenio) {
   document.getElementById('data-inicio').value = validStart;
   document.getElementById('data-fim').value = validStart;
   document.getElementById('date-mode').value = 'period';
-  showCreationStep('date-selection-card');
+  hydrateServiceSelect(convenio);
+  showCreationStep('service-selection-card');
   document.querySelectorAll('[data-date-mode-option]').forEach((button) => {
     button.classList.toggle('active', button.dataset.dateModeOption === 'period');
   });
@@ -3638,6 +3787,7 @@ function collectVagaPayload(convenio, dataServico, classConfig, serviceInfo) {
   return {
     id: editingId || makeId(),
     convenioId: convenio.id,
+    servicoId: serviceInfo.servicoId,
     dataServico,
     nomeServico: serviceInfo.nomeServico,
     classe: classConfig.classe,
@@ -3707,7 +3857,8 @@ function resetVagaForm() {
   document.getElementById('data-inicio').value = today;
   document.getElementById('data-fim').value = today;
   document.getElementById('date-mode').value = 'period';
-  showCreationStep('date-selection-card');
+  hydrateServiceSelect(selectedConvenioCache);
+  showCreationStep('service-selection-card');
   hideCreationSummaryModal(false);
   document.getElementById('submit-button').textContent = 'Criar vagas';
   document.querySelectorAll('[data-date-mode-option]').forEach((button) => {
@@ -3740,16 +3891,26 @@ function fillVagaForm(vaga) {
   document.getElementById('data-inicio').value = vaga.dataServico || '';
   document.getElementById('data-fim').value = vaga.dataServico || '';
   document.getElementById('calendar-month').value = (vaga.dataServico || today).slice(0, 7);
-  document.getElementById('nome-servico').value = vaga.nomeServico || '';
-  document.getElementById('local-servico').value = vaga.localServico || '';
-  document.getElementById('servico-cep').value = vaga.enderecoDados?.cep || '';
-  document.getElementById('servico-logradouro').value = vaga.enderecoDados?.logradouro || '';
-  document.getElementById('servico-numero').value = vaga.enderecoDados?.numero || '';
-  document.getElementById('servico-complemento').value = vaga.enderecoDados?.complemento || '';
-  document.getElementById('servico-bairro').value = vaga.enderecoDados?.bairro || '';
-  document.getElementById('servico-cidade').value = vaga.enderecoDados?.cidade || '';
-  document.getElementById('servico-uf').value = vaga.enderecoDados?.uf || '';
-  document.getElementById('ponto-referencia').value = vaga.pontoReferencia || '';
+  hydrateServiceSelect(selectedConvenioCache, vaga.servicoId || '');
+
+  if (!document.getElementById('servico-cadastrado')?.value) {
+    applySelectedServiceToForm({
+      nomeServico: vaga.nomeServico || '',
+      localServico: vaga.localServico || '',
+      enderecoDados: vaga.enderecoDados || {},
+      enderecoServico: vaga.enderecoServico || '',
+      pontoReferencia: vaga.pontoReferencia || ''
+    });
+
+    const select = document.getElementById('servico-cadastrado');
+    if (select && vaga.nomeServico) {
+      const legacyOption = document.createElement('option');
+      legacyOption.value = `vaga-atual-${vaga.id}`;
+      legacyOption.textContent = `${vaga.nomeServico} (vaga atual)`;
+      select.appendChild(legacyOption);
+      select.value = legacyOption.value;
+    }
+  }
   document.getElementById('submit-button').textContent = 'Atualizar vagas';
   const classInput = document.querySelector(`[data-class-enabled="${vaga.classe}"]`) || document.querySelector('[data-class-enabled]');
   const turno = document.querySelector('[data-class-turno]');
@@ -3765,6 +3926,7 @@ function fillVagaForm(vaga) {
 
   syncClassConfig(selectedConvenioCache);
   renderCalendar((vaga.dataServico || today).slice(0, 7), selectedConvenioCache);
+  showCreationStep('service-selection-card');
 }
 
 /**
@@ -4048,7 +4210,7 @@ function bindOperationalEvents(convenio) {
     });
 
     document.getElementById('preview-button')?.addEventListener('click', () => {
-      if (validateCreationStep('class-selection-card', convenio) && validateCreationWizard(convenio)) {
+      if (validateCreationStep('date-selection-card', convenio) && validateCreationWizard(convenio)) {
         renderCreationSummary(convenio);
       }
     });
@@ -4069,6 +4231,12 @@ function bindOperationalEvents(convenio) {
       button.addEventListener('click', () => {
         showCreationStep(button.dataset.stepBack);
       });
+    });
+
+    document.getElementById('servico-cadastrado')?.addEventListener('change', (event) => {
+      const servico = getServicosConvenio(convenio.id).find((item) => item.id === event.target.value) || null;
+      applySelectedServiceToForm(servico);
+      hideCreationSummaryModal(false);
     });
 
     document.getElementById('creation-type-options')?.addEventListener('click', (event) => {

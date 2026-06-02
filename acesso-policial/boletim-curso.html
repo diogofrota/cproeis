@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Publicação de Curso</title>
+  <link rel="stylesheet" href="../css/style-acesso-policial-cursos.css">
+  <link rel="stylesheet" href="../css/style-forms.css">
+</head>
+<body>
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="page-title">Publicação de curso</h1>
+        <p id="page-subtitle">Envie referência de BOL PM para validação de curso concluído.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="acesso-policial-menu" aria-label="Menu do policial">
+      <a id="menu-vagas" href="vagas.html">Ver vagas</a>
+      <a href="perfil.html">Perfil</a>
+      <a href="historico-servico.html">Histórico de serviço</a>
+      <a href="tabela-servico.html">Tabela de serviço</a>
+      <a href="pagamentos.html">Pagamentos</a>
+      <a href="cursos.html">Cursos</a>
+      <a href="cursos-disponiveis.html">Cursos disponíveis</a>
+      <a href="boletim-curso.html">Publicação de curso</a>
+      <a href="habilitacao.html">Habilitação de moto</a>
+      <a class="menu-logout-link" href="acesso.html" data-logout-policial="true">Sair</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Enviar publicação em boletim</h2>
+          <p class="hint">Escolha o curso oficial do GSI e informe o BOL PM, data e página onde o nome foi publicado.</p>
+        </div>
+      </div>
+
+      <!--
+        DESCRIÇÃO DO BLOCO: Solicitação de validação de curso por publicação em boletim.
+        PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; o script coleta os campos no envio.
+        ARMAZENAMENTO E PERSISTÊNCIA: Lê `cproeis_gsi_tipos_curso_capacitacao` e grava solicitações em
+        `cproeis_policiais_cursos_boletins` no LocalStorage.
+        TODO: Em produção, consultar documento oficial, validar presença do policial e gerar trilha de auditoria.
+      -->
+      <form id="bulletin-form" class="course-form">
+        <label>
+          Tipo de curso
+          <select id="bulletin-course-type" required></select>
+        </label>
+        <label>
+          Número do BOL PM
+          <input id="bulletin-number" type="text" required placeholder="Ex.: 123/2026">
+        </label>
+        <label>
+          Data do BOL PM
+          <input id="bulletin-date" type="date" required>
+        </label>
+        <label>
+          Página
+          <input id="bulletin-page" type="text" required placeholder="Ex.: 14">
+        </label>
+        <label class="full">
+          Observações
+          <textarea id="bulletin-notes" placeholder="Trecho, unidade ou informação adicional para conferência."></textarea>
+        </label>
+        <div class="form-actions">
+          <button type="submit">Enviar para verificação</button>
+        </div>
+      </form>
+      <p class="hint" id="bulletin-feedback" aria-live="polite"></p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Solicitações enviadas</h2>
+          <p class="hint" id="bulletin-count">Nenhuma solicitação carregada.</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Curso</th>
+              <th>BOL PM</th>
+              <th>Data</th>
+              <th>Página</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="bulletin-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-acesso-policial-boletim-curso.js"></script>
+  <script src="../js/script-acesso-policial-session.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

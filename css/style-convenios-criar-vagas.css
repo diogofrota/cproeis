@@ -1220,7 +1220,8 @@ button:hover {
   background: #8f1c13;
 }
 
-.table-wrap {
+.table-wrap,
+.table-wrapper {
   width: 100%;
   overflow-x: auto;
   border: 1px solid #e2e8f0;
@@ -1413,6 +1414,47 @@ tr:hover td {
   padding: 18px;
   color: #64748b;
   text-align: center;
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Ficha textual somente leitura para perfil do responsável e dados
+ * do contrato, seguindo o padrão visual dos detalhes do policial.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; define apenas layout.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os scripts injetam os valores no DOM.
+ * TODO: Em produção, mover este padrão para um componente compartilhado de detalhes.
+ */
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 28px;
+  row-gap: 18px;
+  padding: 6px 0 22px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.detail-item {
+  min-height: 42px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.detail-item span {
+  display: block;
+  margin-bottom: 4px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.detail-item strong {
+  display: block;
+  color: #1f2937;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.35;
+  white-space: pre-line;
 }
 
 .badge {
@@ -1608,7 +1650,8 @@ tr:hover td {
   .summary,
   .contract-status,
   .dashboard-grid,
-  .module-menu {
+  .module-menu,
+  .details-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1699,6 +1742,7 @@ tr:hover td {
   .summary-grid,
   .metric-row,
   .metric-row.single,
+  .details-grid,
   .creation-grid {
     grid-template-columns: 1fr;
   }
@@ -1996,4 +2040,195 @@ tr:hover td {
   .module-header .header-top {
     display: flex;
   }
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Aproxima a tela de criação de vagas do padrão visual do Cadastro de
+ * Policiais, mantendo card branco limpo, passos com marcador quadrado e botões consistentes.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; sobrescreve apenas apresentação.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; a criação continua controlada pelo JavaScript.
+ * TODO: Em produção, mover estes padrões de card/step para componentes compartilhados do design system.
+ */
+.panel {
+  padding: 22px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.07);
+}
+
+.panel-header {
+  margin-bottom: 18px;
+}
+
+.panel-header h2 {
+  color: #1f2a8a;
+  font-size: 22px;
+}
+
+.wizard-form {
+  gap: 18px;
+}
+
+.wizard-card,
+.calendar-card,
+.creation-card {
+  padding: 22px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.wizard-card-header {
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.wizard-card-header > span {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #eef2ff;
+  color: #1f2a8a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.wizard-card-header h3 {
+  color: #1f2a8a;
+  font-size: 22px;
+}
+
+.date-mode {
+  gap: 14px;
+  align-items: end;
+}
+
+.date-display-input {
+  background: #fff;
+  color: #1f2937;
+  font-weight: 400;
+}
+
+.form-actions {
+  align-self: end;
+  gap: 10px;
+  margin-top: 0;
+}
+
+button,
+.button-link,
+.form-actions button,
+.modal-create-button,
+.modal-back-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #1f2a8a;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+button:hover,
+.button-link:hover,
+.form-actions button:hover,
+.modal-create-button:hover {
+  background: #151d66;
+}
+
+.secondary,
+.modal-back-button {
+  background: #475569;
+}
+
+.secondary:hover,
+.modal-back-button:hover {
+  background: #334155;
+}
+
+.ghost {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+}
+
+.ghost:hover {
+  background: #f8fafc;
+}
+
+#service-name-card .service-grid label,
+#service-info-card .service-grid label {
+  grid-template-rows: auto 44px 14px;
+}
+
+#service-name-card .service-grid .form-actions,
+#service-info-card .service-grid .form-actions {
+  padding-top: 24px;
+}
+
+.service-selection-grid {
+  grid-template-columns: minmax(260px, 1fr) auto;
+  align-items: end;
+}
+
+#servico-cadastrado {
+  min-height: 48px;
+  height: 48px;
+  padding: 11px 12px;
+  line-height: 1.35;
+}
+
+.service-selection-grid .wide,
+.service-selection-grid .selected-service-card {
+  grid-column: 1 / -1;
+}
+
+.service-selection-grid .form-actions {
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  padding-top: 0;
+}
+
+.selected-service-card {
+  display: grid;
+  gap: 6px;
+  min-height: 78px;
+  padding: 14px 16px;
+  border: 1px solid #dbe4f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.selected-service-card strong {
+  color: #1f2a8a;
+  font-size: 15px;
+}
+
+.selected-service-card span {
+  color: #5c6f8e;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.page-actions {
+  justify-content: flex-end;
+  margin-top: 0;
+}
+
+.form-status {
+  min-height: 20px;
+  margin: 0;
+  color: #b42318;
+  font-size: 13px;
+  font-weight: 700;
 }

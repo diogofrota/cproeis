@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CPROEIS - Criar Curso</title>
   <link rel="stylesheet" href="../css/style-convenios-criar-curso.css">
+  <link rel="stylesheet" href="../css/style-forms.css">
 </head>
 <body>
   <header class="module-header">
@@ -29,10 +30,14 @@
       <a id="menu-acompanhamento" href="acompanhamento.html">Acompanhar limite mensal</a>
       <a id="menu-vagas" href="vagas.html">Vagas criadas</a>
       <a id="menu-vagas-calendario" href="vagas-calendario.html">Vagas calendário</a>
+      <a id="menu-perfil-convenio" href="perfil.html">Perfil</a>
+      <a id="menu-dados-contrato" href="dados-contrato.html">Dados do contrato</a>
+      <a id="menu-servicos" href="servicos.html">Serviços cadastrados</a>
+      <a id="menu-criar-servico" href="criar-servico.html">Criar serviço</a>
       <a id="menu-criar-curso" href="criar-curso.html">Criar curso</a>
       <a id="menu-historico-curso" href="historico-curso.html">Histórico de curso</a>
+      <a id="menu-inscritos-curso" href="inscritos-curso.html">Inscritos em cursos</a>
       <a id="menu-renovacao-contrato" href="renovacao-contrato.html">Renovação de contrato</a>
-      <a id="menu-detalhes-convenio" href="../contratos/detalhes-convenio.html">Detalhes do convênio</a>
       <a class="menu-logout-link" href="acesso.html" data-logout-convenio="true">Sair</a>
     </nav>
   </header>
@@ -40,9 +45,133 @@
     <section class="panel">
       <div class="panel-header">
         <div>
-          <h2>Criar curso</h2>
-          <p class="hint">Estrutura preparada para receber formulário, validações e persistência da rota.</p>
+          <h2>Tipos de capacitação do convênio</h2>
+          <p class="hint">Cadastre os tipos próprios deste convênio antes de criar uma turma.</p>
         </div>
+      </div>
+
+      <!--
+        DESCRIÇÃO DO BLOCO: Formulário para criar tipos de capacitação próprios do convênio.
+        PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; o JavaScript lê os campos no envio.
+        ARMAZENAMENTO E PERSISTÊNCIA: Grava `cproeis_convenios_tipos_curso_capacitacao` no LocalStorage.
+        TODO: Em produção, validar nomes duplicados no backend e vincular o tipo ao contrato vigente.
+      -->
+      <form id="course-type-form" class="course-form">
+        <label class="wide">
+          Nome do tipo de capacitação
+          <input id="course-type-name" type="text" required placeholder="Ex.: Atendimento ao passageiro">
+        </label>
+        <label class="wide">
+          Critérios da capacitação
+          <input id="course-type-criteria" type="text" placeholder="Ex.: Público-alvo, requisitos ou documentos">
+        </label>
+        <div class="form-actions">
+          <button type="submit">Salvar tipo</button>
+        </div>
+      </form>
+      <p class="hint" id="course-type-feedback" aria-live="polite"></p>
+
+      <div class="table-wrap course-type-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo do convênio</th>
+              <th>Critérios</th>
+              <th>Situação</th>
+            </tr>
+          </thead>
+          <tbody id="course-type-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Criar curso de capacitação</h2>
+          <p class="hint">Cadastre turmas disponíveis para inscrição dos policiais no acesso individual.</p>
+        </div>
+      </div>
+
+      <!--
+        DESCRIÇÃO DO BLOCO: Formulário do convênio para criação de cursos de capacitação.
+        PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os campos são lidos pelo
+        JavaScript da página no envio.
+        ARMAZENAMENTO E PERSISTÊNCIA: O script grava as turmas em `cproeis_convenios_cursos_capacitacao`
+        no LocalStorage, vinculando o curso ao convênio ativo.
+        TODO: Em produção, validar saldo contratual, autorização do responsável e criar a turma por API.
+      -->
+      <form id="course-form" class="course-form">
+        <label>
+          Tipo de capacitação do convênio
+          <select id="course-type" required></select>
+        </label>
+        <label>
+          Nome da turma
+          <input id="course-title" type="text" required placeholder="Ex.: Patrulha Escolar - Turma 01">
+        </label>
+        <label>
+          Início das inscrições
+          <input id="course-enrollment-start" type="date" required>
+        </label>
+        <label>
+          Fim das inscrições
+          <input id="course-enrollment-end" type="date" required>
+        </label>
+        <label>
+          Início do curso
+          <input id="course-start" type="date" required>
+        </label>
+        <label>
+          Término do curso
+          <input id="course-end" type="date" required>
+        </label>
+        <fieldset class="target-rank-field full">
+          <legend>Posto/Graduação</legend>
+          <div class="target-rank-grid" id="course-target-rank"></div>
+        </fieldset>
+        <label>
+          Carga horária
+          <input id="course-hours" type="number" min="1" step="1" required placeholder="Ex.: 20">
+        </label>
+        <label>
+          Vagas
+          <input id="course-slots" type="number" min="1" step="1" required placeholder="Ex.: 30">
+        </label>
+        <label class="wide">
+          Local / ambiente
+          <input id="course-location" type="text" required placeholder="Ex.: Auditório do convênio">
+        </label>
+        <div class="form-actions">
+          <button type="submit">Salvar curso</button>
+        </div>
+      </form>
+      <p class="hint" id="course-feedback" aria-live="polite"></p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Cursos criados</h2>
+          <p class="hint" id="course-count">Nenhum curso carregado.</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Turma</th>
+              <th>Prazo de inscrição</th>
+              <th>Período</th>
+              <th>Público-alvo</th>
+              <th>Vagas</th>
+              <th>Inscritos</th>
+              <th>Situação</th>
+            </tr>
+          </thead>
+          <tbody id="course-body"></tbody>
+        </table>
       </div>
     </section>
   </main>

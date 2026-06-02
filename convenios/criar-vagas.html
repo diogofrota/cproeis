@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CPROEIS - Criar Vagas</title>
   <link rel="stylesheet" href="../css/style-convenios-criar-vagas.css">
+  <link rel="stylesheet" href="../css/style-forms.css">
 </head>
 <body>
   <header class="module-header">
@@ -29,10 +30,14 @@
       <a id="menu-acompanhamento" href="acompanhamento.html">Acompanhar limite mensal</a>
       <a id="menu-vagas" href="vagas.html">Vagas criadas</a>
       <a id="menu-vagas-calendario" href="vagas-calendario.html">Vagas calendário</a>
+      <a id="menu-perfil-convenio" href="perfil.html">Perfil</a>
+      <a id="menu-dados-contrato" href="dados-contrato.html">Dados do contrato</a>
+      <a id="menu-servicos" href="servicos.html">Serviços cadastrados</a>
+      <a id="menu-criar-servico" href="criar-servico.html">Criar serviço</a>
       <a id="menu-criar-curso" href="criar-curso.html">Criar curso</a>
       <a id="menu-historico-curso" href="historico-curso.html">Histórico de curso</a>
+      <a id="menu-inscritos-curso" href="inscritos-curso.html">Inscritos em cursos</a>
       <a id="menu-renovacao-contrato" href="renovacao-contrato.html">Renovação de contrato</a>
-      <a id="menu-detalhes-convenio" href="../contratos/detalhes-convenio.html">Detalhes do convênio</a>
       <a class="menu-logout-link" href="acesso.html" data-logout-convenio="true">Sair</a>
     </nav>
   </header>
@@ -50,11 +55,68 @@
       <form id="vaga-form" class="wizard-form">
         <input type="hidden" id="editing-id">
 
-        <section class="wizard-card calendar-card" id="date-selection-card" aria-label="Seleção de datas para criação de vagas">
+        <section class="wizard-card service-card" id="service-selection-card" aria-label="Serviço cadastrado para criação de vagas">
           <div class="wizard-card-header">
-            <span>1</span>
+            <span>01</span>
             <div>
-              <h3>Datas de criação</h3>
+              <h3>Selecione o Serviço</h3>
+              <p class="hint">Escolha um serviço cadastrado com nome e endereço de apresentação.</p>
+            </div>
+          </div>
+
+          <div class="service-grid service-selection-grid">
+            <label class="wide">
+              Serviço cadastrado
+              <select id="servico-cadastrado" required>
+                <option value="">Selecione</option>
+              </select>
+            </label>
+
+            <div class="form-actions">
+              <a class="button-link ghost" id="create-service-link" href="criar-servico.html">Criar novo serviço</a>
+              <button type="button" data-step-next="class-selection-card">Avançar</button>
+            </div>
+
+            <div class="selected-service-card wide" id="selected-service-preview">
+              <strong>Nenhum serviço selecionado</strong>
+              <span>Cadastre um serviço para usar nome, local e endereço nas vagas.</span>
+            </div>
+
+            <input id="nome-servico" type="hidden" required>
+            <input id="local-servico" type="hidden" required>
+            <input id="servico-cep" type="hidden">
+            <input id="servico-logradouro" type="hidden" required>
+            <input id="servico-numero" type="hidden" required>
+            <input id="servico-complemento" type="hidden">
+            <input id="servico-bairro" type="hidden" required>
+            <input id="servico-cidade" type="hidden" required>
+            <input id="servico-uf" type="hidden" required>
+            <input id="ponto-referencia" type="hidden">
+          </div>
+        </section>
+
+        <section class="wizard-card class-selection-card is-hidden" id="class-selection-card" aria-label="Classes, turnos e quantidades">
+          <div class="wizard-card-header">
+            <span>02</span>
+            <div>
+              <h3>Classes, turnos e vagas</h3>
+              <p class="hint">Selecione apenas uma classe e configure turno, horário, quantidade e curso.</p>
+            </div>
+          </div>
+
+          <div class="class-choice-grid" id="class-choice-grid"></div>
+
+          <div class="form-actions">
+            <button type="button" class="secondary" data-step-back="service-selection-card">Voltar</button>
+            <button type="button" data-step-next="date-selection-card">Avançar</button>
+          </div>
+        </section>
+
+        <section class="wizard-card calendar-card is-hidden" id="date-selection-card" aria-label="Seleção de datas para criação de vagas">
+          <div class="wizard-card-header">
+            <span>03</span>
+            <div>
+              <h3>Período de criação</h3>
               <p class="hint">Informe data inicial e data final do período de criação.</p>
             </div>
           </div>
@@ -80,7 +142,8 @@
             </label>
 
             <div class="form-actions">
-              <button type="button" data-step-next="service-name-card">Avançar</button>
+              <button type="button" class="secondary" data-step-back="class-selection-card">Voltar</button>
+              <button type="button" id="preview-button">Avançar</button>
             </div>
           </div>
 
@@ -96,112 +159,10 @@
           </div>
         </section>
 
-        <section class="wizard-card is-hidden" id="service-name-card" aria-label="Nome do serviço">
-          <div class="wizard-card-header">
-            <span>2</span>
-            <div>
-              <h3>Nome do serviço</h3>
-              <p class="hint">Defina a identificação operacional que aparecerá nas vagas criadas.</p>
-            </div>
-          </div>
-
-          <div class="service-grid">
-            <label class="full">
-              Nome do serviço
-              <input id="nome-servico" type="text" placeholder="Ex.: Reforço operacional, evento, patrulhamento..." required>
-            </label>
-
-            <div class="form-actions">
-              <button type="button" class="secondary" data-step-back="date-selection-card">Voltar</button>
-              <button type="button" data-step-next="service-info-card">Avançar</button>
-            </div>
-          </div>
-        </section>
-
-        <section class="wizard-card service-card is-hidden" id="service-info-card" aria-label="Local de apresentação">
-          <div class="wizard-card-header">
-            <span>3</span>
-            <div>
-              <h3>Local de apresentação</h3>
-              <p class="hint">Informe o local, endereço e ponto de referência para apresentação.</p>
-            </div>
-          </div>
-
-          <div class="service-grid">
-
-            <label>
-              Local de apresentação
-              <input id="local-servico" type="text" placeholder="Ex.: Portaria principal, base operacional..." required>
-            </label>
-
-            <label>
-              CEP
-              <input id="servico-cep" type="text" inputmode="numeric" placeholder="00000-000">
-            </label>
-
-            <label class="wide">
-              Logradouro
-              <input id="servico-logradouro" type="text" placeholder="Rua, avenida, praça..." required>
-            </label>
-
-            <label>
-              Número
-              <input id="servico-numero" type="text" required>
-            </label>
-
-            <label>
-              Complemento
-              <input id="servico-complemento" type="text">
-            </label>
-
-            <label>
-              Bairro
-              <input id="servico-bairro" type="text" required>
-            </label>
-
-            <label>
-              Cidade
-              <input id="servico-cidade" type="text" required>
-            </label>
-
-            <label>
-              UF
-              <input id="servico-uf" type="text" maxlength="2" placeholder="RJ" required>
-            </label>
-
-            <label class="wide">
-              Ponto de referência
-              <input id="ponto-referencia" type="text" placeholder="Ex.: Ao lado do terminal, entrada pela rua lateral...">
-            </label>
-
-            <div class="form-actions">
-              <button type="button" class="secondary" data-step-back="service-name-card">Voltar</button>
-              <button type="button" data-step-next="class-selection-card">Avançar</button>
-            </div>
-          </div>
-        </section>
-
-        <section class="wizard-card class-selection-card is-hidden" id="class-selection-card" aria-label="Classes, turnos e quantidades">
-          <div class="wizard-card-header">
-            <span>4</span>
-            <div>
-              <h3>Classes, turnos e vagas</h3>
-              <p class="hint">Selecione apenas uma classe e configure turno, horário, quantidade e curso.</p>
-            </div>
-          </div>
-
-          <div class="class-choice-grid" id="class-choice-grid"></div>
-
-          <div class="form-actions">
-            <button type="button" class="secondary" data-step-back="service-info-card">Voltar</button>
-            <button type="button" id="preview-button">Avançar</button>
-          </div>
-        </section>
-
         <div class="creation-modal is-hidden" id="creation-summary-modal" role="dialog" aria-modal="true" aria-labelledby="creation-summary-title">
           <div class="creation-modal-panel">
             <div class="wizard-card-header">
-              <span>5</span>
+              <span>04</span>
               <div>
                 <h3 id="creation-summary-title">Resumo antes de criar</h3>
                 <p class="hint">Confirme as informações abaixo antes de criar.</p>

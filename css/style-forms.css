@@ -1,0 +1,120 @@
+/*
+ * DESCRIÇÃO DO BLOCO:
+ * Padrão visual compartilhado para formulários do sistema CPROEIS, extraído da página de
+ * Cadastro de Policiais para manter labels, inputs, selects, textareas e dicas com a mesma leitura.
+ *
+ * PARÂMETROS E RETORNO:
+ * Não recebe parâmetros nem retorna valores; aplica estilos globais aos elementos de formulário.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não lê nem grava dados. A persistência continua sendo responsabilidade dos scripts de cada página.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, transformar estas regras em tokens/componentes oficiais do design system.
+ */
+:root {
+  --form-blue: #1f2a8a;
+  --form-ink: #1f2937;
+  --form-label: #263244;
+  --form-line: #c8d2e0;
+  --form-soft: #eef2f7;
+  --form-white: #ffffff;
+  --form-error: #dc2626;
+}
+
+label {
+  display: grid;
+  gap: 7px;
+  color: var(--form-label);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+label[hidden] {
+  display: none !important;
+}
+
+input,
+select,
+textarea,
+button {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--form-line);
+  border-radius: 8px;
+  background: var(--form-white);
+  color: var(--form-ink);
+  font-weight: 400;
+}
+
+select {
+  appearance: auto;
+}
+
+textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 3px solid rgba(31, 42, 138, 0.14);
+  border-color: var(--form-blue);
+}
+
+input.invalid,
+select.invalid,
+textarea.invalid {
+  border-color: var(--form-error);
+}
+
+input[readonly],
+textarea[readonly] {
+  background: var(--form-soft);
+  color: #475569;
+}
+
+.native-date-input {
+  position: absolute;
+  width: 1px;
+  min-width: 1px;
+  height: 1px;
+  min-height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+select:disabled,
+input:disabled,
+textarea:disabled {
+  background: #e6edf7;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.field-hint {
+  display: block;
+  margin-top: -2px;
+  min-height: 14px;
+  color: var(--form-error);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.field-hint.hidden {
+  visibility: hidden;
+}

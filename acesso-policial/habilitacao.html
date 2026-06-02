@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Habilitação de Moto</title>
+  <link rel="stylesheet" href="../css/style-acesso-policial-cursos.css">
+  <link rel="stylesheet" href="../css/style-forms.css">
+</head>
+<body>
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="page-title">Habilitação de moto</h1>
+        <p id="page-subtitle">Cadastro de CNH vinculado ao policial selecionado.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="acesso-policial-menu" aria-label="Menu do policial">
+      <a id="menu-vagas" href="vagas.html">Ver vagas</a>
+      <a href="perfil.html">Perfil</a>
+      <a href="historico-servico.html">Histórico de serviço</a>
+      <a href="tabela-servico.html">Tabela de serviço</a>
+      <a href="pagamentos.html">Pagamentos</a>
+      <a href="cursos.html">Cursos</a>
+      <a href="cursos-disponiveis.html">Cursos disponíveis</a>
+      <a href="boletim-curso.html">Publicação de curso</a>
+      <a href="habilitacao.html">Habilitação de moto</a>
+      <a class="menu-logout-link" href="acesso.html" data-logout-policial="true">Sair</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Carteira de habilitação</h2>
+          <p class="hint">Informe os dados principais. A leitura por IA poderá preencher estes campos automaticamente depois.</p>
+        </div>
+      </div>
+
+      <!--
+        DESCRIÇÃO DO BLOCO: Formulário de habilitação do policial para futura leitura automática por IA.
+        PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; o script coleta os campos no envio.
+        ARMAZENAMENTO E PERSISTÊNCIA: Grava `cproeis_policiais_habilitacoes` no LocalStorage, vinculado ao ID do policial.
+        TODO: Em produção, enviar o documento para serviço seguro de OCR/IA, validar dados extraídos e proteger anexos.
+      -->
+      <form id="license-form" class="course-form">
+        <label>
+          Documento da CNH
+          <input id="license-file" type="file" accept="image/*,.pdf">
+        </label>
+        <label>
+          Número da habilitação
+          <input id="license-number" type="text" required placeholder="Ex.: 01234567890">
+        </label>
+        <label>
+          Categoria
+          <select id="license-category" required>
+            <option value="">Selecione</option>
+            <option value="A">A</option>
+            <option value="AB">AB</option>
+            <option value="AC">AC</option>
+            <option value="AD">AD</option>
+            <option value="AE">AE</option>
+          </select>
+        </label>
+        <label>
+          Data de vencimento
+          <input id="license-expiration" type="date" required>
+        </label>
+        <div class="form-actions">
+          <button type="button" id="license-ai-demo">Ler documento com IA (demo)</button>
+          <button type="submit">Salvar habilitação</button>
+        </div>
+      </form>
+      <p class="hint" id="license-feedback" aria-live="polite"></p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Habilitação registrada</h2>
+          <p class="hint" id="license-count">Nenhuma habilitação carregada.</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Número</th>
+              <th>Categoria</th>
+              <th>Vencimento</th>
+              <th>Situação</th>
+              <th>Origem</th>
+            </tr>
+          </thead>
+          <tbody id="license-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-acesso-policial-habilitacao.js"></script>
+  <script src="../js/script-acesso-policial-session.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Cursos Disponíveis</title>
+  <link rel="stylesheet" href="../css/style-acesso-policial-cursos.css">
+  <link rel="stylesheet" href="../css/style-forms.css">
+</head>
+<body>
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="page-title">Cursos disponíveis</h1>
+        <p id="page-subtitle">Cursos de capacitação abertos para inscrição.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="acesso-policial-menu" aria-label="Menu do policial">
+      <a id="menu-vagas" href="vagas.html">Ver vagas</a>
+      <a href="perfil.html">Perfil</a>
+      <a href="historico-servico.html">Histórico de serviço</a>
+      <a href="tabela-servico.html">Tabela de serviço</a>
+      <a href="pagamentos.html">Pagamentos</a>
+      <a href="cursos.html">Cursos</a>
+      <a href="cursos-disponiveis.html">Cursos disponíveis</a>
+      <a href="boletim-curso.html">Publicação de curso</a>
+      <a href="habilitacao.html">Habilitação de moto</a>
+      <a class="menu-logout-link" href="acesso.html" data-logout-policial="true">Sair</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Cursos de capacitação disponíveis</h2>
+          <p class="hint" id="available-course-count">Carregando cursos.</p>
+        </div>
+      </div>
+
+      <!--
+        DESCRIÇÃO DO BLOCO: Lista de cursos criados pelo convênio e disponíveis ao policial.
+        PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; o script renderiza linhas e botões de inscrição.
+        ARMAZENAMENTO E PERSISTÊNCIA: Lê `cproeis_convenios_cursos_capacitacao` e grava inscrições em
+        `cproeis_policiais_cursos_inscricoes` no LocalStorage.
+        TODO: Em produção, validar elegibilidade, vagas restantes e conflitos de escala no backend antes da inscrição.
+      -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Curso</th>
+              <th>Convênio</th>
+              <th>Prazo de inscrição</th>
+              <th>Período</th>
+              <th>Vagas</th>
+              <th>Situação</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody id="available-course-body"></tbody>
+        </table>
+      </div>
+      <p class="hint" id="available-course-feedback" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <script src="../js/script-acesso-policial-cursos-disponiveis.js"></script>
+  <script src="../js/script-acesso-policial-session.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

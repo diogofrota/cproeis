@@ -73,10 +73,14 @@ function aplicarSessaoPolicialNoMenu(policial) {
   const idParam = `id=${encodeURIComponent(policial.id)}`;
   const menuLinks = {
     'vagas.html': `vagas.html?${idParam}`,
+    'perfil.html': `perfil.html?${idParam}`,
     'historico-servico.html': `historico-servico.html?${idParam}`,
     'tabela-servico.html': `tabela-servico.html?${idParam}`,
     'pagamentos.html': `pagamentos.html?${idParam}`,
-    'cursos.html': `cursos.html?${idParam}`
+    'cursos.html': `cursos.html?${idParam}`,
+    'cursos-disponiveis.html': `cursos-disponiveis.html?${idParam}`,
+    'boletim-curso.html': `boletim-curso.html?${idParam}`,
+    'habilitacao.html': `habilitacao.html?${idParam}`
   };
 
   Object.entries(menuLinks).forEach(([baseHref, nextHref]) => {

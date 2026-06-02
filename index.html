@@ -35,8 +35,11 @@
 
     <!--
       DESCRIÇÃO DO BLOCO: Ferramentas locais de demonstração para facilitar testes do protótipo.
+      Os cadastros foram separados em ações independentes para permitir carregar contratos ou
+      policiais sem sobrescrever a outra base de dados. A geração inicial segue o fluxo real:
+      primeiro serviços do convênio, depois vagas do mês atual usando os serviços cadastrados.
       PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os botões acionam rotinas
-      JavaScript que carregam cadastros, geram vagas ou limpam o armazenamento local.
+      JavaScript que carregam contratos, policiais, serviços, vagas do mês atual ou limpam o armazenamento local.
       ARMAZENAMENTO E PERSISTÊNCIA: As ações gravam e removem dados somente em chaves cproeis_* do
       LocalStorage do navegador atual.
       TODO: Em produção, remover esta área da página pública e substituir por seeds controlados
@@ -44,14 +47,21 @@
     -->
     <section class="demo-tools" aria-label="Ferramentas de teste local">
       <div class="demo-actions">
-        <button type="button" id="seed-demo-registers">Carregar cadastros</button>
-        <button type="button" id="seed-demo-vagas">Gerar vagas simuladas</button>
+        <button type="button" id="seed-demo-contratos">Carregar contratos</button>
+        <button type="button" id="seed-demo-policiais">Carregar policiais</button>
+        <button type="button" id="seed-demo-servicos">Criar serviços demo</button>
+        <button type="button" id="seed-demo-vagas-mes-atual">Criar vagas mês atual</button>
         <button type="button" class="danger-demo" id="clear-demo-cache">Limpar cache</button>
       </div>
     </section>
   </main>
   <script src="js/script-navigation.js"></script>
-  <script src="dados-simulados/dados-demo.js"></script>
+  <script src="dados-simulados/dados-contratos-demo.js"></script>
+  <script src="dados-simulados/dados-policiais-demo.js"></script>
+  <script src="dados-simulados/dados-cursos-demo.js"></script>
+  <script src="dados-simulados/dados-vagas-mes-atual-demo.js"></script>
+  <script src="dados-simulados/dados-vagas-mes-anterior-demo.js"></script>
+  <script src="dados-simulados/dados-vagas-com-curso-demo.js"></script>
   <script src="js/script-index-demo-data.js"></script>
 </body>
 </html>

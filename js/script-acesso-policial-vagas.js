@@ -2,6 +2,9 @@ const STORAGE_POLICIAIS = 'cproeis_cadastro_policiais';
 const STORAGE_VAGAS = 'cproeis_convenios_vagas';
 const STORAGE_CONVENIOS = 'cproeis_contratos_convenios';
 const STORAGE_POLICIAL_ATUAL = 'cproeis_acesso_policial_atual';
+const STORAGE_COURSE_ENROLLMENTS = 'cproeis_policiais_cursos_inscricoes';
+const STORAGE_COURSE_BULLETINS = 'cproeis_policiais_cursos_boletins';
+const STORAGE_LICENSES = 'cproeis_policiais_habilitacoes';
 
 const tiposServico = {
   servico12: 'Serviço 12h',
@@ -10,6 +13,7 @@ const tiposServico = {
 };
 const mesesAno = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 const vagaDatePickerState = { month: '' };
+const COMPLETED_REQUIREMENT_STATUS = new Set(['concluido', 'concluído', 'aprovado', 'aprovada', 'validado', 'validada', 'habilitado', 'habilitada']);
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
@@ -448,6 +452,131 @@ function isVagaLiberada(vaga) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
+ * Normaliza um status textual de curso, boletim ou habilitação para comparação de requisitos.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} status - Situação original gravada nas tabelas locais.
+ * @returns {boolean} Verdadeiro quando o status representa conclusão, validação ou habilitação.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não acessa LocalStorage; compara somente o valor recebido com o conjunto local de status aceitos.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, trocar textos livres por enum oficial de situação retornado pela API.
+ */
+function isCompletedRequirementStatus(status) {
+  return COMPLETED_REQUIREMENT_STATUS.has(String(status || '').trim().toLowerCase());
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Verifica se o policial concluiu uma capacitação criada por convênio exigida pela vaga.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} policialId - ID interno do policial.
+ * @param {string} courseId - ID da turma exigida.
+ * @returns {boolean} Verdadeiro quando há inscrição concluída/validada.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Lê `cproeis_policiais_cursos_inscricoes` no LocalStorage; não grava dados.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Validar conclusão no backend antes de listar e antes de aceitar a vaga.
+ */
+function hasCompletedConvenioCourse(policialId, courseId) {
+  if (!courseId) return false;
+  return loadList(STORAGE_COURSE_ENROLLMENTS).some((item) => (
+    item.policialId === policialId &&
+    item.courseId === courseId &&
+    isCompletedRequirementStatus(item.status)
+  ));
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Verifica se o policial possui curso GSI validado por publicação em boletim.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} policialId - ID interno do policial.
+ * @param {string} tipoId - ID do tipo de curso definido pelo GSI.
+ * @returns {boolean} Verdadeiro quando existe publicação validada para o curso.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Lê `cproeis_policiais_cursos_boletins` no LocalStorage; não grava dados.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, validar a publicação por leitura automatizada do BOL PM e auditoria do GSI.
+ */
+function hasValidatedGsiCourse(policialId, tipoId) {
+  if (!tipoId) return false;
+  return loadList(STORAGE_COURSE_BULLETINS).some((item) => (
+    item.policialId === policialId &&
+    item.tipoId === tipoId &&
+    isCompletedRequirementStatus(item.status)
+  ));
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Verifica se o policial possui habilitação de moto válida para vagas que exigem categoria A.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} policialId - ID interno do policial.
+ * @returns {boolean} Verdadeiro quando há CNH com categoria A e vencimento futuro.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Lê `cproeis_policiais_habilitacoes` no LocalStorage; não grava dados.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, conferir a CNH por serviço documental oficial antes da liberação operacional.
+ */
+function hasValidMotorcycleLicense(policialId) {
+  const today = toDateInputValue(new Date());
+  return loadList(STORAGE_LICENSES).some((license) => (
+    license.policialId === policialId &&
+    String(license.categoria || '').includes('A') &&
+    (!license.vencimento || license.vencimento >= today)
+  ));
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Aplica requisitos adicionais da vaga, como curso GSI, capacitação de convênio ou habilitação de moto.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object} vaga - Vaga persistida com campos requisitoTipo/requisitoId.
+ * @param {object} policial - Policial logado no acesso individual.
+ * @returns {boolean} Verdadeiro quando não há requisito ou quando o policial possui a habilitação exigida.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Lê LocalStorage indiretamente pelas funções de curso, boletim e habilitação; não grava dados.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, retornar vagas já filtradas pela API e repetir a checagem no aceite da vaga.
+ */
+function isPolicialQualifiedForVaga(vaga, policial) {
+  const tipo = vaga?.requisitoTipo || '';
+  const requisitoId = vaga?.requisitoId || '';
+  if (!tipo) return true;
+  if (!policial?.id) return false;
+
+  if (tipo === 'curso-convenio') {
+    return hasCompletedConvenioCourse(policial.id, requisitoId);
+  }
+
+  if (tipo === 'curso-gsi') {
+    return hasValidatedGsiCourse(policial.id, requisitoId);
+  }
+
+  if (tipo === 'habilitacao-moto') {
+    return hasValidMotorcycleLicense(policial.id);
+  }
+
+  return true;
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
  * Verifica se uma vaga é compatível com o cadastro funcional do policial.
  *
  * PARÂMETROS E RETORNO:
@@ -465,6 +594,7 @@ function isVagaCompativelComPolicial(vaga, policial) {
   if (!isPolicialOperationallyEligible(policial)) return false;
   if (!isVagaLiberada(vaga)) return false;
   if (Number(vaga.preenchidas || 0) >= Number(vaga.quantidade || 0)) return false;
+  if (!isPolicialQualifiedForVaga(vaga, policial)) return false;
 
   const allowedClasses = getEligibleClasses(policial);
   return allowedClasses.includes(vaga.classe);

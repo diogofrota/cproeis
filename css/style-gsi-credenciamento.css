@@ -266,7 +266,8 @@ label {
 }
 
 input,
-select {
+select,
+textarea {
   width: 100%;
   min-height: 42px;
   padding: 10px 12px;
@@ -277,10 +278,60 @@ select {
   background: #fff;
 }
 
+textarea {
+  min-height: 82px;
+  resize: vertical;
+}
+
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
   outline: 2px solid rgba(31, 42, 138, 0.25);
   border-color: #1f2a8a;
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Estrutura o formulário de tipos de curso do GSI com o mesmo padrão
+ * operacional das demais telas administrativas.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica grid, largura e botões.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa dados; a persistência é feita por JavaScript.
+ * TODO: Em produção, centralizar formulários administrativos em CSS compartilhado do design system.
+ */
+.course-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.wide {
+  grid-column: span 2;
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.form-actions button {
+  min-height: 42px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #1f2a8a;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.form-actions button:hover {
+  background: #17206a;
 }
 
 .table-wrap {
@@ -377,7 +428,8 @@ tbody tr:last-child td {
 }
 
 @media (max-width: 800px) {
-  .filter-bar {
+  .filter-bar,
+  .course-form {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -415,6 +467,14 @@ tbody tr:last-child td {
 
   .filter-bar {
     grid-template-columns: 1fr;
+  }
+
+  .course-form {
+    grid-template-columns: 1fr;
+  }
+
+  .wide {
+    grid-column: 1;
   }
 
   .module-header.is-open .module-menu {
