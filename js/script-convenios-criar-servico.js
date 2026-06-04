@@ -127,6 +127,221 @@ function formatarCepServico(value) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
+ * Retorna apenas dígitos de um valor textual para validar e consultar CEP.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} value - Valor digitado no input.
+ * @returns {string} Texto contendo somente números.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não lê nem grava dados; normaliza valor em memória.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: centralizar normalizadores de documento/endereço em utilitário compartilhado.
+ */
+function obterDigitosServico(value) {
+  return String(value || '').replace(/\D/g, '');
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Garante mensagens auxiliares abaixo dos campos do serviço.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não usa LocalStorage; cria elementos temporários no DOM.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: transformar hints em componente acessível compartilhado do design system.
+ */
+function garantirHintsServico() {
+  [
+    'nome-servico',
+    'local-servico',
+    'classe-servico',
+    'servico-cep',
+    'servico-logradouro',
+    'servico-numero',
+    'servico-bairro',
+    'servico-cidade',
+    'servico-uf'
+  ].forEach((id) => {
+    const input = document.getElementById(id);
+    const label = input?.closest('label');
+    if (!input || !label || label.querySelector(`[data-field-hint="${id}"]`)) return;
+
+    const hint = document.createElement('span');
+    hint.className = 'field-hint hidden';
+    hint.dataset.fieldHint = id;
+    label.appendChild(hint);
+  });
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Atualiza estado visual e mensagem de validação de um campo do serviço.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} id - ID do input/select validado.
+ * @param {boolean} valid - Indica se o campo está válido.
+ * @param {string} message - Mensagem exibida quando inválido.
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; altera classes e texto no DOM.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: receber mensagens de validação da API quando o cadastro for online.
+ */
+function definirEstadoCampoServico(id, valid, message = '') {
+  const input = document.getElementById(id);
+  const hint = document.querySelector(`[data-field-hint="${id}"]`);
+  if (!input || !hint) return;
+
+  input.classList.toggle('invalid', !valid);
+  hint.textContent = valid ? '' : message;
+  hint.dataset.status = valid ? '' : 'error';
+  hint.classList.toggle('hidden', valid);
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Atualiza mensagem auxiliar específica da consulta de CEP.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} message - Texto exibido abaixo do campo CEP.
+ * @param {string} status - Estado visual: loading, success ou error.
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; altera apenas DOM.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: registrar falhas do provedor externo quando houver backend.
+ */
+function definirStatusCepServico(message = '', status = '') {
+  const hint = document.querySelector('[data-field-hint="servico-cep"]');
+  const input = document.getElementById('servico-cep');
+  if (!hint || !input) return;
+
+  hint.textContent = message;
+  hint.dataset.status = status;
+  hint.classList.toggle('hidden', !message);
+  input.classList.toggle('invalid', status === 'error');
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Consulta o ViaCEP para preencher endereço do serviço de apresentação.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} cep - CEP com ou sem máscara.
+ * @returns {Promise<object|null>} Endereço normalizado ou null se não encontrado.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; faz requisição GET para https://viacep.com.br/ws/{cep}/json/.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: mover consulta para backend para controlar timeout, log e indisponibilidade.
+ */
+async function consultarCepServico(cep) {
+  const digits = obterDigitosServico(cep);
+  if (digits.length !== 8) return null;
+
+  const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+  if (!response.ok) throw new Error('Falha ao consultar CEP.');
+  const data = await response.json();
+  if (data.erro) return null;
+
+  return {
+    cep: formatarCepServico(data.cep || digits),
+    logradouro: data.logradouro || '',
+    complemento: data.complemento || '',
+    bairro: data.bairro || '',
+    cidade: data.localidade || '',
+    uf: data.uf || ''
+  };
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Preenche campos de endereço com o retorno do ViaCEP.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object} endereco - Dados retornados pela consulta de CEP.
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava LocalStorage; preenche apenas inputs do formulário.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: validar endereço oficial no backend antes de salvar serviço.
+ */
+function preencherEnderecoPorCepServico(endereco) {
+  const mapping = {
+    'servico-cep': endereco.cep,
+    'servico-logradouro': endereco.logradouro,
+    'servico-complemento': endereco.complemento,
+    'servico-bairro': endereco.bairro,
+    'servico-cidade': endereco.cidade,
+    'servico-uf': endereco.uf
+  };
+
+  Object.entries(mapping).forEach(([id, value]) => {
+    const input = document.getElementById(id);
+    if (input && value) {
+      input.value = value;
+      definirEstadoCampoServico(id, true);
+    }
+  });
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Executa a consulta de CEP no blur ou quando o campo chega a oito dígitos.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {Promise<void>}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Lê o input de CEP e preenche campos no DOM; não grava LocalStorage.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: usar serviço interno de CEP em produção para reduzir dependência direta do frontend.
+ */
+async function buscarEnderecoServicoPorCep() {
+  const cepInput = document.getElementById('servico-cep');
+  const digits = obterDigitosServico(cepInput?.value);
+
+  if (!digits) {
+    definirStatusCepServico('');
+    return;
+  }
+
+  if (digits.length !== 8) {
+    definirStatusCepServico('Digite os 8 números do CEP.', 'error');
+    return;
+  }
+
+  try {
+    definirStatusCepServico('Consultando endereço pelo CEP...', 'loading');
+    const endereco = await consultarCepServico(digits);
+    if (!endereco) {
+      definirStatusCepServico('CEP não encontrado. Preencha o endereço manualmente.', 'error');
+      return;
+    }
+
+    preencherEnderecoPorCepServico(endereco);
+    definirStatusCepServico('Endereço preenchido automaticamente pelo CEP.', 'success');
+  } catch (error) {
+    definirStatusCepServico('Não foi possível consultar o CEP. Preencha manualmente.', 'error');
+  }
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
  * Monta o endereço textual usado nas tabelas e no resumo da criação de vagas.
  *
  * PARÂMETROS E RETORNO:
@@ -178,6 +393,7 @@ function coletarServico(convenio) {
     convenioNome: convenio.nome || '',
     nomeServico: normalizarTextoServico(document.getElementById('nome-servico')?.value),
     localServico: normalizarTextoServico(document.getElementById('local-servico')?.value),
+    classePadrao: document.getElementById('classe-servico')?.value || '',
     enderecoDados,
     enderecoServico: formatarEnderecoServico(enderecoDados),
     pontoReferencia: normalizarTextoServico(document.getElementById('ponto-referencia')?.value),
@@ -201,21 +417,24 @@ function coletarServico(convenio) {
  * TODO: substituir validação local por validação de domínio retornada pela API.
  */
 function validarServico(servico) {
+  const cepDigits = obterDigitosServico(servico.enderecoDados.cep);
   const required = {
-    'nome-servico': servico.nomeServico.length >= 3,
-    'local-servico': servico.localServico.length >= 3,
-    'servico-logradouro': servico.enderecoDados.logradouro.length >= 3,
-    'servico-numero': servico.enderecoDados.numero.length >= 1,
-    'servico-bairro': servico.enderecoDados.bairro.length >= 3,
-    'servico-cidade': servico.enderecoDados.cidade.length >= 3,
-    'servico-uf': /^[A-Z]{2}$/.test(servico.enderecoDados.uf)
+    'nome-servico': { valid: servico.nomeServico.length >= 3, message: 'Informe um nome com pelo menos 3 caracteres.' },
+    'local-servico': { valid: servico.localServico.length >= 3, message: 'Informe o local de apresentação.' },
+    'classe-servico': { valid: ['A', 'B', 'C/D'].includes(servico.classePadrao), message: 'Selecione a classe do serviço.' },
+    'servico-cep': { valid: !cepDigits || cepDigits.length === 8, message: 'Digite os 8 números do CEP ou deixe em branco.' },
+    'servico-logradouro': { valid: servico.enderecoDados.logradouro.length >= 3, message: 'Informe o logradouro.' },
+    'servico-numero': { valid: servico.enderecoDados.numero.length >= 1, message: 'Informe o número.' },
+    'servico-bairro': { valid: servico.enderecoDados.bairro.length >= 3, message: 'Informe o bairro com pelo menos 3 caracteres.' },
+    'servico-cidade': { valid: servico.enderecoDados.cidade.length >= 3, message: 'Informe a cidade.' },
+    'servico-uf': { valid: /^[A-Z]{2}$/.test(servico.enderecoDados.uf), message: 'Informe a UF com 2 letras.' }
   };
 
-  Object.entries(required).forEach(([id, valid]) => {
-    document.getElementById(id)?.classList.toggle('invalid', !valid);
+  Object.entries(required).forEach(([id, result]) => {
+    definirEstadoCampoServico(id, result.valid, result.message);
   });
 
-  return Object.values(required).every(Boolean);
+  return Object.values(required).every((result) => result.valid);
 }
 
 /**
@@ -260,10 +479,16 @@ function iniciarCriacaoServico() {
   const form = document.getElementById('servico-form');
   const status = document.getElementById('servico-status');
   configurarLinksServico(convenio);
+  garantirHintsServico();
 
   document.getElementById('servico-cep')?.addEventListener('input', (event) => {
     event.target.value = formatarCepServico(event.target.value);
+    if (obterDigitosServico(event.target.value).length === 8) {
+      buscarEnderecoServicoPorCep();
+    }
   });
+
+  document.getElementById('servico-cep')?.addEventListener('blur', buscarEnderecoServicoPorCep);
 
   document.getElementById('servico-uf')?.addEventListener('input', (event) => {
     event.target.value = normalizarTextoServico(event.target.value).replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase();
@@ -279,7 +504,7 @@ function iniciarCriacaoServico() {
 
     const servico = coletarServico(convenio);
     if (!validarServico(servico)) {
-      if (status) status.textContent = 'Preencha os campos obrigatórios do serviço.';
+      if (status) status.textContent = 'Preencha os campos destacados em vermelho.';
       return;
     }
 

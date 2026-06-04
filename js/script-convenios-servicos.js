@@ -137,13 +137,13 @@ function renderizarServicos(convenio) {
   if (!body) return;
 
   if (!convenio) {
-    body.innerHTML = '<tr><td class="empty" colspan="5">Convênio não encontrado. Acesse novamente pelo login do convênio.</td></tr>';
+    body.innerHTML = '<tr><td class="empty" colspan="6">Convênio não encontrado. Acesse novamente pelo login do convênio.</td></tr>';
     return;
   }
 
   const servicos = obterServicosDoConvenio(convenio.id);
   if (!servicos.length) {
-    body.innerHTML = '<tr><td class="empty" colspan="5">Nenhum serviço cadastrado. Crie um serviço para liberar a primeira etapa da criação de vagas.</td></tr>';
+    body.innerHTML = '<tr><td class="empty" colspan="6">Nenhum serviço cadastrado. Crie um serviço para liberar a primeira etapa da criação de vagas.</td></tr>';
     return;
   }
 
@@ -151,6 +151,7 @@ function renderizarServicos(convenio) {
     <tr>
       <td>${escaparTextoServico(servico.nomeServico || '-')}</td>
       <td>${escaparTextoServico(servico.localServico || '-')}</td>
+      <td>${escaparTextoServico(servico.classePadrao || '-')}</td>
       <td>${escaparTextoServico(servico.enderecoServico || '-')}</td>
       <td>${escaparTextoServico(servico.pontoReferencia || '-')}</td>
       <td>${escaparTextoServico(servico.status || 'Ativo')}</td>

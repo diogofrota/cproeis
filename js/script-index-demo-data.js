@@ -2,6 +2,7 @@ const DEMO_KEYS = {
   convenios: 'cproeis_contratos_convenios',
   valores: 'cproeis_contratos_valores',
   responsaveis: 'cproeis_contratos_responsaveis',
+  limitesVagas: 'cproeis_contratos_limites_vagas',
   contratosHistoricos: 'cproeis_contratos_historicos',
   contratosSchema: 'cproeis_contratos_schema_version',
   policiais: 'cproeis_cadastro_policiais',
@@ -183,6 +184,26 @@ function demoDiffDays(start, end) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
+ * Calcula a quantidade inclusiva de dias entre início e fim de um contrato demo.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} start - Data inicial em YYYY-MM-DD.
+ * @param {string} end - Data final em YYYY-MM-DD.
+ * @returns {number} Quantidade de dias considerada na prova real do contrato.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; o retorno é usado para calcular `valorContrato` na massa demo.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, considerar calendário operacional do contrato em vez de todos os dias corridos.
+ */
+function demoCountContractDays(start, end) {
+  if (!start || !end || end < start) return 0;
+  return demoDiffDays(start, end) + 1;
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
  * Calcula módulo sempre positivo para manter a variação sintética estável em datas futuras e passadas.
  *
  * PARÂMETROS E RETORNO:
@@ -292,11 +313,77 @@ function demoId(prefix, index) {
  * TODO: Versionar valores por vigência e por publicação oficial.
  */
 function demoBuildValores(convenioId, offset) {
+  const passagem = 18 + (offset % 3);
+  const alimentacao = 32 + (offset % 4);
+
   return [
-    { id: `${convenioId}-valor-a`, convenioId, classe: 'A', servico12: 780 + offset, servico8: 540 + offset, servico6: 420 + offset },
-    { id: `${convenioId}-valor-b`, convenioId, classe: 'B', servico12: 680 + offset, servico8: 480 + offset, servico6: 360 + offset },
-    { id: `${convenioId}-valor-c`, convenioId, classe: 'C', servico12: 560 + offset, servico8: 390 + offset, servico6: 300 + offset },
-    { id: `${convenioId}-valor-d`, convenioId, classe: 'D', servico12: 480 + offset, servico8: 340 + offset, servico6: 260 + offset }
+    { id: `${convenioId}-valor-a`, convenioId, classe: 'A', servico12: 780 + offset, servico8: 540 + offset, servico6: 420 + offset, passagem, alimentacao },
+    { id: `${convenioId}-valor-b`, convenioId, classe: 'B', servico12: 680 + offset, servico8: 480 + offset, servico6: 360 + offset, passagem, alimentacao },
+    { id: `${convenioId}-valor-c`, convenioId, classe: 'C', servico12: 560 + offset, servico8: 390 + offset, servico6: 300 + offset, passagem, alimentacao },
+    { id: `${convenioId}-valor-d`, convenioId, classe: 'D', servico12: 480 + offset, servico8: 340 + offset, servico6: 260 + offset, passagem, alimentacao }
+  ];
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Calcula o valor final de contrato demo a partir dos limites diários, valores unitários,
+ * passagem/alimentação e dias de vigência.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {Array<object>} valores - Valores unitários por classe e turno.
+ * @param {Array<object>} limites - Quantidade máxima diária por classe e turno.
+ * @param {string} inicio - Início da vigência em YYYY-MM-DD.
+ * @param {string} fim - Fim da vigência em YYYY-MM-DD.
+ * @returns {number} Valor total calculado para preencher `valorContrato`.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados diretamente; o retorno é salvo no objeto do convênio demo.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Reaproveitar a mesma regra do backend financeiro quando a aplicação sair do modo LocalStorage.
+ */
+function demoCalculateValorContrato(valores, limites, inicio, fim) {
+  const valorBase = valores[0] || {};
+  const passagemAlimentacao = Number(valorBase.passagem || 0) + Number(valorBase.alimentacao || 0);
+  const totalDiario = ['A', 'B', 'C', 'D'].reduce((total, classe) => {
+    const valor = valores.find((item) => item.classe === classe) || {};
+    const limite = limites.find((item) => item.classe === classe) || {};
+    const turnos = (Number(valor.servico12 || 0) * Number(limite.servico12 || 0))
+      + (Number(valor.servico8 || 0) * Number(limite.servico8 || 0))
+      + (Number(valor.servico6 || 0) * Number(limite.servico6 || 0));
+    const vagas = Number(limite.servico12 || 0) + Number(limite.servico8 || 0) + Number(limite.servico6 || 0);
+
+    return total + turnos + (vagas * passagemAlimentacao);
+  }, 0);
+
+  return totalDiario * demoCountContractDays(inicio, fim);
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Cria os limites diários de vagas por classe e turno para um convênio de demonstração.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} convenioId - ID do convênio vinculado aos limites operacionais.
+ * @param {number} offset - Índice usado para variar os limites entre contratos demo.
+ * @returns {Array<object>} Lista de limites por classe com totais para 12h, 8h e 6h.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados diretamente; o retorno é salvo dentro do convênio em `limitesVagasDiarias`
+ * e na chave `cproeis_contratos_limites_vagas`.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, validar estes limites em tabela contratual própria e bloquear geração
+ * de vagas no backend quando a quantidade diária por classe/turno for excedida.
+ */
+function demoBuildLimitesVagasDiarias(convenioId, offset) {
+  const variation = offset % 4;
+
+  return [
+    { id: `${convenioId}-limite-classe-A`, convenioId, classe: 'A', grupo: 'Oficiais superiores', servico12: 2 + variation, servico8: 2 + variation, servico6: 1 + variation },
+    { id: `${convenioId}-limite-classe-B`, convenioId, classe: 'B', grupo: 'Oficiais intermediários e subalternos', servico12: 4 + variation, servico8: 3 + variation, servico6: 2 + variation },
+    { id: `${convenioId}-limite-classe-C`, convenioId, classe: 'C', grupo: 'Praças subtenentes e sargentos', servico12: 8 + variation, servico8: 6 + variation, servico6: 4 + variation },
+    { id: `${convenioId}-limite-classe-D`, convenioId, classe: 'D', grupo: 'Cabos e soldados', servico12: 12 + variation, servico8: 10 + variation, servico6: 8 + variation }
   ];
 }
 
@@ -334,10 +421,11 @@ function demoBuildResponsavel(convenioId, convenioNome, index) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
- * Monta 10 convênios vigentes de demonstração, cada um com um responsável e valores por classe.
+ * Monta 10 convênios vigentes de demonstração, cada um com um responsável, valores por classe
+ * e limites diários de vagas por classe/turno.
  *
  * PARÂMETROS E RETORNO:
- * @returns {{convenios: Array<object>, responsaveis: Array<object>, valores: Array<object>}} Base sintética.
+ * @returns {{convenios: Array<object>, responsaveis: Array<object>, valores: Array<object>, limitesVagas: Array<object>}} Base sintética.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
  * Não grava diretamente; a função `seedDemoContratos` persiste o retorno no LocalStorage.
@@ -351,13 +439,16 @@ function demoBuildConvenios() {
   const convenios = [];
   const responsaveis = [];
   const valores = [];
+  const limitesVagas = [];
 
   names.forEach((nome, index) => {
     const convenioId = demoId('conv-demo', index + 1);
     const responsavel = demoBuildResponsavel(convenioId, nome, index + 1);
     const convenioValores = demoBuildValores(convenioId, index * 10);
+    const convenioLimitesVagas = demoBuildLimitesVagasDiarias(convenioId, index);
     const inicio = demoAddDays(DEMO_TODAY, -90 - index);
     const fim = demoAddDays(DEMO_TODAY, 150 + (index * 20));
+    const valorContratoCalculado = demoCalculateValorContrato(convenioValores, convenioLimitesVagas, inicio, fim);
 
     convenios.push({
       id: convenioId,
@@ -377,7 +468,7 @@ function demoBuildConvenios() {
       numero: `SEI-${String(123456 + index)}/789012/34${String(50 + index)}`,
       diarioData: inicio,
       diarioPagina: `Página ${12 + index}`,
-      valorContrato: 1800000 + (index * 220000),
+      valorContrato: valorContratoCalculado,
       inicio,
       fim,
       classeA: 0,
@@ -385,14 +476,16 @@ function demoBuildConvenios() {
       classeC: 0,
       classeD: 0,
       valores: convenioValores,
+      limitesVagasDiarias: convenioLimitesVagas,
       responsaveis: [responsavel]
     });
 
     responsaveis.push(responsavel);
     valores.push(...convenioValores);
+    limitesVagas.push(...convenioLimitesVagas);
   });
 
-  return { convenios, responsaveis, valores };
+  return { convenios, responsaveis, valores, limitesVagas };
 }
 
 /**
@@ -498,7 +591,8 @@ function demoBuildHistoricos(policiais) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
- * Carrega contratos, responsáveis, valores e histórico contratual de teste no armazenamento local.
+ * Carrega contratos, responsáveis, valores, limites diários de vagas e histórico contratual
+ * de teste no armazenamento local.
  *
  * PARÂMETROS E RETORNO:
  * @returns {void}
@@ -506,21 +600,23 @@ function demoBuildHistoricos(policiais) {
  * ARMAZENAMENTO E PERSISTÊNCIA:
  * Grava `cproeis_contratos_schema_version`, `cproeis_contratos_convenios`,
  * `cproeis_contratos_responsaveis`, `cproeis_contratos_valores` e
- * `cproeis_contratos_historicos` no LocalStorage.
+ * `cproeis_contratos_limites_vagas`, além de `cproeis_contratos_historicos`
+ * no LocalStorage.
  *
  * NOTAS DE EXPANSÃO:
  * TODO: Em produção, carregar contratos por API administrativa com autenticação, auditoria e
  * validação de vigência antes da persistência.
  */
 function seedDemoContratos() {
-  const { convenios, responsaveis, valores } = demoBuildConvenios();
+  const { convenios, responsaveis, valores, limitesVagas } = demoBuildConvenios();
 
   localStorage.setItem(DEMO_KEYS.contratosSchema, '2026-05-15-endereco-separado');
   demoSaveList(DEMO_KEYS.convenios, convenios);
   demoSaveList(DEMO_KEYS.responsaveis, responsaveis);
   demoSaveList(DEMO_KEYS.valores, valores);
+  demoSaveList(DEMO_KEYS.limitesVagas, limitesVagas);
   demoSaveList(DEMO_KEYS.contratosHistoricos, []);
-  demoFeedback('Contratos carregados: 10 convênios e 10 responsáveis.');
+  demoFeedback('Contratos carregados: 10 convênios, 10 responsáveis e limites diários de vagas.');
 }
 
 /**

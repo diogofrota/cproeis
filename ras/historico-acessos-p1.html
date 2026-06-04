@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - RAS</title>
+  <link rel="stylesheet" href="../css/style-ras.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página de histórico dos responsáveis P/1 RAS por unidade. Ela separa
+    auditoria de mudanças da tela operacional de vínculo ativo.
+    PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; navegação é feita por links
+    locais do menu.
+    ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados diretamente; o script lê cproeis_ras_acessos_p1
+    no LocalStorage para montar a tabela.
+    TODO: Em produção, substituir por histórico paginado vindo do backend com usuário responsável
+    pela alteração, motivo e trilha de auditoria imutável.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>RAS</h1>
+        <p>Serviço extra pago pelo Estado com controle de orçamento, liberação do GSI e eventos por unidade.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="ras-menu" aria-label="Menu do RAS">
+      <a href="ras.html">RAS</a>
+      <a href="acessos-p1.html">P/1 Unidade</a>
+      <a class="menu-back-link" href="../index.html" data-history-back="false">Página inicial</a>
+    </nav>
+  </header>
+
+  <main class="ras-layout">
+    <section class="table-panel" aria-labelledby="ras-access-history-title">
+      <div class="panel-heading">
+        <h2 id="ras-access-history-title">Histórico de mudanças</h2>
+        <p class="hint" id="ras-access-history-count">Nenhuma mudança registrada.</p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Unidade</th>
+              <th>Policial</th>
+              <th>RG</th>
+              <th>Entrada</th>
+              <th>Saída</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="ras-access-history-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-ras-historico-acessos-p1.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 const STORAGE_VALORES = 'cproeis_contratos_valores';
 const STORAGE_CONVENIOS = 'cproeis_contratos_convenios';
 const STORAGE_RESPONSAVEIS = 'cproeis_contratos_responsaveis';
+const STORAGE_LIMITES_VAGAS = 'cproeis_contratos_limites_vagas';
 const STORAGE_HISTORICOS = 'cproeis_contratos_historicos';
 const STORAGE_SCHEMA_VERSION = 'cproeis_contratos_schema_version';
 const CURRENT_SCHEMA_VERSION = '2026-05-15-endereco-separado';
@@ -9,6 +10,7 @@ window.CPROEIS_CONTRATOS_STORAGE = {
   valores: STORAGE_VALORES,
   convenios: STORAGE_CONVENIOS,
   responsaveis: STORAGE_RESPONSAVEIS,
+  limitesVagas: STORAGE_LIMITES_VAGAS,
   historicos: STORAGE_HISTORICOS,
   schemaVersion: STORAGE_SCHEMA_VERSION
 };
@@ -18,6 +20,7 @@ if (localStorage.getItem(STORAGE_SCHEMA_VERSION) !== CURRENT_SCHEMA_VERSION) {
     STORAGE_VALORES,
     STORAGE_CONVENIOS,
     STORAGE_RESPONSAVEIS,
+    STORAGE_LIMITES_VAGAS,
     STORAGE_HISTORICOS
   ].forEach((key) => localStorage.removeItem(key));
 
@@ -123,6 +126,29 @@ const valueInputs = {
   }
 };
 
+const dailyLimitInputs = {
+  A: {
+    servico12: document.getElementById('limite-a-12'),
+    servico8: document.getElementById('limite-a-8'),
+    servico6: document.getElementById('limite-a-6')
+  },
+  B: {
+    servico12: document.getElementById('limite-b-12'),
+    servico8: document.getElementById('limite-b-8'),
+    servico6: document.getElementById('limite-b-6')
+  },
+  C: {
+    servico12: document.getElementById('limite-c-12'),
+    servico8: document.getElementById('limite-c-8'),
+    servico6: document.getElementById('limite-c-6')
+  },
+  D: {
+    servico12: document.getElementById('limite-d-12'),
+    servico8: document.getElementById('limite-d-8'),
+    servico6: document.getElementById('limite-d-6')
+  }
+};
+
 const validationRules = {
   nome: {
     message: 'Informe o nome oficial do convênio, com pelo menos 3 caracteres.',
@@ -223,6 +249,7 @@ const validationRules = {
 };
 
 const valueValidationRules = Object.values(valueInputs).flatMap((group) => Object.values(group)).filter(Boolean);
+const dailyLimitValidationRules = Object.values(dailyLimitInputs).flatMap((group) => Object.values(group)).filter(Boolean);
 const currencyInputs = [
   fields.valorContrato,
   fields.valorPassagem,
@@ -497,6 +524,32 @@ function numberValue(input) {
   return parseCurrencyValue(input.value);
 }
 
+function integerValue(input) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Converte um campo de quantidade diária em inteiro não negativo para
+   * controlar o teto de vagas que cada contrato permite por classe e turno.
+   * PARÂMETROS E RETORNO: Recebe um input HTML numérico e retorna Number inteiro; campos vazios,
+   * inválidos ou negativos retornam 0.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê somente o DOM; a gravação ocorre em collectPayload e
+   * syncRelatedStorage no LocalStorage.
+   * TODO: Em produção, validar estes limites no backend para impedir manipulação do navegador
+   * antes da criação de vagas ou pedidos antecipados.
+   */
+  const parsed = Number.parseInt(input?.value || '0', 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+function isValidDailyLimitInput(input) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Valida se o limite diário informado é vazio ou um número inteiro
+   * não negativo, evitando persistir frações ou quantidades negativas.
+   * PARÂMETROS E RETORNO: Recebe um input HTML e retorna booleano.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê somente o valor do campo no DOM; não grava LocalStorage.
+   * TODO: Em produção, centralizar a validação com a regra contratual oficial no servidor.
+   */
+  return input.value === '' || (/^\d+$/.test(input.value) && Number(input.value) >= 0);
+}
+
 function formatDate(value) {
   if (!value) return 'Sem fim';
   const [year, month, day] = value.split('-');
@@ -509,6 +562,23 @@ function formatDateOrDash(value) {
 
 function formatPeriod(start, end) {
   return start || end ? `${formatDateOrDash(start)} até ${formatDate(end)}` : '-';
+}
+
+function countContractDays(start, end) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Calcula a quantidade inclusiva de dias da vigência contratual para
+   * projetar o limite financeiro do contrato inteiro.
+   * PARÂMETROS E RETORNO: Recebe start e end como strings YYYY-MM-DD; retorna Number inteiro
+   * com pelo menos 0 quando as datas estão ausentes ou inválidas.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; usa somente os valores já carregados.
+   * TODO: Em produção, centralizar calendário no backend para tratar suspensão, aditivos e
+   * regras oficiais de dias operacionais.
+   */
+  if (!start || !end || end < start) return 0;
+
+  const startDate = new Date(`${start}T00:00:00`);
+  const endDate = new Date(`${end}T00:00:00`);
+  return Math.max(0, Math.round((endDate - startDate) / 86400000) + 1);
 }
 
 function getEnderecoFromFields() {
@@ -703,6 +773,17 @@ function getResponsaveis() {
   return loadList(STORAGE_RESPONSAVEIS);
 }
 
+function getLimitesVagas() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Recupera a tabela local de limites diários de vagas por contrato,
+   * classe e turno, usada como base para bloqueios operacionais futuros.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna array de registros de limite.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê a chave `cproeis_contratos_limites_vagas` no LocalStorage.
+   * TODO: Em produção, substituir esta leitura local por consulta paginada em API autenticada.
+   */
+  return loadList(STORAGE_LIMITES_VAGAS);
+}
+
 function setActiveView(viewId) {
   tabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.view === viewId));
   views.forEach((view) => view.classList.toggle('active', view.id === viewId));
@@ -808,6 +889,40 @@ function getContractResponsaveis(convenio) {
   return getResponsaveis().filter((item) => item.convenioId === convenio.id);
 }
 
+function buildEmptyDailyLimitRows(convenioId) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Cria linhas padrão zeradas para exibir a matriz de limites diários
+   * quando um contrato antigo ainda não possui configuração salva.
+   * PARÂMETROS E RETORNO: Recebe convenioId como string e retorna array com classes A, B, C e D.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava LocalStorage; apenas monta dados em memória
+   * para renderização e compatibilidade com registros legados.
+   * TODO: Em produção, diferenciar explicitamente "sem limite configurado" de limite zero no banco.
+   */
+  return ['A', 'B', 'C', 'D'].map((classe) => ({
+    id: `${convenioId}-limite-classe-${classe}`,
+    convenioId,
+    classe,
+    grupo: gruposClasse[classe],
+    servico12: 0,
+    servico8: 0,
+    servico6: 0
+  }));
+}
+
+function getContractDailyLimits(convenio) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Resolve os limites diários de vagas vinculados ao convênio selecionado,
+   * priorizando registros embutidos no contrato e aceitando a tabela separada como fallback.
+   * PARÂMETROS E RETORNO: Recebe convenio como objeto e retorna array de limites por classe.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê `convenio.limitesVagasDiarias` em memória ou a chave
+   * `cproeis_contratos_limites_vagas` no LocalStorage.
+   * TODO: Em produção, carregar estes limites por endpoint próprio e aplicar versionamento por contrato/aditivo.
+   */
+  if (convenio.limitesVagasDiarias?.length) return convenio.limitesVagasDiarias;
+  const storedLimits = getLimitesVagas().filter((item) => item.convenioId === convenio.id);
+  return storedLimits.length ? storedLimits : buildEmptyDailyLimitRows(convenio.id);
+}
+
 function getValueRows(convenioId) {
   return ['A', 'B', 'C', 'D'].map((classe) => ({
     id: `${convenioId}-classe-${classe}`,
@@ -824,6 +939,26 @@ function getValueRows(convenioId) {
     fim: '',
     publicacao: '',
     status: 'Vigente'
+  }));
+}
+
+function getDailyLimitRows(convenioId) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Monta a tabela persistível de total diário de vagas por classe e turno
+   * a partir dos inputs do formulário de contrato.
+   * PARÂMETROS E RETORNO: Recebe convenioId como string e retorna array com um registro por classe.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê os inputs `limite-*-12`, `limite-*-8` e `limite-*-6`; o retorno
+   * é gravado no objeto do convênio e em `cproeis_contratos_limites_vagas`.
+   * TODO: Em produção, validar estes tetos contra regras contratuais oficiais antes de salvar.
+   */
+  return ['A', 'B', 'C', 'D'].map((classe) => ({
+    id: `${convenioId}-limite-classe-${classe}`,
+    convenioId,
+    classe,
+    grupo: gruposClasse[classe],
+    servico12: integerValue(dailyLimitInputs[classe].servico12),
+    servico8: integerValue(dailyLimitInputs[classe].servico8),
+    servico6: integerValue(dailyLimitInputs[classe].servico6)
   }));
 }
 
@@ -857,6 +992,17 @@ function createFieldHints() {
     input.insertAdjacentElement('afterend', hint);
     valueValidationHints.set(input, hint);
   });
+
+  dailyLimitValidationRules.forEach((input) => {
+    if (!input) return;
+    if (valueValidationHints.has(input)) return;
+
+    const hint = document.createElement('small');
+    hint.className = 'field-hint hidden';
+    hint.textContent = 'Informe quantidade inteira igual ou maior que zero, ou deixe em branco.';
+    input.insertAdjacentElement('afterend', hint);
+    valueValidationHints.set(input, hint);
+  });
 }
 
 function runValueValidation(input, options = {}) {
@@ -868,6 +1014,23 @@ function runValueValidation(input, options = {}) {
    * TODO: Em produção, buscar limites de valores por classe em tabela oficial versionada.
    */
   const isValid = isValidOptionalCurrencyInput(input);
+  const hint = valueValidationHints.get(input);
+  const shouldShowError = !isValid && (options.showAll || input.value !== '');
+
+  input.classList.toggle('invalid', shouldShowError);
+  if (hint) hint.classList.toggle('hidden', !shouldShowError);
+  return isValid;
+}
+
+function runDailyLimitValidation(input, options = {}) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Valida visualmente o campo de limite diário de vagas por classe e turno,
+   * impedindo quantidade negativa ou fracionada antes do envio do contrato.
+   * PARÂMETROS E RETORNO: Recebe input HTML e options.showAll como booleano; retorna true quando válido.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê apenas o DOM e alterna classes/mensagens; não grava LocalStorage.
+   * TODO: Em produção, validar novamente no backend antes de criar ou antecipar vagas do convênio.
+   */
+  const isValid = isValidDailyLimitInput(input);
   const hint = valueValidationHints.get(input);
   const shouldShowError = !isValid && (options.showAll || input.value !== '');
 
@@ -988,6 +1151,20 @@ function setCurrencyFieldValue(input, value) {
   input.value = amount > 0 ? formatCurrencyInput(String(Math.round(amount * 100))) : '';
 }
 
+function setDailyLimitFieldValue(input, value) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Preenche um input de limite diário com quantidade inteira já gravada
+   * no contrato, mantendo vazio quando o valor é zero ou ausente.
+   * PARÂMETROS E RETORNO: Recebe input HTML e value numérico/string; não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Escreve somente no DOM; não altera LocalStorage.
+   * TODO: Em produção, exibir limites herdados de aditivos ou regras específicas por período.
+   */
+  if (!input) return;
+
+  const parsed = Number.parseInt(value || 0, 10);
+  input.value = Number.isFinite(parsed) && parsed > 0 ? String(parsed) : '';
+}
+
 function runFieldValidation(key, options = {}) {
   /*
    * DESCRIÇÃO DA FUNÇÃO: Executa a regra de validação de um campo, mostra ou esconde a mensagem fixa e
@@ -1041,8 +1218,11 @@ function validateContractForm(options = {}) {
     .map((key) => runFieldValidation(key, options))
     .every(Boolean);
   const areValuesValid = valueValidationRules.map((input) => runValueValidation(input, options)).every(Boolean);
+  const areDailyLimitsValid = dailyLimitValidationRules
+    .map((input) => runDailyLimitValidation(input, options))
+    .every(Boolean);
 
-  return areMainFieldsValid && areValuesValid;
+  return areMainFieldsValid && areValuesValid && areDailyLimitsValid;
 }
 
 function validateResponsavelDraft(options = {}) {
@@ -1187,6 +1367,7 @@ function addResponsavelFromFields() {
 function collectPayload() {
   const id = editingId.value || makeId();
   const valores = getValueRows(id);
+  const limitesVagasDiarias = getDailyLimitRows(id);
   const responsaveis = responsaveisState.map((responsavel) => ({ ...responsavel, convenioId: id }));
   const enderecoDados = getEnderecoFromFields();
 
@@ -1208,11 +1389,12 @@ function collectPayload() {
     classeC: 0,
     classeD: 0,
     valores,
+    limitesVagasDiarias,
     responsaveis
   };
 }
 
-function syncRelatedStorage(convenioId, valores, responsaveis) {
+function syncRelatedStorage(convenioId, valores, responsaveis, limitesVagasDiarias = []) {
   saveList(STORAGE_VALORES, [
     ...getValores().filter((item) => item.convenioId !== convenioId),
     ...valores
@@ -1221,6 +1403,11 @@ function syncRelatedStorage(convenioId, valores, responsaveis) {
   saveList(STORAGE_RESPONSAVEIS, [
     ...getResponsaveis().filter((item) => item.convenioId !== convenioId),
     ...responsaveis
+  ]);
+
+  saveList(STORAGE_LIMITES_VAGAS, [
+    ...getLimitesVagas().filter((item) => item.convenioId !== convenioId),
+    ...limitesVagasDiarias
   ]);
 }
 
@@ -1236,6 +1423,7 @@ function resetForm() {
   activeValidationFields.clear();
   Object.keys(validationRules).forEach((key) => runFieldValidation(key));
   valueValidationRules.forEach((input) => runValueValidation(input));
+  dailyLimitValidationRules.forEach((input) => runDailyLimitValidation(input));
   setApiStatus(cnpjApiStatus);
   setApiStatus(cepApiStatus);
 }
@@ -1257,6 +1445,14 @@ function applyClientData(convenio) {
   setCurrencyFieldValue(fields.valorPassagem, valorBase.passagem || 0);
   setCurrencyFieldValue(fields.valorAlimentacao, valorBase.alimentacao || 0);
 
+  const limitesVagasDiarias = getContractDailyLimits(convenio);
+  limitesVagasDiarias.forEach((limite) => {
+    if (!dailyLimitInputs[limite.classe]) return;
+    setDailyLimitFieldValue(dailyLimitInputs[limite.classe].servico12, limite.servico12 || 0);
+    setDailyLimitFieldValue(dailyLimitInputs[limite.classe].servico8, limite.servico8 || 0);
+    setDailyLimitFieldValue(dailyLimitInputs[limite.classe].servico6, limite.servico6 || 0);
+  });
+
   responsaveisState = getContractResponsaveis(convenio).map((responsavel) => ({ ...responsavel, id: makeId() }));
   renderResponsaveisForm();
 }
@@ -1274,7 +1470,12 @@ function fillForm(convenio) {
   setCurrencyFieldValue(fields.valorContrato, convenio.valorContrato ?? convenio.valorMensal ?? 0);
   fields.inicio.value = convenio.inicio || '';
   fields.fim.value = convenio.fim || '';
-  applyClientData({ ...convenio, responsaveis: getContractResponsaveis(convenio), valores: getContractValues(convenio) });
+  applyClientData({
+    ...convenio,
+    responsaveis: getContractResponsaveis(convenio),
+    valores: getContractValues(convenio),
+    limitesVagasDiarias: getContractDailyLimits(convenio)
+  });
   responsaveisState = getContractResponsaveis(convenio).map((responsavel) => ({ ...responsavel }));
   renderResponsaveisForm();
   formTitle.textContent = 'Editar convênio';
@@ -1301,7 +1502,12 @@ function renewContract(convenio) {
   fields.classeB && (fields.classeB.value = convenio.classeB || 0);
   fields.classeC && (fields.classeC.value = convenio.classeC || 0);
   fields.classeD && (fields.classeD.value = convenio.classeD || 0);
-  applyClientData({ ...convenio, responsaveis: getContractResponsaveis(convenio), valores: getContractValues(convenio) });
+  applyClientData({
+    ...convenio,
+    responsaveis: getContractResponsaveis(convenio),
+    valores: getContractValues(convenio),
+    limitesVagasDiarias: getContractDailyLimits(convenio)
+  });
 
   formTitle.textContent = 'Renovar contrato';
   submitButton.textContent = 'Salvar novo contrato';
@@ -1482,6 +1688,7 @@ function removeContract(id) {
   saveList(STORAGE_CONVENIOS, getConvenios().filter((item) => item.id !== id));
   saveList(STORAGE_VALORES, getValores().filter((item) => item.convenioId !== id));
   saveList(STORAGE_RESPONSAVEIS, getResponsaveis().filter((item) => item.convenioId !== id));
+  saveList(STORAGE_LIMITES_VAGAS, getLimitesVagas().filter((item) => item.convenioId !== id));
 
   if (selectedConvenioId === id) {
     selectedConvenioId = '';
@@ -1502,6 +1709,7 @@ function renderDetails(id) {
 
   selectedConvenioId = id;
   const valores = getContractValues(convenio);
+  const limitesVagasDiarias = getContractDailyLimits(convenio);
   const responsaveis = getContractResponsaveis(convenio);
   const historicoContratos = getClientContracts(convenio.cnpj);
   const situacao = getSituacao(convenio);
@@ -1509,10 +1717,12 @@ function renderDetails(id) {
   detailsHeading.textContent = titleCaseText(convenio.nome) || 'Detalhes do convênio';
   detailsSubtitle.textContent = `Contrato ${convenio.numero || '-'} | ${situacao.label}`;
 
-  const valoresHtml = valores.length ? `
-    <h3 class="section-title">Valores por classe</h3>
+  const valorBase = valores[0] || {};
+  const classesContratuais = ['A', 'B', 'C', 'D'];
+  const valoresHtml = classesContratuais.length ? `
+    <h3 class="section-title">Valores unitários por classe</h3>
     <div class="table-wrap">
-      <table>
+      <table class="compact-table contract-values-details-table">
         <thead>
           <tr>
             <th>Classe</th>
@@ -1520,26 +1730,135 @@ function renderDetails(id) {
             <th>12h</th>
             <th>8h</th>
             <th>6h</th>
-            <th>Passagem</th>
-            <th>Alimentação</th>
           </tr>
         </thead>
         <tbody>
-          ${valores.map((valor) => `
-            <tr>
-              <td>Classe ${escapeHtml(valor.classe)}</td>
-              <td>${escapeHtml(valor.grupo || gruposClasse[valor.classe])}</td>
-              <td>${dinheiro.format(Number(valor.servico12 || 0))}</td>
-              <td>${dinheiro.format(Number(valor.servico8 || 0))}</td>
-              <td>${dinheiro.format(Number(valor.servico6 || 0))}</td>
-              <td>${dinheiro.format(Number(valor.passagem || 0))}</td>
-              <td>${dinheiro.format(Number(valor.alimentacao || 0))}</td>
-            </tr>
-          `).join('')}
+          ${classesContratuais.map((classe) => {
+            const valor = valores.find((item) => item.classe === classe) || {};
+
+            return `
+              <tr>
+                <td>Classe ${escapeHtml(classe)}</td>
+                <td>${escapeHtml(valor.grupo || gruposClasse[classe])}</td>
+                <td>${dinheiro.format(Number(valor.servico12 || 0))}</td>
+                <td>${dinheiro.format(Number(valor.servico8 || 0))}</td>
+                <td>${dinheiro.format(Number(valor.servico6 || 0))}</td>
+              </tr>
+            `;
+          }).join('')}
         </tbody>
       </table>
     </div>
   ` : '';
+
+  const limitesVagasHtml = classesContratuais.length ? `
+    <h3 class="section-title">Total diário de vagas</h3>
+    <div class="table-wrap">
+      <table class="compact-table daily-limits-details-table">
+        <thead>
+          <tr>
+            <th>Classe</th>
+            <th>Grupo</th>
+            <th>12h por dia</th>
+            <th>8h por dia</th>
+            <th>6h por dia</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${classesContratuais.map((classe) => {
+            const limite = limitesVagasDiarias.find((item) => item.classe === classe) || {};
+
+            return `
+              <tr>
+                <td>Classe ${escapeHtml(classe)}</td>
+                <td>${escapeHtml(limite.grupo || gruposClasse[classe])}</td>
+                <td>${Number(limite.servico12 || 0)}</td>
+                <td>${Number(limite.servico8 || 0)}</td>
+                <td>${Number(limite.servico6 || 0)}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  ` : '';
+
+  const passagemAlimentacaoHtml = `
+    <h3 class="section-title">Passagem e alimentação</h3>
+    <div class="details-grid compact-details-grid">
+      ${detailItem('Passagem', dinheiro.format(Number(valorBase.passagem || 0)))}
+      ${detailItem('Alimentação', dinheiro.format(Number(valorBase.alimentacao || 0)))}
+    </div>
+  `;
+
+  /*
+   * DESCRIÇÃO DO BLOCO: Calcula o teto financeiro diário do contrato por turno, multiplicando
+   * a quantidade máxima de vagas pelo valor unitário de cada classe/turno.
+   * PARÂMETROS E RETORNO: Usa arrays locais `valores`, `limitesVagasDiarias` e `classesContratuais`;
+   * gera objetos em memória para renderizar a tabela e o card resumo.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; apenas lê os registros já carregados do LocalStorage.
+   * TODO: Em produção, mover este cálculo para endpoint financeiro auditável, considerando aditivos,
+   * regras de arredondamento e possíveis exceções por período.
+   */
+  const totaisFinanceirosPorClasse = classesContratuais.map((classe) => {
+    const valor = valores.find((item) => item.classe === classe) || {};
+    const limite = limitesVagasDiarias.find((item) => item.classe === classe) || {};
+    const total12 = Number(valor.servico12 || 0) * Number(limite.servico12 || 0);
+    const total8 = Number(valor.servico8 || 0) * Number(limite.servico8 || 0);
+    const total6 = Number(valor.servico6 || 0) * Number(limite.servico6 || 0);
+
+    return {
+      classe,
+      grupo: valor.grupo || limite.grupo || gruposClasse[classe],
+      total12,
+      total8,
+      total6,
+      totalClasse: total12 + total8 + total6,
+      vagasClasse: Number(limite.servico12 || 0) + Number(limite.servico8 || 0) + Number(limite.servico6 || 0)
+    };
+  });
+  const totalFinanceiroTurnos = totaisFinanceirosPorClasse.reduce((acc, item) => ({
+    total12: acc.total12 + item.total12,
+    total8: acc.total8 + item.total8,
+    total6: acc.total6 + item.total6,
+    totalGeral: acc.totalGeral + item.totalClasse,
+    totalVagas: acc.totalVagas + item.vagasClasse
+  }), { total12: 0, total8: 0, total6: 0, totalGeral: 0, totalVagas: 0 });
+  const valorPassagemAlimentacaoUnitario = Number(valorBase.passagem || 0) + Number(valorBase.alimentacao || 0);
+  const valorPassagemAlimentacaoDiario = totalFinanceiroTurnos.totalVagas * valorPassagemAlimentacaoUnitario;
+  const valorTotalDiarioMaximo = totalFinanceiroTurnos.totalGeral + valorPassagemAlimentacaoDiario;
+  const diasLimiteMensal = 30;
+  const diasContrato = countContractDays(convenio.inicio, convenio.fim);
+  const valorTurnosContrato = totalFinanceiroTurnos.totalGeral * diasContrato;
+  const valorPassagemAlimentacaoContrato = valorPassagemAlimentacaoDiario * diasContrato;
+  const valorTotalContratoCalculado = valorTotalDiarioMaximo * diasContrato;
+  const valorContratoInformado = Number(convenio.valorContrato ?? convenio.valorMensal ?? 0);
+  const diferencaContrato = valorContratoInformado - valorTotalContratoCalculado;
+  const contratoConfere = Math.abs(diferencaContrato) < 0.01;
+
+  const resumoFinanceiroHtml = `
+    <h3 class="section-title">Prova real do valor do contrato</h3>
+    <div class="details-grid compact-details-grid financial-summary-grid">
+      ${detailItem('Valor dos turnos no contrato inteiro', dinheiro.format(valorTurnosContrato))}
+      ${detailItem('Valor com passagem/alimentação no contrato inteiro', dinheiro.format(valorPassagemAlimentacaoContrato))}
+      ${detailItem('Valor total calculado do contrato', dinheiro.format(valorTotalContratoCalculado))}
+      ${detailItem('Valor informado no contrato', dinheiro.format(valorContratoInformado))}
+      ${detailItem('Diferença', dinheiro.format(diferencaContrato))}
+      ${detailItem('Conferência', contratoConfere ? 'Valor informado confere' : 'Valor informado divergente')}
+    </div>
+  `;
+
+  const resumoDiarioMensalHtml = `
+    <h3 class="section-title">Resumo financeiro por período</h3>
+    <div class="details-grid compact-details-grid financial-summary-grid">
+      ${detailItem('Valor dos turnos por dia', dinheiro.format(totalFinanceiroTurnos.totalGeral))}
+      ${detailItem('Passagem/alimentação por dia', dinheiro.format(valorPassagemAlimentacaoDiario))}
+      ${detailItem('Valor total diário máximo', dinheiro.format(valorTotalDiarioMaximo))}
+      ${detailItem('Valor total mensal estimado', dinheiro.format(valorTotalDiarioMaximo * diasLimiteMensal))}
+      ${detailItem('Valor total do contrato inteiro', dinheiro.format(valorTotalContratoCalculado))}
+      ${detailItem('Dias de vigência usados', String(diasContrato))}
+    </div>
+  `;
 
   const responsaveisHtml = responsaveis.length ? `
     <h3 class="section-title">Responsáveis</h3>
@@ -1625,7 +1944,11 @@ function renderDetails(id) {
       ${detailItem('Publicação no Diário Oficial', `${formatDateOrDash(convenio.diarioData)}\nPágina ${convenio.diarioPagina || '-'}`)}
       ${detailItem('Vigência', formatPeriod(convenio.inicio, convenio.fim))}
     </div>
+    ${limitesVagasHtml}
     ${valoresHtml}
+    ${passagemAlimentacaoHtml}
+    ${resumoDiarioMensalHtml}
+    ${resumoFinanceiroHtml}
     ${responsaveisHtml}
     ${historicoHtml}
   `;
@@ -1694,7 +2017,7 @@ if (form) {
       : [...convenios, payload];
 
     saveList(STORAGE_CONVENIOS, next);
-    syncRelatedStorage(payload.id, payload.valores, payload.responsaveis);
+    syncRelatedStorage(payload.id, payload.valores, payload.responsaveis, payload.limitesVagasDiarias);
     selectedConvenioId = payload.id;
     resetForm();
     renderAll();
@@ -1746,6 +2069,22 @@ valueValidationRules.forEach((input) => {
   input.addEventListener('input', () => {
     input.value = formatCurrencyInput(input.value);
     runValueValidation(input);
+  });
+});
+
+dailyLimitValidationRules.forEach((input) => {
+  if (!input) return;
+
+  input.addEventListener('input', () => {
+    /*
+     * DESCRIÇÃO DO BLOCO: Revalida o total diário de vagas enquanto o usuário digita,
+     * mantendo a quantidade como número inteiro não negativo.
+     * PARÂMETROS E RETORNO: O listener recebe o evento de input e não retorna valores.
+     * ARMAZENAMENTO E PERSISTÊNCIA: Lê e altera apenas o DOM; a gravação acontece no submit.
+     * TODO: Em produção, consultar o backend para avisar quando o limite informado conflitar
+     * com vagas já criadas no contrato.
+     */
+    runDailyLimitValidation(input);
   });
 });
 

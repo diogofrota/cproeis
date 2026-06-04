@@ -1434,15 +1434,9 @@ function renderClassConfigCards(convenio) {
     .join('');
 
   container.innerHTML = `
-    <div class="class-picker" aria-label="Selecionar classe">
+    <div class="class-picker is-hidden" aria-hidden="true">
       ${classesDisponiveis.map((classe, index) => `
-        <label class="class-pill">
-          <input type="radio" name="classe-operacional" value="${escapeHtml(classe)}" data-class-enabled="${escapeHtml(classe)}"${index === 0 ? ' checked' : ''}>
-          <span class="class-pill-copy">
-            <strong>${escapeHtml(gruposClasse[classe])}</strong>
-            <small>${escapeHtml(descricoesClasseCriacao[classe] || '')}</small>
-          </span>
-        </label>
+        <input type="radio" name="classe-operacional" value="${escapeHtml(classe)}" data-class-enabled="${escapeHtml(classe)}"${index === 0 ? ' checked' : ''}>
       `).join('')}
     </div>
 
@@ -1478,6 +1472,35 @@ function renderClassConfigCards(convenio) {
   `;
 
   syncClassConfig(convenio);
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Limita a classe da vaga à classe cadastrada no serviço selecionado, mantendo o fluxo serviço -> vaga coerente.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object|null} servico - Serviço selecionado na primeira etapa da criação de vagas.
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; lê a classe do serviço carregado de cproeis_convenios_servicos e altera somente
+ * os radios de classe no DOM.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: validar essa regra no backend antes de salvar a vaga, impedindo alteração indevida por manipulação do frontend.
+ */
+function applyServiceClassRestriction(servico) {
+  const classePadrao = servico?.classePadrao || '';
+  document.querySelectorAll('[data-class-enabled]').forEach((input) => {
+    const shouldDisable = Boolean(classePadrao) && input.value !== classePadrao;
+    input.disabled = shouldDisable;
+    input.closest('.class-pill')?.classList.toggle('is-disabled', shouldDisable);
+  });
+
+  if (classePadrao && classesCriacaoPermitidas.has(classePadrao)) {
+    const input = document.querySelector(`[data-class-enabled="${classePadrao}"]`);
+    if (input) input.checked = true;
+  }
 }
 
 /**
@@ -1577,9 +1600,11 @@ function applySelectedServiceToForm(servico) {
   const preview = document.getElementById('selected-service-preview');
   if (preview) {
     preview.innerHTML = servico
-      ? `<strong>${escapeHtml(servico.nomeServico || 'Serviço sem nome')}</strong><span>${escapeHtml(formatSelectedServicePreview(servico))}</span>`
+      ? `<strong>${escapeHtml(servico.nomeServico || 'Serviço sem nome')}</strong><span>${escapeHtml(formatSelectedServicePreview(servico))} | Classe ${escapeHtml(servico.classePadrao || '-')}</span>`
       : '<strong>Nenhum serviço selecionado</strong><span>Cadastre um serviço para usar nome, local e endereço nas vagas.</span>';
   }
+
+  applyServiceClassRestriction(servico);
 }
 
 /**
@@ -1677,6 +1702,7 @@ function collectServiceInfo() {
     servicoId: document.getElementById('servico-cadastrado')?.value || '',
     nomeServico: normalizeServiceField(document.getElementById('nome-servico')) || '',
     localServico: normalizeServiceField(document.getElementById('local-servico')) || '',
+    classePadrao: getServicosConvenio(selectedConvenioCache?.id || '').find((servico) => servico.id === (document.getElementById('servico-cadastrado')?.value || ''))?.classePadrao || '',
     enderecoDados,
     enderecoServico: formatServiceAddress(enderecoDados),
     pontoReferencia: normalizeServiceField(document.getElementById('ponto-referencia')) || ''

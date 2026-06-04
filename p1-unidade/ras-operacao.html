@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - P/1 RAS</title>
+  <link rel="stylesheet" href="../css/style-p1-unidade.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página operacional da P/1 Unidade para criar vagas RAS vinculadas ao
+    responsável ativo cadastrado no módulo RAS.
+    PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; a unidade e o policial
+    podem vir pela URL ou pela sessão local do policial.
+    ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados diretamente; o script lê cproeis_ras_acessos_p1
+    e cproeis_cadastro_policiais, gravando vagas em cproeis_ras_vagas.
+    TODO: Em produção, validar permissão P/1 no backend antes de renderizar a tela e carregar
+    dados por API com auditoria.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="p1-page-title">P/1 Unidade - RAS</h1>
+        <p id="p1-page-subtitle">Criação de vagas normais e compulsórias do RAS.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="p1-unidade-menu" aria-label="Menu da P/1 Unidade">
+      <a href="p1-unidade.html">P/1 Unidade</a>
+      <a href="../acesso-policial/menu.html">Acesso do Policial</a>
+      <a class="menu-back-link" href="../index.html" data-history-back="false">Página inicial</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="card p1-operational-card" aria-labelledby="p1-vaga-title">
+      <div class="section-heading">
+        <h2 id="p1-vaga-title">Criar vaga RAS</h2>
+        <p id="p1-access-status">Validando acesso P/1 RAS.</p>
+      </div>
+
+      <!--
+        DESCRIÇÃO DO BLOCO: Formulário local de criação de vaga RAS pela P/1. Ele separa escala
+        normal e compulsória, mantendo a unidade vinculada ao responsável ativo.
+        PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; o submit é tratado pelo
+        script, que valida acesso e salva a vaga.
+        ARMAZENAMENTO E PERSISTÊNCIA: Lê campos do DOM, consulta cproeis_ras_acessos_p1 e grava
+        cproeis_ras_vagas no LocalStorage.
+        TODO: Em produção, enviar a criação para endpoint transacional que confira saldo liberado
+        pelo GSI, conflito de escala, auditoria e autorização da unidade.
+      -->
+      <form id="p1-ras-vaga-form" class="p1-form-grid">
+        <label>
+          Evento/serviço
+          <input type="text" id="p1-ras-evento" placeholder="Ex: Operação Praia" required>
+        </label>
+        <label>
+          Data
+          <input type="date" id="p1-ras-data" required>
+        </label>
+        <label>
+          Classe
+          <select id="p1-ras-classe" required>
+            <option value="A">Classe A</option>
+            <option value="B">Classe B</option>
+            <option value="C/D">Classe C/D</option>
+          </select>
+        </label>
+        <label>
+          Quantidade
+          <input type="number" id="p1-ras-quantidade" min="1" required>
+        </label>
+        <label>
+          Início
+          <input type="time" id="p1-ras-inicio" required>
+        </label>
+        <label>
+          Término
+          <input type="time" id="p1-ras-termino" required>
+        </label>
+        <label>
+          Tipo de escala
+          <select id="p1-ras-tipo-escala" required>
+            <option value="normal">Normal</option>
+            <option value="compulsoria">Compulsória</option>
+          </select>
+        </label>
+        <label>
+          Policial compulsório
+          <select id="p1-ras-policial-compulsorio" disabled>
+            <option value="">Somente para escala compulsória</option>
+          </select>
+        </label>
+        <label class="full-field">
+          Observação
+          <textarea id="p1-ras-observacao" rows="3" placeholder="Detalhes operacionais da vaga"></textarea>
+        </label>
+        <p class="form-feedback full-field" id="p1-ras-feedback" role="status"></p>
+        <div class="form-actions full-field">
+          <button type="submit">Criar vaga RAS</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="p1-vagas-title">
+      <div class="section-heading">
+        <h2 id="p1-vagas-title">Vagas RAS criadas</h2>
+        <p class="hint" id="p1-ras-vagas-count">Nenhuma vaga criada.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Evento</th>
+              <th>Classe</th>
+              <th>Quantidade</th>
+              <th>Tipo</th>
+              <th>Compulsório</th>
+            </tr>
+          </thead>
+          <tbody id="p1-ras-vagas-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="p1-police-title">
+      <div class="section-heading">
+        <h2 id="p1-police-title">Policiais cadastrados na unidade</h2>
+        <p class="hint" id="p1-police-count">Nenhum policial encontrado.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Policial</th>
+              <th>RG</th>
+              <th>Posto/Graduação</th>
+              <th>Situação</th>
+              <th>Sanitário</th>
+            </tr>
+          </thead>
+          <tbody id="p1-police-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-p1-ras-operacao.js"></script>
+  <script src="../js/script-p1-unidade.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

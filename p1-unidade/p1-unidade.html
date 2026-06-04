@@ -29,7 +29,40 @@
     </nav>
   </header>
   <main>
+    <!--
+      DESCRIÇÃO DO BLOCO: Lista administrativa de responsáveis P/1 RAS ativos. O acesso operacional
+      deixa de aparecer dentro do login comum do policial e passa a ser iniciado por esta tela.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; o script renderiza linhas
+      com botão Logar para abrir a operação da unidade.
+      ARMAZENAMENTO E PERSISTÊNCIA: Lê cproeis_ras_acessos_p1 e cproeis_cadastro_policiais no
+      LocalStorage, sem gravar dados nesta tela.
+      TODO: Em produção, substituir esta lista por tela administrativa autenticada, com perfil
+      específico e consulta paginada ao banco de dados.
+    -->
+    <section class="card" aria-labelledby="p1-access-title">
+      <div class="section-heading">
+        <h2 id="p1-access-title">Policiais vinculados à P/1 RAS</h2>
+        <p class="hint" id="p1-access-count">Nenhum vínculo ativo encontrado.</p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Unidade</th>
+              <th>Policial</th>
+              <th>RG</th>
+              <th>Posto/Graduação</th>
+              <th>Data de entrada</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="p1-access-body"></tbody>
+        </table>
+      </div>
+    </section>
   </main>
+  <script src="../js/script-p1-unidade-acesso.js"></script>
   <script src="../js/script-p1-unidade.js"></script>
   <script src="../js/script-navigation.js"></script>
 </body>

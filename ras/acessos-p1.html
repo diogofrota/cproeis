@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - RAS</title>
+  <link rel="stylesheet" href="../css/style-ras.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página específica do RAS para controle de responsável P/1 por unidade.
+    A tabela é organizada por batalhão/unidade e limita um policial responsável ativo por unidade.
+    PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os links fazem navegação
+    local dentro do protótipo e as ações são tratadas pelo script desta página.
+    ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados diretamente; o script lê cproeis_cadastro_policiais
+    e grava histórico em cproeis_ras_acessos_p1.
+    TODO: Em produção, proteger esta rota por perfil do gestor RAS e validar unidade/responsável em API.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>RAS</h1>
+        <p>Serviço extra pago pelo Estado com controle de orçamento, liberação do GSI e eventos por unidade.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="ras-menu" aria-label="Menu do RAS">
+      <a href="ras.html">RAS</a>
+      <a href="acessos-p1.html">P/1 Unidade</a>
+      <a class="menu-back-link" href="../index.html" data-history-back="false">Página inicial</a>
+    </nav>
+  </header>
+
+  <main class="ras-layout">
+    <section class="form-panel" aria-labelledby="ras-access-title">
+      <div class="panel-heading">
+        <h2 id="ras-access-title">Responsáveis por unidade</h2>
+        <p class="hint" id="ras-access-count">Nenhuma unidade encontrada na Base de Dados.</p>
+      </div>
+
+      <!--
+        DESCRIÇÃO DO BLOCO: Tabela por unidade do cadastro de policiais. Cada linha representa
+        um batalhão/unidade cadastrada e exibe o responsável P/1 RAS ativo, se houver.
+        PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; filtros e botões
+        acionam funções JavaScript para abrir a janela de vínculo ou registrar saída.
+        ARMAZENAMENTO E PERSISTÊNCIA: Lê unidades derivadas de cproeis_cadastro_policiais e
+        histórico de responsáveis em cproeis_ras_acessos_p1 no LocalStorage.
+        TODO: Em produção, substituir a derivação de unidades por cadastro oficial e manter
+        histórico imutável com usuário, data/hora e motivo da alteração.
+      -->
+      <div class="filter-bar" aria-label="Filtros de responsáveis P/1 RAS">
+        <label>
+          Pesquisar
+          <input id="ras-access-filter-text" type="search" placeholder="Unidade, RG ou nome">
+        </label>
+
+        <label>
+          Situação
+          <select id="ras-access-filter-status">
+            <option value="">Todas</option>
+            <option value="linked">Com responsável</option>
+            <option value="unlinked">Sem responsável</option>
+          </select>
+        </label>
+
+        <div class="form-actions filter-actions">
+          <button type="button" class="secondary" id="ras-access-clear-filters">Limpar filtros</button>
+        </div>
+      </div>
+
+      <p class="form-feedback" id="ras-access-feedback" role="status"></p>
+
+      <div class="table-wrap access-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Unidade</th>
+              <th>Responsável ativo</th>
+              <th>RG</th>
+              <th>Posto/Graduação</th>
+              <th>Data de entrada</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="ras-access-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="modal-backdrop" id="ras-access-modal" hidden>
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="ras-access-modal-title">
+      <div class="modal-header">
+        <div>
+          <h2 id="ras-access-modal-title">Vincular responsável P/1 RAS</h2>
+          <p id="ras-access-modal-subtitle">Informe o RG do policial cadastrado.</p>
+        </div>
+        <button type="button" class="modal-close" id="ras-access-modal-close" aria-label="Fechar">Fechar</button>
+      </div>
+
+      <!--
+        DESCRIÇÃO DO BLOCO: Janela de escolha por RG. O nome só aparece depois que o RG é encontrado
+        na Base de Dados; o vínculo fica bloqueado até essa confirmação.
+        PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; o script controla busca
+        por RG, preenchimento dos dados encontrados e gravação do vínculo.
+        ARMAZENAMENTO E PERSISTÊNCIA: Lê cproeis_cadastro_policiais e grava novo histórico em
+        cproeis_ras_acessos_p1 quando confirmado.
+        TODO: Em produção, trocar a busca local por consulta segura à base oficial e registrar
+        o motivo da alteração e o usuário autenticado que realizou a ação.
+      -->
+      <form id="ras-access-modal-form" class="ras-form modal-form">
+        <input type="hidden" id="ras-access-modal-unit">
+        <label>
+          RG do policial
+          <input type="text" id="ras-access-modal-rg" placeholder="Ex: 118.452" required>
+        </label>
+        <div class="form-actions modal-search-action">
+          <button type="button" class="secondary" id="ras-access-search-rg">Buscar RG</button>
+        </div>
+        <div class="found-police-card full-field" id="ras-access-found-police" hidden></div>
+        <p class="form-feedback full-field" id="ras-access-modal-feedback" role="status"></p>
+        <div class="form-actions full-field">
+          <button type="submit" id="ras-access-confirm-link" disabled>Vincular responsável</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <script src="../js/script-ras-acessos-p1.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

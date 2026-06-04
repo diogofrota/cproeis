@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Serviços P/1</title>
+  <link rel="stylesheet" href="../css/style-convenios-criar-vagas.css">
+  <link rel="stylesheet" href="../css/style-p1-unidade.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página de serviços cadastrados pela P/1 Unidade, equivalente à listagem
+    de serviços do acesso do convênio.
+    PARÂMETROS E RETORNO: Recebe id/unidade pela URL ou sessão local; não retorna valores.
+    ARMAZENAMENTO E PERSISTÊNCIA: O script lê cproeis_p1_unidade_servicos no LocalStorage.
+    TODO: Em produção, carregar serviços por unidade em API paginada e auditar alterações.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="p1-page-title" data-base-title="Serviços cadastrados">Serviços cadastrados</h1>
+        <p id="p1-page-subtitle">Serviços da P/1 disponíveis para criação de vagas.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="p1-unidade-menu" aria-label="Menu operacional da P/1 Unidade"></nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Serviços cadastrados</h2>
+          <p class="hint" id="p1-servicos-count">Nenhum serviço cadastrado.</p>
+        </div>
+        <a class="button-link ghost" href="criar-servico.html" data-p1-session-link>Criar serviço</a>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Serviço</th>
+              <th>Local</th>
+              <th>Classe</th>
+              <th>Situação</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="p1-servicos-body">
+            <tr><td class="empty-row" colspan="5">Nenhum serviço cadastrado para a unidade.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-p1-unidade-session.js"></script>
+  <script src="../js/script-p1-unidade-servicos.js"></script>
+  <script src="../js/script-p1-unidade.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

@@ -4,6 +4,9 @@ const FUNCTIONAL_HISTORY_STORAGE_KEY = 'cproeis_historico_funcional';
 const BEHAVIOR_HISTORY_STORAGE_KEY = 'cproeis_historico_comportamento';
 const UNIT_HISTORY_STORAGE_KEY = 'cproeis_historico_unidade';
 const STATUS_HISTORY_STORAGE_KEY = 'cproeis_historico_situacao_funcional';
+const COURSE_HISTORY_STORAGE_KEY = 'cproeis_historico_cursos';
+const MOTOR_LICENSE_HISTORY_STORAGE_KEY = 'cproeis_historico_habilitacao_moto';
+const ORDINANCE_HISTORY_STORAGE_KEY = 'cproeis_historico_portariado';
 const POLICIAL_STORAGE_RESET_KEY = 'cproeis_cadastro_policial_reset_version';
 const POLICIAL_STORAGE_RESET_VERSION = '2026-05-15-input-ajustes';
 const LEGACY_STORAGE_KEYS = [
@@ -21,7 +24,10 @@ if (localStorage.getItem(POLICIAL_STORAGE_RESET_KEY) !== POLICIAL_STORAGE_RESET_
     FUNCTIONAL_HISTORY_STORAGE_KEY,
     BEHAVIOR_HISTORY_STORAGE_KEY,
     UNIT_HISTORY_STORAGE_KEY,
-    STATUS_HISTORY_STORAGE_KEY
+    STATUS_HISTORY_STORAGE_KEY,
+    COURSE_HISTORY_STORAGE_KEY,
+    MOTOR_LICENSE_HISTORY_STORAGE_KEY,
+    ORDINANCE_HISTORY_STORAGE_KEY
   ].forEach((key) => localStorage.removeItem(key));
 
   localStorage.setItem(POLICIAL_STORAGE_RESET_KEY, POLICIAL_STORAGE_RESET_VERSION);
@@ -34,34 +40,44 @@ const clearButton = document.getElementById('clear-button');
 const cancelButton = document.getElementById('cancel-button');
 const historyForm = document.getElementById('history-form');
 const historyPolicialId = document.getElementById('history-policial-id');
-const editingHistoryId = document.getElementById('editing-history-id');
 const showHistoryFormButton = document.getElementById('show-history-form');
 const saveHistoryButton = document.getElementById('save-history-button');
 const cancelHistoryButton = document.getElementById('cancel-history-button');
 const functionalForm = document.getElementById('functional-form');
 const functionalPolicialId = document.getElementById('functional-policial-id');
-const editingFunctionalId = document.getElementById('editing-functional-id');
 const showFunctionalFormButton = document.getElementById('show-functional-form');
 const saveFunctionalButton = document.getElementById('save-functional-button');
 const cancelFunctionalButton = document.getElementById('cancel-functional-button');
 const behaviorForm = document.getElementById('behavior-form');
 const behaviorPolicialId = document.getElementById('behavior-policial-id');
-const editingBehaviorId = document.getElementById('editing-behavior-id');
 const showBehaviorFormButton = document.getElementById('show-behavior-form');
 const saveBehaviorButton = document.getElementById('save-behavior-button');
 const cancelBehaviorButton = document.getElementById('cancel-behavior-button');
 const unitForm = document.getElementById('unit-form');
 const unitPolicialId = document.getElementById('unit-policial-id');
-const editingUnitId = document.getElementById('editing-unit-id');
 const showUnitFormButton = document.getElementById('show-unit-form');
 const saveUnitButton = document.getElementById('save-unit-button');
 const cancelUnitButton = document.getElementById('cancel-unit-button');
 const statusForm = document.getElementById('status-form');
 const statusPolicialId = document.getElementById('status-policial-id');
-const editingStatusId = document.getElementById('editing-status-id');
 const showStatusFormButton = document.getElementById('show-status-form');
 const saveStatusButton = document.getElementById('save-status-button');
 const cancelStatusButton = document.getElementById('cancel-status-button');
+const courseForm = document.getElementById('course-form');
+const coursePolicialId = document.getElementById('course-policial-id');
+const showCourseFormButton = document.getElementById('show-course-form');
+const saveCourseButton = document.getElementById('save-course-button');
+const cancelCourseButton = document.getElementById('cancel-course-button');
+const motorLicenseForm = document.getElementById('motor-license-form');
+const motorLicensePolicialId = document.getElementById('motor-license-policial-id');
+const showMotorLicenseFormButton = document.getElementById('show-motor-license-form');
+const saveMotorLicenseButton = document.getElementById('save-motor-license-button');
+const cancelMotorLicenseButton = document.getElementById('cancel-motor-license-button');
+const ordinanceForm = document.getElementById('ordinance-form');
+const ordinancePolicialId = document.getElementById('ordinance-policial-id');
+const showOrdinanceFormButton = document.getElementById('show-ordinance-form');
+const saveOrdinanceButton = document.getElementById('save-ordinance-button');
+const cancelOrdinanceButton = document.getElementById('cancel-ordinance-button');
 const policiaisBody = document.getElementById('policiais-body');
 const tableCount = document.getElementById('table-count');
 const detailsCard = document.getElementById('details-card');
@@ -73,6 +89,9 @@ const comportamentoBody = document.getElementById('comportamento-body');
 const unidadeBody = document.getElementById('unidade-body');
 const situacaoFuncionalBody = document.getElementById('situacao-funcional-body');
 const historicoBody = document.getElementById('historico-body');
+const cursoBody = document.getElementById('curso-body');
+const habilitacaoMotoBody = document.getElementById('habilitacao-moto-body');
+const portariadoBody = document.getElementById('portariado-body');
 const closeDetails = document.getElementById('close-details');
 const tabButtons = document.querySelectorAll('.tab-button[data-view]');
 const viewPanels = document.querySelectorAll('.view-panel');
@@ -135,6 +154,26 @@ const historyFieldIds = [
   'dataBolpm'
 ];
 
+const courseFieldIds = [
+  'courseDate',
+  'courseConvenio',
+  'courseName'
+];
+
+const motorLicenseFieldIds = [
+  'motorLicenseExpiration',
+  'motorLicenseCategory',
+  'motorLicenseObservation'
+];
+
+const ordinanceFieldIds = [
+  'ordinanceFineType',
+  'ordinanceStartDate',
+  'ordinanceBolNumber',
+  'ordinanceBolDate',
+  'ordinanceRegistrationStatus'
+];
+
 const fields = Object.fromEntries(
   fieldIds.map((id) => [id, document.getElementById(id)])
 );
@@ -161,6 +200,18 @@ const unitFields = Object.fromEntries(
 
 const statusFields = Object.fromEntries(
   statusFieldIds.map((id) => [id, document.getElementById(id)])
+);
+
+const courseFields = Object.fromEntries(
+  courseFieldIds.map((id) => [id, document.getElementById(id)])
+);
+
+const motorLicenseFields = Object.fromEntries(
+  motorLicenseFieldIds.map((id) => [id, document.getElementById(id)])
+);
+
+const ordinanceFields = Object.fromEntries(
+  ordinanceFieldIds.map((id) => [id, document.getElementById(id)])
 );
 
 const formHintIds = [
@@ -271,6 +322,78 @@ function saveStatusHistoricos(historicos) {
   localStorage.setItem(STATUS_HISTORY_STORAGE_KEY, JSON.stringify(historicos));
 }
 
+function loadCourseHistoricos() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Carrega os cursos vinculados ao policial na Base de Dados.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros; retorna um array de objetos de curso ou array vazio.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê COURSE_HISTORY_STORAGE_KEY do localStorage.
+   * TODO: Em produção, substituir a leitura local por endpoint paginado filtrado pelo policial.
+   */
+  try {
+    return JSON.parse(localStorage.getItem(COURSE_HISTORY_STORAGE_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCourseHistoricos(historicos) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Persiste a lista de cursos vinculados aos policiais.
+   * PARÂMETROS E RETORNO: Recebe array de históricos de curso e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Grava COURSE_HISTORY_STORAGE_KEY no localStorage.
+   * TODO: Em ambiente online, enviar o lançamento para API com validação de convênio e curso existente.
+   */
+  localStorage.setItem(COURSE_HISTORY_STORAGE_KEY, JSON.stringify(historicos));
+}
+
+function loadMotorLicenseHistoricos() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Carrega os registros de habilitação de moto do policial.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros; retorna array de registros normalizáveis.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê MOTOR_LICENSE_HISTORY_STORAGE_KEY do localStorage.
+   * TODO: Em produção, consultar tabela própria de documentos/habilitações com controle de vencimento.
+   */
+  try {
+    return JSON.parse(localStorage.getItem(MOTOR_LICENSE_HISTORY_STORAGE_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveMotorLicenseHistoricos(historicos) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Persiste registros de vencimento da habilitação de moto.
+   * PARÂMETROS E RETORNO: Recebe array de registros e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Grava MOTOR_LICENSE_HISTORY_STORAGE_KEY no localStorage.
+   * TODO: Em produção, validar datas e alertas de vencimento no backend.
+   */
+  localStorage.setItem(MOTOR_LICENSE_HISTORY_STORAGE_KEY, JSON.stringify(historicos));
+}
+
+function loadOrdinanceHistoricos() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Carrega registros de policial portariado por tipo de multa.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros; retorna array de portarias ou array vazio.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê ORDINANCE_HISTORY_STORAGE_KEY do localStorage.
+   * TODO: Em produção, vincular esses registros a publicações oficiais e controlar permissões de lançamento.
+   */
+  try {
+    return JSON.parse(localStorage.getItem(ORDINANCE_HISTORY_STORAGE_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveOrdinanceHistoricos(historicos) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Persiste os registros de portaria do policial.
+   * PARÂMETROS E RETORNO: Recebe array de portarias e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Grava ORDINANCE_HISTORY_STORAGE_KEY no localStorage.
+   * TODO: Em ambiente online, gravar por transação com número/data do BOLPM e auditoria do operador.
+   */
+  localStorage.setItem(ORDINANCE_HISTORY_STORAGE_KEY, JSON.stringify(historicos));
+}
+
 function createId() {
   return window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
 }
@@ -369,6 +492,60 @@ function normalizeStatusHistorico(historico) {
     dataAlteracao: historico.dataAlteracao || '',
     bolpm: historico.bolpm || '',
     dataBolpm: historico.dataBolpm || '',
+    createdAt: historico.createdAt || new Date().toISOString()
+  };
+}
+
+function normalizeCourseHistorico(historico) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Padroniza um registro de curso realizado pelo policial.
+   * PARÂMETROS E RETORNO: Recebe objeto bruto e retorna objeto com id, vínculo funcional, data,
+   * nome do convênio, nome do curso e metadado de criação.
+   * ARMAZENAMENTO E PERSISTÊNCIA: O retorno é usado para renderizar e gravar COURSE_HISTORY_STORAGE_KEY.
+   * TODO: Em produção, trocar nomes livres por ids de convênio/curso vindos do banco.
+   */
+  return {
+    id: historico.id || createId(),
+    idFuncional: historico.idFuncional || '',
+    data: historico.data || '',
+    convenio: historico.convenio || '',
+    curso: historico.curso || '',
+    createdAt: historico.createdAt || new Date().toISOString()
+  };
+}
+
+function normalizeMotorLicenseHistorico(historico) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Padroniza o registro de habilitação de moto para exibição e persistência.
+   * PARÂMETROS E RETORNO: Recebe objeto bruto e retorna objeto normalizado com vencimento, categoria e observação.
+   * ARMAZENAMENTO E PERSISTÊNCIA: O retorno é persistido em MOTOR_LICENSE_HISTORY_STORAGE_KEY.
+   * TODO: Em produção, associar imagem/documento da CNH e regra automática de alerta de vencimento.
+   */
+  return {
+    id: historico.id || createId(),
+    idFuncional: historico.idFuncional || '',
+    dataVencimento: historico.dataVencimento || '',
+    categoria: historico.categoria || '',
+    observacao: historico.observacao || '',
+    createdAt: historico.createdAt || new Date().toISOString()
+  };
+}
+
+function normalizeOrdinanceHistorico(historico) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Padroniza um registro de portaria de multa estadual ou municipal.
+   * PARÂMETROS E RETORNO: Recebe objeto bruto e retorna portaria normalizada com tipo, início, BOLPM e status cadastral.
+   * ARMAZENAMENTO E PERSISTÊNCIA: O retorno é usado em ORDINANCE_HISTORY_STORAGE_KEY no localStorage.
+   * TODO: Em produção, criar vínculo com cadastro estadual/municipal oficial e validar duplicidade por tipo.
+   */
+  return {
+    id: historico.id || createId(),
+    idFuncional: historico.idFuncional || '',
+    tipoMulta: historico.tipoMulta || '',
+    dataInicio: historico.dataInicio || '',
+    numeroBol: historico.numeroBol || '',
+    dataBol: historico.dataBol || '',
+    situacaoCadastro: historico.situacaoCadastro || '',
     createdAt: historico.createdAt || new Date().toISOString()
   };
 }
@@ -632,6 +809,50 @@ function readHistoryForm() {
   };
 }
 
+function readCourseForm() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Coleta os dados do formulário de cursos do policial.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros; retorna objeto com data, convênio e nome do curso.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê apenas campos do DOM; o submit grava em COURSE_HISTORY_STORAGE_KEY.
+   * TODO: Em produção, substituir campos de texto por selects pesquisáveis carregados da API de convênios.
+   */
+  return {
+    data: courseFields.courseDate.value,
+    convenio: courseFields.courseConvenio.value.trim(),
+    curso: courseFields.courseName.value.trim()
+  };
+}
+
+function readMotorLicenseForm() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Coleta dados de vencimento da habilitação para moto.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros; retorna objeto com data de vencimento, categoria e observação.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê somente DOM; o submit grava em MOTOR_LICENSE_HISTORY_STORAGE_KEY.
+   * TODO: Em produção, validar categoria e vencimento com serviço de documentos do policial.
+   */
+  return {
+    dataVencimento: motorLicenseFields.motorLicenseExpiration.value,
+    categoria: motorLicenseFields.motorLicenseCategory.value,
+    observacao: motorLicenseFields.motorLicenseObservation.value.trim()
+  };
+}
+
+function readOrdinanceForm() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Coleta os dados da portaria de multa estadual ou municipal.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros; retorna objeto com tipo de multa, início, BOL e situação cadastral.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê campos do DOM; o submit grava em ORDINANCE_HISTORY_STORAGE_KEY.
+   * TODO: Em produção, validar número/data do boletim e impedir duplicidades por tipo de multa ativo.
+   */
+  return {
+    tipoMulta: ordinanceFields.ordinanceFineType.value,
+    dataInicio: ordinanceFields.ordinanceStartDate.value,
+    numeroBol: ordinanceFields.ordinanceBolNumber.value.trim(),
+    dataBol: ordinanceFields.ordinanceBolDate.value,
+    situacaoCadastro: ordinanceFields.ordinanceRegistrationStatus.value
+  };
+}
+
 function hasHistoryData(historico) {
   return Boolean(
     historico.dataInicio ||
@@ -678,40 +899,22 @@ function hasStatusData(historico) {
   );
 }
 
-function fillForm(policial) {
-  /*
-   * DESCRIÇÃO DA FUNÇÃO: Preenche o formulário de cadastro para edição, exibindo apenas números nos
-   * campos que possuem máscara salva, como RG, ID Funcional e telefone.
-   * PARÂMETROS E RETORNO: Recebe um objeto de policial e não retorna valor; atualiza os campos do DOM.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Lê o objeto já carregado do localStorage e não grava dados até o submit.
-   * TODO: Em ambiente online, carregar o registro por ID real do banco e tratar falhas de consulta.
-   */
-  const data = normalizePolicial(policial);
-  editingId.value = data.id;
+function hasCourseData(historico) {
+  return Boolean(historico.data || historico.convenio || historico.curso);
+}
 
-  fieldIds.forEach((id) => {
-    if (fields[id] && id in data) fields[id].value = data[id];
-  });
-  fields.rg.value = onlyDigits(data.rg);
-  fields.idFuncional.value = onlyDigits(data.idFuncional);
-  fields.telefone.value = onlyDigits(data.telefone);
-  fields.email.value = data.email.toLowerCase();
-  fields.nomeCompleto.value = toTitleCase(data.nomeCompleto);
-  fields.nomeGuerra.value = toTitleCase(data.nomeGuerra);
+function hasMotorLicenseData(historico) {
+  return Boolean(historico.dataVencimento || historico.observacao);
+}
 
-  const currentFunctional = getCurrentFunctional(data);
-  initialFields.initialPostoGraduacao.value = currentFunctional.postoGraduacao;
-  initialFields.initialGrupoHierarquico.value = currentFunctional.grupoHierarquico;
-  initialFields.initialGrupoOficial.value = currentFunctional.grupoOficial;
-  initialFields.initialComportamento.value = getCurrentBehavior(data);
-  initialFields.initialSituacaoFuncional.value = getCurrentStatus(data);
-  initialFields.initialUnidade.value = getCurrentUnit(data);
-  initialFields.initialSituacaoSanitaria.value = getCurrentSituacaoSanitaria(data);
-  updateInitialBehaviorVisibility();
-
-  saveButton.textContent = 'Atualizar';
-  updateMainFormValidation();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+function hasOrdinanceData(historico) {
+  return Boolean(
+    historico.tipoMulta ||
+    historico.dataInicio ||
+    historico.numeroBol ||
+    historico.dataBol ||
+    historico.situacaoCadastro
+  );
 }
 
 function clearForm() {
@@ -727,13 +930,11 @@ function clearForm() {
 
 function clearHistoryForm() {
   historyForm.reset();
-  editingHistoryId.value = '';
   saveHistoryButton.textContent = 'Salvar histórico';
 }
 
 function clearFunctionalForm() {
   functionalForm.reset();
-  editingFunctionalId.value = '';
   functionalFields.functionalGrupoHierarquico.value = '';
   functionalFields.functionalGrupoOficial.value = '';
   saveFunctionalButton.textContent = 'Salvar histórico';
@@ -741,20 +942,32 @@ function clearFunctionalForm() {
 
 function clearBehaviorForm() {
   behaviorForm.reset();
-  editingBehaviorId.value = '';
   saveBehaviorButton.textContent = 'Salvar histórico';
 }
 
 function clearUnitForm() {
   unitForm.reset();
-  editingUnitId.value = '';
   saveUnitButton.textContent = 'Salvar histórico';
 }
 
 function clearStatusForm() {
   statusForm.reset();
-  editingStatusId.value = '';
   saveStatusButton.textContent = 'Salvar histórico';
+}
+
+function clearCourseForm() {
+  courseForm.reset();
+  saveCourseButton.textContent = 'Salvar curso';
+}
+
+function clearMotorLicenseForm() {
+  motorLicenseForm.reset();
+  saveMotorLicenseButton.textContent = 'Salvar habilitação';
+}
+
+function clearOrdinanceForm() {
+  ordinanceForm.reset();
+  saveOrdinanceButton.textContent = 'Salvar portaria';
 }
 
 function formatDate(value) {
@@ -848,6 +1061,45 @@ function getStatusHistoricosByPolicial(policial) {
   const link = getHistoryLink(policial);
   return sortByCreation(loadStatusHistoricos()
     .map(normalizeStatusHistorico)
+    .filter((historico) => historico.idFuncional === link));
+}
+
+function getCourseHistoricosByPolicial(policial) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Retorna cursos vinculados ao policial selecionado no detalhe.
+   * PARÂMETROS E RETORNO: Recebe objeto de policial e retorna array de cursos ordenado pela criação.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê COURSE_HISTORY_STORAGE_KEY via loadCourseHistoricos.
+   * TODO: Em produção, substituir filtro local por consulta ao banco usando chave do policial.
+   */
+  const link = getHistoryLink(policial);
+  return sortByCreation(loadCourseHistoricos()
+    .map(normalizeCourseHistorico)
+    .filter((historico) => historico.idFuncional === link));
+}
+
+function getMotorLicenseHistoricosByPolicial(policial) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Retorna registros de habilitação de moto do policial.
+   * PARÂMETROS E RETORNO: Recebe objeto de policial e retorna array ordenado.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê MOTOR_LICENSE_HISTORY_STORAGE_KEY do localStorage.
+   * TODO: Em produção, buscar somente documentos ativos/arquivados autorizados ao perfil logado.
+   */
+  const link = getHistoryLink(policial);
+  return sortByCreation(loadMotorLicenseHistoricos()
+    .map(normalizeMotorLicenseHistorico)
+    .filter((historico) => historico.idFuncional === link));
+}
+
+function getOrdinanceHistoricosByPolicial(policial) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Retorna portarias de multa estadual/municipal do policial.
+   * PARÂMETROS E RETORNO: Recebe objeto de policial e retorna array ordenado por criação.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê ORDINANCE_HISTORY_STORAGE_KEY do localStorage.
+   * TODO: Em produção, filtrar por situação e vigência via consulta indexada no banco.
+   */
+  const link = getHistoryLink(policial);
+  return sortByCreation(loadOrdinanceHistoricos()
+    .map(normalizeOrdinanceHistorico)
     .filter((historico) => historico.idFuncional === link));
 }
 
@@ -1008,7 +1260,6 @@ function render() {
     const actions = document.createElement('div');
     actions.className = 'actions';
     actions.appendChild(createActionButton('Detalhes', 'details', policial.id, 'action-details'));
-    actions.appendChild(createActionButton('Editar', 'edit', policial.id, 'action-edit'));
     actions.appendChild(createActionButton('Excluir', 'delete', policial.id, 'action-delete'));
     actionsCell.appendChild(actions);
     row.appendChild(actionsCell);
@@ -1055,16 +1306,17 @@ function attachHistoryRowReferences(row, historico) {
 function renderFuncionalTable(historicos) {
   /*
    * DESCRIÇÃO DA FUNÇÃO: Renderiza o histórico funcional exibindo apenas os dados operacionais que o
-   * usuário precisa ver, com Data Promoção como primeira coluna e referências técnicas ocultas na linha.
+   * usuário precisa ver, com Data Promoção como primeira coluna e sem ações de edição/exclusão.
    * PARÂMETROS E RETORNO: Recebe um array de históricos funcionais normalizados e não retorna valor.
    * ARMAZENAMENTO E PERSISTÊNCIA: Lê o array em memória e escreve linhas no tbody funcionalBody; os dados
    * completos continuam persistidos no localStorage em FUNCTIONAL_HISTORY_STORAGE_KEY.
-   * TODO: Em ambiente online, carregar esse histórico via relacionamento entre policial e promoções.
+   * TODO: Em ambiente online, carregar esse histórico via relacionamento entre policial e promoções,
+   * mantendo regra de auditoria append-only também no backend.
    */
   funcionalBody.innerHTML = '';
 
   if (historicos.length === 0) {
-    renderEmptyHistory(funcionalBody, 5, 'Nenhum histórico funcional informado.');
+    renderEmptyHistory(funcionalBody, 4, 'Nenhum histórico funcional informado.');
     return;
   }
 
@@ -1082,13 +1334,6 @@ function renderFuncionalTable(historicos) {
       row.appendChild(cell);
     });
 
-    const actionsCell = document.createElement('td');
-    const actions = document.createElement('div');
-    actions.className = 'actions';
-    actions.appendChild(createActionButton('Editar', 'edit-functional', historico.id, 'secondary'));
-    actions.appendChild(createActionButton('Excluir registro', 'delete-functional', historico.id));
-    actionsCell.appendChild(actions);
-    row.appendChild(actionsCell);
     funcionalBody.appendChild(row);
   });
 }
@@ -1100,12 +1345,13 @@ function renderComportamentoTable(historicos) {
    * PARÂMETROS E RETORNO: Recebe um array de históricos de comportamento e não retorna valor.
    * ARMAZENAMENTO E PERSISTÊNCIA: Atualiza apenas o tbody comportamentoBody; os registros completos
    * permanecem no localStorage em BEHAVIOR_HISTORY_STORAGE_KEY.
-   * TODO: Em produção, trocar a leitura local por consulta relacional filtrada pelo policial.
+   * TODO: Em produção, trocar a leitura local por consulta relacional filtrada pelo policial e impedir
+   * atualização/exclusão desses lançamentos fora de um fluxo formal de retificação.
    */
   comportamentoBody.innerHTML = '';
 
   if (historicos.length === 0) {
-    renderEmptyHistory(comportamentoBody, 5, 'Nenhum histórico de comportamento informado.');
+    renderEmptyHistory(comportamentoBody, 4, 'Nenhum histórico de comportamento informado.');
     return;
   }
 
@@ -1123,13 +1369,6 @@ function renderComportamentoTable(historicos) {
       row.appendChild(cell);
     });
 
-    const actionsCell = document.createElement('td');
-    const actions = document.createElement('div');
-    actions.className = 'actions';
-    actions.appendChild(createActionButton('Editar', 'edit-behavior', historico.id, 'secondary'));
-    actions.appendChild(createActionButton('Excluir registro', 'delete-behavior', historico.id));
-    actionsCell.appendChild(actions);
-    row.appendChild(actionsCell);
     comportamentoBody.appendChild(row);
   });
 }
@@ -1137,16 +1376,16 @@ function renderComportamentoTable(historicos) {
 function renderUnidadeTable(historicos) {
   /*
    * DESCRIÇÃO DA FUNÇÃO: Renderiza a grade de histórico de unidade no detalhe do policial, mostrando
-   * Data de Apresentação como primeira coluna, publicação e ações, sem expor o ID Funcional.
+   * Data de Apresentação como primeira coluna e publicação, sem expor o ID Funcional nem ações destrutivas.
    * PARÂMETROS E RETORNO: Recebe um array de históricos normalizados e não retorna valor; atualiza o DOM.
    * ARMAZENAMENTO E PERSISTÊNCIA: Lê o array recebido em memória e escreve apenas na tabela HTML
    * unidadeBody, mantendo o vínculo em data-id-funcional; a persistência permanece no localStorage.
-   * TODO: Em produção, carregar essa lista paginada da API para evitar tabelas grandes no navegador.
+   * TODO: Em produção, carregar essa lista paginada da API e registrar retificações em tabela separada.
    */
   unidadeBody.innerHTML = '';
 
   if (historicos.length === 0) {
-    renderEmptyHistory(unidadeBody, 5, 'Nenhum histórico de unidade informado.');
+    renderEmptyHistory(unidadeBody, 4, 'Nenhum histórico de unidade informado.');
     return;
   }
 
@@ -1164,13 +1403,6 @@ function renderUnidadeTable(historicos) {
       row.appendChild(cell);
     });
 
-    const actionsCell = document.createElement('td');
-    const actions = document.createElement('div');
-    actions.className = 'actions';
-    actions.appendChild(createActionButton('Editar', 'edit-unit', historico.id, 'secondary'));
-    actions.appendChild(createActionButton('Excluir registro', 'delete-unit', historico.id));
-    actionsCell.appendChild(actions);
-    row.appendChild(actionsCell);
     unidadeBody.appendChild(row);
   });
 }
@@ -1182,12 +1414,13 @@ function renderSituacaoFuncionalTable(historicos) {
    * PARÂMETROS E RETORNO: Recebe um array de históricos de situação funcional e não retorna valor.
    * ARMAZENAMENTO E PERSISTÊNCIA: Escreve somente no DOM em situacaoFuncionalBody; os dados completos
    * continuam salvos em localStorage pela chave STATUS_HISTORY_STORAGE_KEY.
-   * TODO: Em ambiente online, consultar essa tabela por chave estrangeira do policial.
+   * TODO: Em ambiente online, consultar essa tabela por chave estrangeira do policial e manter bloqueio
+   * de edição/exclusão no serviço de aplicação.
    */
   situacaoFuncionalBody.innerHTML = '';
 
   if (historicos.length === 0) {
-    renderEmptyHistory(situacaoFuncionalBody, 5, 'Nenhum histórico de situação funcional informado.');
+    renderEmptyHistory(situacaoFuncionalBody, 4, 'Nenhum histórico de situação funcional informado.');
     return;
   }
 
@@ -1205,14 +1438,105 @@ function renderSituacaoFuncionalTable(historicos) {
       row.appendChild(cell);
     });
 
-    const actionsCell = document.createElement('td');
-    const actions = document.createElement('div');
-    actions.className = 'actions';
-    actions.appendChild(createActionButton('Editar', 'edit-status', historico.id, 'secondary'));
-    actions.appendChild(createActionButton('Excluir registro', 'delete-status', historico.id));
-    actionsCell.appendChild(actions);
-    row.appendChild(actionsCell);
     situacaoFuncionalBody.appendChild(row);
+  });
+}
+
+function renderCourseTable(historicos) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Renderiza a tabela de cursos do policial com data, convênio e curso realizado.
+   * PARÂMETROS E RETORNO: Recebe array de históricos de curso normalizados e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Escreve somente no tbody cursoBody; os dados vêm do localStorage
+   * COURSE_HISTORY_STORAGE_KEY filtrado pelo policial.
+   * TODO: Em produção, carregar convênio/curso por ids reais e exibir origem da certificação.
+   */
+  cursoBody.innerHTML = '';
+
+  if (historicos.length === 0) {
+    renderEmptyHistory(cursoBody, 3, 'Nenhum curso informado.');
+    return;
+  }
+
+  historicos.forEach((historico) => {
+    const row = document.createElement('tr');
+    attachHistoryRowReferences(row, historico);
+    [
+      formatDate(historico.data),
+      historico.convenio,
+      historico.curso
+    ].forEach((value) => {
+      const cell = document.createElement('td');
+      cell.textContent = displayValue(value);
+      row.appendChild(cell);
+    });
+
+    cursoBody.appendChild(row);
+  });
+}
+
+function renderMotorLicenseTable(historicos) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Renderiza registros de habilitação de moto e vencimento da carteira.
+   * PARÂMETROS E RETORNO: Recebe array de registros normalizados e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Atualiza habilitacaoMotoBody no DOM; os dados seguem em
+   * MOTOR_LICENSE_HISTORY_STORAGE_KEY no localStorage.
+   * TODO: Em produção, destacar vencimentos próximos com regra de alerta vinda do backend.
+   */
+  habilitacaoMotoBody.innerHTML = '';
+
+  if (historicos.length === 0) {
+    renderEmptyHistory(habilitacaoMotoBody, 3, 'Nenhuma habilitação de moto informada.');
+    return;
+  }
+
+  historicos.forEach((historico) => {
+    const row = document.createElement('tr');
+    attachHistoryRowReferences(row, historico);
+    [
+      formatDate(historico.dataVencimento),
+      historico.categoria,
+      historico.observacao
+    ].forEach((value) => {
+      const cell = document.createElement('td');
+      cell.textContent = displayValue(value);
+      row.appendChild(cell);
+    });
+
+    habilitacaoMotoBody.appendChild(row);
+  });
+}
+
+function renderOrdinanceTable(historicos) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Renderiza registros de policial portariado para multa estadual ou municipal.
+   * PARÂMETROS E RETORNO: Recebe array de portarias normalizadas e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Escreve linhas no tbody portariadoBody; a origem é
+   * ORDINANCE_HISTORY_STORAGE_KEY no localStorage.
+   * TODO: Em produção, controlar vigência, revogação e validação de publicação por serviço administrativo.
+   */
+  portariadoBody.innerHTML = '';
+
+  if (historicos.length === 0) {
+    renderEmptyHistory(portariadoBody, 5, 'Nenhum registro de policial portariado informado.');
+    return;
+  }
+
+  historicos.forEach((historico) => {
+    const row = document.createElement('tr');
+    attachHistoryRowReferences(row, historico);
+    [
+      historico.tipoMulta,
+      formatDate(historico.dataInicio),
+      historico.numeroBol,
+      formatDate(historico.dataBol),
+      historico.situacaoCadastro
+    ].forEach((value) => {
+      const cell = document.createElement('td');
+      cell.textContent = displayValue(value);
+      row.appendChild(cell);
+    });
+
+    portariadoBody.appendChild(row);
   });
 }
 
@@ -1226,16 +1550,25 @@ function showDetails(id) {
   behaviorPolicialId.value = policial.id;
   unitPolicialId.value = policial.id;
   statusPolicialId.value = policial.id;
+  coursePolicialId.value = policial.id;
+  motorLicensePolicialId.value = policial.id;
+  ordinancePolicialId.value = policial.id;
   clearHistoryForm();
   clearFunctionalForm();
   clearBehaviorForm();
   clearUnitForm();
   clearStatusForm();
+  clearCourseForm();
+  clearMotorLicenseForm();
+  clearOrdinanceForm();
   historyForm.hidden = true;
   functionalForm.hidden = true;
   behaviorForm.hidden = true;
   unitForm.hidden = true;
   statusForm.hidden = true;
+  courseForm.hidden = true;
+  motorLicenseForm.hidden = true;
+  ordinanceForm.hidden = true;
   detailsTitle.textContent = policial.nomeCompleto || policial.nomeGuerra || policial.rg || 'Registro sem nome';
   detailsGrid.innerHTML = '';
   historicoBody.innerHTML = '';
@@ -1244,6 +1577,9 @@ function showDetails(id) {
   const comportamentoHistoricos = getBehaviorHistoricosByPolicial(policial);
   const unidadeHistoricos = getUnitHistoricosByPolicial(policial);
   const statusHistoricos = getStatusHistoricosByPolicial(policial);
+  const courseHistoricos = getCourseHistoricosByPolicial(policial);
+  const motorLicenseHistoricos = getMotorLicenseHistoricosByPolicial(policial);
+  const ordinanceHistoricos = getOrdinanceHistoricosByPolicial(policial);
   const currentFunctional = getCurrentFunctional(policial);
   const policialWithCurrentStatus = {
     ...policial,
@@ -1272,20 +1608,24 @@ function showDetails(id) {
   renderComportamentoTable(comportamentoHistoricos);
   renderUnidadeTable(unidadeHistoricos);
   renderSituacaoFuncionalTable(statusHistoricos);
+  renderCourseTable(courseHistoricos);
+  renderMotorLicenseTable(motorLicenseHistoricos);
+  renderOrdinanceTable(ordinanceHistoricos);
 
   /*
-   * DESCRIÇÃO DA FUNÇÃO: Renderiza o histórico sanitário do policial sem exibir o ID Funcional como
-   * coluna, mantendo esse vínculo técnico em data-id-funcional na linha.
+   * DESCRIÇÃO DA FUNÇÃO: Renderiza o histórico sanitário do policial sem exibir o ID Funcional e sem
+   * ações de edição/exclusão, pois a base de dados deve aceitar apenas novos lançamentos históricos.
    * PARÂMETROS E RETORNO: Usa a lista historicos já filtrada no detalhe do policial e não retorna valor.
    * ARMAZENAMENTO E PERSISTÊNCIA: Atualiza apenas o tbody historicoBody; os dados completos seguem
    * persistidos no localStorage pela chave HISTORY_STORAGE_KEY.
-   * TODO: Em produção, substituir o vínculo textual por chave estrangeira relacional e paginação via API.
+   * TODO: Em produção, substituir o vínculo textual por chave estrangeira relacional, paginação via API e
+   * trilha de retificação separada para qualquer correção administrativa.
    */
   if (historicos.length === 0) {
     const row = document.createElement('tr');
     const cell = document.createElement('td');
     cell.className = 'empty';
-    cell.colSpan = 6;
+    cell.colSpan = 5;
     cell.textContent = 'Nenhum histórico sanitário informado.';
     row.appendChild(cell);
     historicoBody.appendChild(row);
@@ -1305,13 +1645,6 @@ function showDetails(id) {
         row.appendChild(cell);
       });
 
-      const actionsCell = document.createElement('td');
-      const actions = document.createElement('div');
-      actions.className = 'actions';
-      actions.appendChild(createActionButton('Editar', 'edit-history', historico.id, 'secondary'));
-      actions.appendChild(createActionButton('Excluir registro', 'delete-history', historico.id));
-      actionsCell.appendChild(actions);
-      row.appendChild(actionsCell);
       historicoBody.appendChild(row);
     });
   }
@@ -1343,6 +1676,15 @@ function deletePolicial(id) {
   const statusHistoricos = loadStatusHistoricos()
     .map(normalizeStatusHistorico)
     .filter((historico) => historico.idFuncional !== link);
+  const courseHistoricos = loadCourseHistoricos()
+    .map(normalizeCourseHistorico)
+    .filter((historico) => historico.idFuncional !== link);
+  const motorLicenseHistoricos = loadMotorLicenseHistoricos()
+    .map(normalizeMotorLicenseHistorico)
+    .filter((historico) => historico.idFuncional !== link);
+  const ordinanceHistoricos = loadOrdinanceHistoricos()
+    .map(normalizeOrdinanceHistorico)
+    .filter((historico) => historico.idFuncional !== link);
 
   savePoliciais(policiais.filter((item) => item.id !== id));
   saveHistoricos(historicos);
@@ -1350,120 +1692,11 @@ function deletePolicial(id) {
   saveBehaviorHistoricos(comportamentoHistoricos);
   saveUnitHistoricos(unidadeHistoricos);
   saveStatusHistoricos(statusHistoricos);
+  saveCourseHistoricos(courseHistoricos);
+  saveMotorLicenseHistoricos(motorLicenseHistoricos);
+  saveOrdinanceHistoricos(ordinanceHistoricos);
   if (!detailsCard.hidden) detailsCard.hidden = true;
   render();
-}
-
-function editHistorico(id) {
-  const historico = loadHistoricos().map(normalizeHistorico).find((item) => item.id === id);
-  if (!historico) return;
-
-  const policial = loadPoliciais()
-    .map(normalizePolicial)
-    .find((item) => getHistoryLink(item) === historico.idFuncional);
-
-  if (policial) {
-    showDetails(policial.id);
-  }
-
-  editingHistoryId.value = historico.id;
-  historyFields.situacaoSanitaria.value = historico.situacaoSanitaria;
-  historyFields.dataInicio.value = historico.dataInicio;
-  historyFields.dataTermino.value = historico.dataTermino;
-  historyFields.bolpm.value = historico.bolpm;
-  historyFields.dataBolpm.value = historico.dataBolpm;
-  saveHistoryButton.textContent = 'Atualizar histórico';
-  historyForm.hidden = false;
-  historyForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function editFunctional(id) {
-  const historico = loadFunctionalHistoricos().map(normalizeFunctionalHistorico).find((item) => item.id === id);
-  if (!historico) return;
-
-  const policial = loadPoliciais()
-    .map(normalizePolicial)
-    .find((item) => getHistoryLink(item) === historico.idFuncional);
-
-  if (policial) showDetails(policial.id);
-
-  editingFunctionalId.value = historico.id;
-  functionalFields.functionalPostoGraduacao.value = historico.postoGraduacao;
-  functionalFields.functionalGrupoHierarquico.value = historico.grupoHierarquico;
-  functionalFields.functionalGrupoOficial.value = historico.grupoOficial;
-  functionalFields.functionalDataAlteracao.value = historico.dataAlteracao;
-  functionalFields.functionalBolpm.value = historico.bolpm;
-  functionalFields.functionalDataBolpm.value = historico.dataBolpm;
-  saveFunctionalButton.textContent = 'Atualizar histórico';
-  functionalForm.hidden = false;
-  functionalForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function editBehavior(id) {
-  const historico = loadBehaviorHistoricos().map(normalizeBehaviorHistorico).find((item) => item.id === id);
-  if (!historico) return;
-
-  const policial = loadPoliciais()
-    .map(normalizePolicial)
-    .find((item) => getHistoryLink(item) === historico.idFuncional);
-
-  if (policial) showDetails(policial.id);
-
-  editingBehaviorId.value = historico.id;
-  behaviorFields.behaviorComportamento.value = historico.comportamento;
-  behaviorFields.behaviorDataAlteracao.value = historico.dataAlteracao;
-  behaviorFields.behaviorBolpm.value = historico.bolpm;
-  behaviorFields.behaviorDataBolpm.value = historico.dataBolpm;
-  saveBehaviorButton.textContent = 'Atualizar histórico';
-  behaviorForm.hidden = false;
-  behaviorForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function editUnit(id) {
-  /*
-   * DESCRIÇÃO DA FUNÇÃO: Carrega um registro do histórico de unidade no formulário para edição.
-   * PARÂMETROS E RETORNO: Recebe o id do histórico como string e não retorna valor; preenche campos do DOM.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Lê os dados do localStorage via loadUnitHistoricos e mantém alterações
-   * somente no formulário até o submit.
-   * TODO: Em ambiente online, buscar o registro por endpoint protegido e tratar falhas de rede/permissão.
-   */
-  const historico = loadUnitHistoricos().map(normalizeUnitHistorico).find((item) => item.id === id);
-  if (!historico) return;
-
-  const policial = loadPoliciais()
-    .map(normalizePolicial)
-    .find((item) => getHistoryLink(item) === historico.idFuncional);
-
-  if (policial) showDetails(policial.id);
-
-  editingUnitId.value = historico.id;
-  unitFields.unitUnidade.value = historico.unidade;
-  unitFields.unitDataApresentacao.value = historico.dataApresentacao;
-  unitFields.unitBolpm.value = historico.bolpm;
-  unitFields.unitDataBolpm.value = historico.dataBolpm;
-  saveUnitButton.textContent = 'Atualizar histórico';
-  unitForm.hidden = false;
-  unitForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function editStatus(id) {
-  const historico = loadStatusHistoricos().map(normalizeStatusHistorico).find((item) => item.id === id);
-  if (!historico) return;
-
-  const policial = loadPoliciais()
-    .map(normalizePolicial)
-    .find((item) => getHistoryLink(item) === historico.idFuncional);
-
-  if (policial) showDetails(policial.id);
-
-  editingStatusId.value = historico.id;
-  statusFields.statusSituacaoFuncional.value = historico.situacaoFuncional;
-  statusFields.statusDataAlteracao.value = historico.dataAlteracao;
-  statusFields.statusBolpm.value = historico.bolpm;
-  statusFields.statusDataBolpm.value = historico.dataBolpm;
-  saveStatusButton.textContent = 'Atualizar histórico';
-  statusForm.hidden = false;
-  statusForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function syncPolicialSituacao(link) {
@@ -1544,99 +1777,6 @@ function syncPolicialStatus(link) {
     if (getHistoryLink(policial) !== link) return policial;
     return { ...policial, situacaoFuncional: latest.situacaoFuncional || '' };
   }));
-}
-
-function deleteHistorico(id) {
-  if (!confirm('Deseja excluir este registro do histórico sanitário?')) return;
-
-  const historicos = loadHistoricos().map(normalizeHistorico);
-  const historico = historicos.find((item) => item.id === id);
-  if (!historico) return;
-
-  saveHistoricos(historicos.filter((item) => item.id !== id));
-  syncPolicialSituacao(historico.idFuncional);
-  render();
-
-  const policial = loadPoliciais()
-    .map(normalizePolicial)
-    .find((item) => getHistoryLink(item) === historico.idFuncional);
-  if (policial) showDetails(policial.id);
-}
-
-function deleteFunctional(id) {
-  if (!confirm('Deseja excluir este registro do histórico funcional?')) return;
-
-  const historicos = loadFunctionalHistoricos().map(normalizeFunctionalHistorico);
-  const historico = historicos.find((item) => item.id === id);
-  if (!historico) return;
-
-  saveFunctionalHistoricos(historicos.filter((item) => item.id !== id));
-  syncPolicialFunctional(historico.idFuncional);
-  render();
-
-  const policial = loadPoliciais()
-    .map(normalizePolicial)
-    .find((item) => getHistoryLink(item) === historico.idFuncional);
-  if (policial) showDetails(policial.id);
-}
-
-function deleteBehavior(id) {
-  if (!confirm('Deseja excluir este registro do histórico de comportamento?')) return;
-
-  const historicos = loadBehaviorHistoricos().map(normalizeBehaviorHistorico);
-  const historico = historicos.find((item) => item.id === id);
-  if (!historico) return;
-
-  saveBehaviorHistoricos(historicos.filter((item) => item.id !== id));
-  syncPolicialBehavior(historico.idFuncional);
-  render();
-
-  const policial = loadPoliciais()
-    .map(normalizePolicial)
-    .find((item) => getHistoryLink(item) === historico.idFuncional);
-  if (policial) showDetails(policial.id);
-}
-
-function deleteUnit(id) {
-  /*
-   * DESCRIÇÃO DA FUNÇÃO: Exclui um registro do histórico de unidade e sincroniza a unidade vigente do
-   * policial conforme a última Data de Apresentação restante.
-   * PARÂMETROS E RETORNO: Recebe o id do histórico como string e não retorna valor.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Lê e grava o array de histórico de unidade no localStorage e sincroniza
-   * a unidade vigente do policial em STORAGE_KEY.
-   * TODO: Em ambiente online, exigir confirmação/autorização no backend e registrar auditoria da exclusão.
-   */
-  if (!confirm('Deseja excluir este registro do histórico de unidade?')) return;
-
-  const historicos = loadUnitHistoricos().map(normalizeUnitHistorico);
-  const historico = historicos.find((item) => item.id === id);
-  if (!historico) return;
-
-  saveUnitHistoricos(historicos.filter((item) => item.id !== id));
-  syncPolicialUnit(historico.idFuncional);
-  render();
-
-  const policial = loadPoliciais()
-    .map(normalizePolicial)
-    .find((item) => getHistoryLink(item) === historico.idFuncional);
-  if (policial) showDetails(policial.id);
-}
-
-function deleteStatus(id) {
-  if (!confirm('Deseja excluir este registro do histórico de situação funcional?')) return;
-
-  const historicos = loadStatusHistoricos().map(normalizeStatusHistorico);
-  const historico = historicos.find((item) => item.id === id);
-  if (!historico) return;
-
-  saveStatusHistoricos(historicos.filter((item) => item.id !== id));
-  syncPolicialStatus(historico.idFuncional);
-  render();
-
-  const policial = loadPoliciais()
-    .map(normalizePolicial)
-    .find((item) => getHistoryLink(item) === historico.idFuncional);
-  if (policial) showDetails(policial.id);
 }
 
 function getLatestSituacaoFromList(historicos, link) {
@@ -1728,6 +1868,54 @@ function openNewStatusForm() {
   statusPolicialId.value = policial.id;
   statusForm.hidden = false;
   statusFields.statusSituacaoFuncional.focus();
+}
+
+function openNewCourseForm() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Abre o formulário para adicionar curso ao histórico do policial selecionado.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valor; usa coursePolicialId para localizar o policial.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; apenas prepara o DOM para posterior submit no localStorage.
+   * TODO: Em produção, carregar lista de convênios/cursos antes de abrir o formulário.
+   */
+  const policial = loadPoliciais().map(normalizePolicial).find((item) => item.id === coursePolicialId.value);
+  if (!policial) return;
+
+  clearCourseForm();
+  coursePolicialId.value = policial.id;
+  courseForm.hidden = false;
+  courseFields.courseDate.focus();
+}
+
+function openNewMotorLicenseForm() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Abre o formulário para cadastrar vencimento da habilitação de moto.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Altera somente o DOM; a persistência ocorre no submit do formulário.
+   * TODO: Em produção, consultar documento vigente do policial para evitar duplicidade manual.
+   */
+  const policial = loadPoliciais().map(normalizePolicial).find((item) => item.id === motorLicensePolicialId.value);
+  if (!policial) return;
+
+  clearMotorLicenseForm();
+  motorLicensePolicialId.value = policial.id;
+  motorLicenseForm.hidden = false;
+  motorLicenseFields.motorLicenseExpiration.focus();
+}
+
+function openNewOrdinanceForm() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Abre o formulário de portaria para multa estadual ou municipal.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Manipula apenas o DOM; o registro é salvo no localStorage no submit.
+   * TODO: Em produção, checar se já existe portaria ativa do mesmo tipo antes de permitir novo lançamento.
+   */
+  const policial = loadPoliciais().map(normalizePolicial).find((item) => item.id === ordinancePolicialId.value);
+  if (!policial) return;
+
+  clearOrdinanceForm();
+  ordinancePolicialId.value = policial.id;
+  ordinanceForm.hidden = false;
+  ordinanceFields.ordinanceFineType.focus();
 }
 
 function updateFunctionalGroups() {
@@ -1835,6 +2023,18 @@ form.addEventListener('submit', (event) => {
     if (historico.idFuncional !== previousLink) return historico;
     return { ...historico, idFuncional: currentLink };
   });
+  const updatedCourseHistories = loadCourseHistoricos().map(normalizeCourseHistorico).map((historico) => {
+    if (historico.idFuncional !== previousLink) return historico;
+    return { ...historico, idFuncional: currentLink };
+  });
+  const updatedMotorLicenseHistories = loadMotorLicenseHistoricos().map(normalizeMotorLicenseHistorico).map((historico) => {
+    if (historico.idFuncional !== previousLink) return historico;
+    return { ...historico, idFuncional: currentLink };
+  });
+  const updatedOrdinanceHistories = loadOrdinanceHistoricos().map(normalizeOrdinanceHistorico).map((historico) => {
+    if (historico.idFuncional !== previousLink) return historico;
+    return { ...historico, idFuncional: currentLink };
+  });
 
   if (!existing) {
     addInitialHistoryRows({
@@ -1868,12 +2068,24 @@ form.addEventListener('submit', (event) => {
   saveBehaviorHistoricos(updatedBehaviorHistories);
   saveUnitHistoricos(updatedUnitHistories);
   saveStatusHistoricos(updatedStatusHistories);
+  saveCourseHistoricos(updatedCourseHistories);
+  saveMotorLicenseHistoricos(updatedMotorLicenseHistories);
+  saveOrdinanceHistoricos(updatedOrdinanceHistories);
   clearForm();
   render();
   setActiveView('table-view');
 });
 
 historyForm.addEventListener('submit', (event) => {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Registra uma nova movimentação sanitária no histórico do policial, sem permitir
+   * edição ou exclusão de lançamentos já gravados.
+   * PARÂMETROS E RETORNO: Recebe o evento submit do formulário e não retorna valor; controla validação e
+   * atualização da tela.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê o policial e o histórico sanitário do localStorage, acrescenta um
+   * novo item em HISTORY_STORAGE_KEY e sincroniza a situação vigente no cadastro principal.
+   * TODO: Em produção, mover a regra append-only para endpoint transacional com auditoria de usuário.
+   */
   event.preventDefault();
 
   const policial = loadPoliciais()
@@ -1886,11 +2098,7 @@ historyForm.addEventListener('submit', (event) => {
 
   const link = getHistoryLink(policial);
   const historicos = loadHistoricos().map(normalizeHistorico);
-  const updatedHistoricos = editingHistoryId.value
-    ? historicos.map((historico) => historico.id === editingHistoryId.value
-      ? normalizeHistorico({ ...historico, ...historyData, idFuncional: link })
-      : historico)
-    : [...historicos, normalizeHistorico({ ...historyData, idFuncional: link })];
+  const updatedHistoricos = [...historicos, normalizeHistorico({ ...historyData, idFuncional: link })];
 
   saveHistoricos(updatedHistoricos);
   syncPolicialSituacao(link);
@@ -1901,6 +2109,13 @@ historyForm.addEventListener('submit', (event) => {
 });
 
 functionalForm.addEventListener('submit', (event) => {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Registra uma nova alteração funcional do policial como histórico imutável.
+   * PARÂMETROS E RETORNO: Recebe o evento submit do formulário e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê policiais e FUNCTIONAL_HISTORY_STORAGE_KEY do localStorage, grava
+   * o array com o novo lançamento e sincroniza posto/grupo vigentes no cadastro principal.
+   * TODO: Em produção, validar a publicação BOLPM no backend e manter trilha de retificação separada.
+   */
   event.preventDefault();
 
   const policial = loadPoliciais()
@@ -1913,11 +2128,7 @@ functionalForm.addEventListener('submit', (event) => {
 
   const link = getHistoryLink(policial);
   const historicos = loadFunctionalHistoricos().map(normalizeFunctionalHistorico);
-  const updatedHistoricos = editingFunctionalId.value
-    ? historicos.map((historico) => historico.id === editingFunctionalId.value
-      ? normalizeFunctionalHistorico({ ...historico, ...historyData, idFuncional: link })
-      : historico)
-    : [...historicos, normalizeFunctionalHistorico({ ...historyData, idFuncional: link })];
+  const updatedHistoricos = [...historicos, normalizeFunctionalHistorico({ ...historyData, idFuncional: link })];
 
   saveFunctionalHistoricos(updatedHistoricos);
   syncPolicialFunctional(link);
@@ -1928,6 +2139,14 @@ functionalForm.addEventListener('submit', (event) => {
 });
 
 behaviorForm.addEventListener('submit', (event) => {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Inclui um novo registro de comportamento no histórico do policial.
+   * PARÂMETROS E RETORNO: Recebe o evento submit e não retorna valor; valida dados mínimos e fecha o
+   * formulário após salvar.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê e grava BEHAVIOR_HISTORY_STORAGE_KEY no localStorage, além de
+   * sincronizar o comportamento atual no cadastro principal.
+   * TODO: Em produção, aplicar permissões por perfil e auditoria antes de aceitar novo lançamento.
+   */
   event.preventDefault();
 
   const policial = loadPoliciais()
@@ -1940,11 +2159,7 @@ behaviorForm.addEventListener('submit', (event) => {
 
   const link = getHistoryLink(policial);
   const historicos = loadBehaviorHistoricos().map(normalizeBehaviorHistorico);
-  const updatedHistoricos = editingBehaviorId.value
-    ? historicos.map((historico) => historico.id === editingBehaviorId.value
-      ? normalizeBehaviorHistorico({ ...historico, ...historyData, idFuncional: link })
-      : historico)
-    : [...historicos, normalizeBehaviorHistorico({ ...historyData, idFuncional: link })];
+  const updatedHistoricos = [...historicos, normalizeBehaviorHistorico({ ...historyData, idFuncional: link })];
 
   saveBehaviorHistoricos(updatedHistoricos);
   syncPolicialBehavior(link);
@@ -1956,12 +2171,13 @@ behaviorForm.addEventListener('submit', (event) => {
 
 unitForm.addEventListener('submit', (event) => {
   /*
-   * DESCRIÇÃO DA FUNÇÃO: Processa inclusão/edição do histórico de unidade e atualiza o cadastro apenas
-   * quando há Data de Apresentação.
+   * DESCRIÇÃO DA FUNÇÃO: Processa inclusão append-only do histórico de unidade e atualiza o cadastro
+   * apenas quando há Data de Apresentação.
    * PARÂMETROS E RETORNO: Recebe o evento submit do formulário; não retorna valor e controla o fluxo na tela.
    * ARMAZENAMENTO E PERSISTÊNCIA: Lê policiais e históricos do localStorage, grava o array atualizado em
    * UNIT_HISTORY_STORAGE_KEY e sincroniza o cadastro principal em STORAGE_KEY.
-   * TODO: Em produção, substituir localStorage por endpoint transacional com validação de permissão do P/1.
+   * TODO: Em produção, substituir localStorage por endpoint transacional com validação de permissão do P/1
+   * e fluxo formal de retificação para correções.
    */
   event.preventDefault();
 
@@ -1975,11 +2191,7 @@ unitForm.addEventListener('submit', (event) => {
 
   const link = getHistoryLink(policial);
   const historicos = loadUnitHistoricos().map(normalizeUnitHistorico);
-  const updatedHistoricos = editingUnitId.value
-    ? historicos.map((historico) => historico.id === editingUnitId.value
-      ? normalizeUnitHistorico({ ...historico, ...historyData, idFuncional: link })
-      : historico)
-    : [...historicos, normalizeUnitHistorico({ ...historyData, idFuncional: link })];
+  const updatedHistoricos = [...historicos, normalizeUnitHistorico({ ...historyData, idFuncional: link })];
 
   saveUnitHistoricos(updatedHistoricos);
   syncPolicialUnit(link);
@@ -1990,6 +2202,13 @@ unitForm.addEventListener('submit', (event) => {
 });
 
 statusForm.addEventListener('submit', (event) => {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Inclui uma nova situação funcional no histórico imutável do policial.
+   * PARÂMETROS E RETORNO: Recebe o evento submit do formulário e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê/grava STATUS_HISTORY_STORAGE_KEY no localStorage e sincroniza a
+   * situação funcional vigente no cadastro principal.
+   * TODO: Em produção, validar o evento administrativo no backend e registrar usuário/data de lançamento.
+   */
   event.preventDefault();
 
   const policial = loadPoliciais()
@@ -2002,11 +2221,7 @@ statusForm.addEventListener('submit', (event) => {
 
   const link = getHistoryLink(policial);
   const historicos = loadStatusHistoricos().map(normalizeStatusHistorico);
-  const updatedHistoricos = editingStatusId.value
-    ? historicos.map((historico) => historico.id === editingStatusId.value
-      ? normalizeStatusHistorico({ ...historico, ...historyData, idFuncional: link })
-      : historico)
-    : [...historicos, normalizeStatusHistorico({ ...historyData, idFuncional: link })];
+  const updatedHistoricos = [...historicos, normalizeStatusHistorico({ ...historyData, idFuncional: link })];
 
   saveStatusHistoricos(updatedHistoricos);
   syncPolicialStatus(link);
@@ -2016,11 +2231,91 @@ statusForm.addEventListener('submit', (event) => {
   showDetails(policial.id);
 });
 
+courseForm.addEventListener('submit', (event) => {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Salva um novo curso no histórico do policial.
+   * PARÂMETROS E RETORNO: Recebe o evento submit e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê policiais e cursos do localStorage, acrescenta novo item em
+   * COURSE_HISTORY_STORAGE_KEY e redesenha o detalhe.
+   * TODO: Em produção, validar convênio/curso contra tabelas reais e anexar certificado quando existir.
+   */
+  event.preventDefault();
+
+  const policial = loadPoliciais()
+    .map(normalizePolicial)
+    .find((item) => item.id === coursePolicialId.value);
+  if (!policial) return;
+
+  const historyData = readCourseForm();
+  if (!hasCourseData(historyData)) return;
+
+  const link = getHistoryLink(policial);
+  const historicos = loadCourseHistoricos().map(normalizeCourseHistorico);
+  saveCourseHistoricos([...historicos, normalizeCourseHistorico({ ...historyData, idFuncional: link })]);
+  clearCourseForm();
+  courseForm.hidden = true;
+  showDetails(policial.id);
+});
+
+motorLicenseForm.addEventListener('submit', (event) => {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Salva um novo registro de habilitação de moto do policial.
+   * PARÂMETROS E RETORNO: Recebe o evento submit e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê localStorage, acrescenta registro em MOTOR_LICENSE_HISTORY_STORAGE_KEY
+   * e atualiza a tabela de detalhe.
+   * TODO: Em produção, automatizar alerta de vencimento e validação documental.
+   */
+  event.preventDefault();
+
+  const policial = loadPoliciais()
+    .map(normalizePolicial)
+    .find((item) => item.id === motorLicensePolicialId.value);
+  if (!policial) return;
+
+  const historyData = readMotorLicenseForm();
+  if (!hasMotorLicenseData(historyData)) return;
+
+  const link = getHistoryLink(policial);
+  const historicos = loadMotorLicenseHistoricos().map(normalizeMotorLicenseHistorico);
+  saveMotorLicenseHistoricos([...historicos, normalizeMotorLicenseHistorico({ ...historyData, idFuncional: link })]);
+  clearMotorLicenseForm();
+  motorLicenseForm.hidden = true;
+  showDetails(policial.id);
+});
+
+ordinanceForm.addEventListener('submit', (event) => {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Salva novo registro de policial portariado por tipo de multa.
+   * PARÂMETROS E RETORNO: Recebe o evento submit e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê/grava ORDINANCE_HISTORY_STORAGE_KEY no localStorage e redesenha o detalhe.
+   * TODO: Em produção, validar publicação em BOLPM e separar fluxos de multa estadual e municipal por serviço.
+   */
+  event.preventDefault();
+
+  const policial = loadPoliciais()
+    .map(normalizePolicial)
+    .find((item) => item.id === ordinancePolicialId.value);
+  if (!policial) return;
+
+  const historyData = readOrdinanceForm();
+  if (!hasOrdinanceData(historyData)) return;
+
+  const link = getHistoryLink(policial);
+  const historicos = loadOrdinanceHistoricos().map(normalizeOrdinanceHistorico);
+  saveOrdinanceHistoricos([...historicos, normalizeOrdinanceHistorico({ ...historyData, idFuncional: link })]);
+  clearOrdinanceForm();
+  ordinanceForm.hidden = true;
+  showDetails(policial.id);
+});
+
 showHistoryFormButton.addEventListener('click', openNewHistoryForm);
 showFunctionalFormButton.addEventListener('click', openNewFunctionalForm);
 showBehaviorFormButton.addEventListener('click', openNewBehaviorForm);
 showUnitFormButton.addEventListener('click', openNewUnitForm);
 showStatusFormButton.addEventListener('click', openNewStatusForm);
+showCourseFormButton.addEventListener('click', openNewCourseForm);
+showMotorLicenseFormButton.addEventListener('click', openNewMotorLicenseForm);
+showOrdinanceFormButton.addEventListener('click', openNewOrdinanceForm);
 
 functionalFields.functionalPostoGraduacao.addEventListener('change', updateFunctionalGroups);
 initialFields.initialPostoGraduacao.addEventListener('change', () => {
@@ -2084,6 +2379,21 @@ cancelStatusButton.addEventListener('click', () => {
   statusForm.hidden = true;
 });
 
+cancelCourseButton.addEventListener('click', () => {
+  clearCourseForm();
+  courseForm.hidden = true;
+});
+
+cancelMotorLicenseButton.addEventListener('click', () => {
+  clearMotorLicenseForm();
+  motorLicenseForm.hidden = true;
+});
+
+cancelOrdinanceButton.addEventListener('click', () => {
+  clearOrdinanceForm();
+  ordinanceForm.hidden = true;
+});
+
 tabButtons.forEach((button) => {
   button.addEventListener('click', () => {
     setActiveView(button.dataset.view);
@@ -2111,25 +2421,11 @@ document.addEventListener('click', (event) => {
   const { action, id } = button.dataset;
   const policial = loadPoliciais().map(normalizePolicial).find((item) => item.id === id);
 
-  if (action === 'edit' && policial) {
-    setActiveView('form-view');
-    fillForm(policial);
-  }
   if (action === 'delete') deletePolicial(id);
   if (action === 'details') {
     setActiveView('details-view');
     showDetails(id);
   }
-  if (action === 'edit-functional') editFunctional(id);
-  if (action === 'delete-functional') deleteFunctional(id);
-  if (action === 'edit-behavior') editBehavior(id);
-  if (action === 'delete-behavior') deleteBehavior(id);
-  if (action === 'edit-unit') editUnit(id);
-  if (action === 'delete-unit') deleteUnit(id);
-  if (action === 'edit-status') editStatus(id);
-  if (action === 'delete-status') deleteStatus(id);
-  if (action === 'edit-history') editHistorico(id);
-  if (action === 'delete-history') deleteHistorico(id);
 });
 
 migrateLegacyHistoricos();

@@ -238,7 +238,6 @@
 
         <form class="history-form" id="functional-form" hidden>
           <input type="hidden" id="functional-policial-id">
-          <input type="hidden" id="editing-functional-id">
 
           <div class="form-grid">
             <label>
@@ -301,7 +300,6 @@
                 <th>Posto/Graduação</th>
                 <th>BOLPM</th>
                 <th>Data BOLPM</th>
-                <th>Ações</th>
               </tr>
             </thead>
             <tbody id="funcional-body"></tbody>
@@ -315,7 +313,6 @@
 
         <form class="history-form" id="behavior-form" hidden>
           <input type="hidden" id="behavior-policial-id">
-          <input type="hidden" id="editing-behavior-id">
 
           <div class="form-grid">
             <label>
@@ -360,7 +357,6 @@
                 <th>Comportamento</th>
                 <th>BOLPM</th>
                 <th>Data BOLPM</th>
-                <th>Ações</th>
               </tr>
             </thead>
             <tbody id="comportamento-body"></tbody>
@@ -374,7 +370,6 @@
 
         <form class="history-form" id="unit-form" hidden>
           <input type="hidden" id="unit-policial-id">
-          <input type="hidden" id="editing-unit-id">
 
           <div class="form-grid">
             <label>
@@ -420,7 +415,6 @@
                 <th>Unidade</th>
                 <th>BOLPM</th>
                 <th>Data BOLPM</th>
-                <th>Ações</th>
               </tr>
             </thead>
             <tbody id="unidade-body"></tbody>
@@ -434,7 +428,6 @@
 
         <form class="history-form" id="status-form" hidden>
           <input type="hidden" id="status-policial-id">
-          <input type="hidden" id="editing-status-id">
 
           <div class="form-grid">
             <label>
@@ -482,7 +475,6 @@
                 <th>Situação Funcional</th>
                 <th>BOLPM</th>
                 <th>Data BOLPM</th>
-                <th>Ações</th>
               </tr>
             </thead>
             <tbody id="situacao-funcional-body"></tbody>
@@ -496,7 +488,6 @@
 
         <form class="history-form" id="history-form" hidden>
           <input type="hidden" id="history-policial-id">
-          <input type="hidden" id="editing-history-id">
 
           <div class="form-grid">
             <label>
@@ -546,10 +537,165 @@
                 <th>BOLPM</th>
                 <th>Data BOLPM</th>
                 <th>Situação Sanitária</th>
-                <th>Ações</th>
               </tr>
             </thead>
             <tbody id="historico-body"></tbody>
+          </table>
+        </div>
+
+        <div class="history-heading">
+          <h3>Cursos</h3>
+          <button type="button" class="add-button" id="show-course-form">Adicionar</button>
+        </div>
+
+        <form class="history-form" id="course-form" hidden>
+          <input type="hidden" id="course-policial-id">
+
+          <div class="form-grid">
+            <label>
+              Data
+              <input id="courseDate" name="courseDate" type="date">
+            </label>
+
+            <label>
+              Nome do convênio
+              <input id="courseConvenio" name="courseConvenio" type="text" placeholder="Ex.: Prefeitura do Rio">
+            </label>
+
+            <label>
+              Nome do curso
+              <input id="courseName" name="courseName" type="text" placeholder="Ex.: Operação trânsito">
+            </label>
+          </div>
+
+          <div class="form-actions compact-actions">
+            <button type="submit" id="save-course-button">Salvar curso</button>
+            <button type="button" class="ghost" id="cancel-course-button">Cancelar</button>
+          </div>
+        </form>
+
+        <div class="table-wrap history-wrap">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Nome do convênio</th>
+                <th>Nome do curso</th>
+              </tr>
+            </thead>
+            <tbody id="curso-body"></tbody>
+          </table>
+        </div>
+
+        <div class="history-heading">
+          <h3>Habilitação de Moto</h3>
+          <button type="button" class="add-button" id="show-motor-license-form">Adicionar</button>
+        </div>
+
+        <form class="history-form" id="motor-license-form" hidden>
+          <input type="hidden" id="motor-license-policial-id">
+
+          <div class="form-grid">
+            <label>
+              Vencimento da habilitação
+              <input id="motorLicenseExpiration" name="motorLicenseExpiration" type="date">
+            </label>
+
+            <label>
+              Categoria
+              <select id="motorLicenseCategory" name="motorLicenseCategory">
+                <option value="">Selecione</option>
+                <option>A</option>
+                <option>AB</option>
+              </select>
+            </label>
+
+            <label>
+              Observação
+              <input id="motorLicenseObservation" name="motorLicenseObservation" type="text" placeholder="Ex.: CNH conferida">
+            </label>
+          </div>
+
+          <div class="form-actions compact-actions">
+            <button type="submit" id="save-motor-license-button">Salvar habilitação</button>
+            <button type="button" class="ghost" id="cancel-motor-license-button">Cancelar</button>
+          </div>
+        </form>
+
+        <div class="table-wrap history-wrap">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Data de vencimento</th>
+                <th>Categoria</th>
+                <th>Observação</th>
+              </tr>
+            </thead>
+            <tbody id="habilitacao-moto-body"></tbody>
+          </table>
+        </div>
+
+        <div class="history-heading">
+          <h3>Policial Portariado</h3>
+          <button type="button" class="add-button" id="show-ordinance-form">Adicionar</button>
+        </div>
+
+        <form class="history-form" id="ordinance-form" hidden>
+          <input type="hidden" id="ordinance-policial-id">
+
+          <div class="form-grid">
+            <label>
+              Tipo de multa
+              <select id="ordinanceFineType" name="ordinanceFineType">
+                <option value="">Selecione</option>
+                <option>Estadual</option>
+                <option>Municipal</option>
+              </select>
+            </label>
+
+            <label>
+              Data início da portaria
+              <input id="ordinanceStartDate" name="ordinanceStartDate" type="date">
+            </label>
+
+            <label>
+              Nº do BOLPM
+              <input id="ordinanceBolNumber" name="ordinanceBolNumber" type="text" placeholder="Ex.: BOL 120/2026">
+            </label>
+
+            <label>
+              Data BOLPM
+              <input id="ordinanceBolDate" name="ordinanceBolDate" type="date">
+            </label>
+
+            <label>
+              Cadastro
+              <select id="ordinanceRegistrationStatus" name="ordinanceRegistrationStatus">
+                <option value="">Selecione</option>
+                <option>Cadastrado</option>
+                <option>Não cadastrado</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="form-actions compact-actions">
+            <button type="submit" id="save-ordinance-button">Salvar portaria</button>
+            <button type="button" class="ghost" id="cancel-ordinance-button">Cancelar</button>
+          </div>
+        </form>
+
+        <div class="table-wrap">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Tipo de multa</th>
+                <th>Data início da portaria</th>
+                <th>Nº do BOLPM</th>
+                <th>Data BOLPM</th>
+                <th>Cadastro</th>
+              </tr>
+            </thead>
+            <tbody id="portariado-body"></tbody>
           </table>
         </div>
       </section>

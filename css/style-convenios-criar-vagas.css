@@ -583,6 +583,39 @@ input[readonly] {
   gap: 12px;
 }
 
+/*
+ * DESCRIÇÃO DO BLOCO: Organiza a primeira etapa do cadastro de serviço para manter nome e classe
+ * na mesma linha em telas médias/grandes, preservando altura uniforme dos campos.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica layout responsivo aos
+ * labels marcados no HTML.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; altera apenas apresentação visual.
+ * TODO: Em produção, mover esta grade para componente oficial de formulário do design system.
+ */
+.service-main-grid {
+  grid-template-columns: minmax(280px, 1fr) minmax(170px, 220px);
+  align-items: start;
+}
+
+.service-main-grid .service-name-field,
+.service-main-grid .service-location-field {
+  grid-column: auto;
+}
+
+.service-main-grid .service-location-field {
+  grid-column: 1 / -1;
+}
+
+.wizard-form input,
+.wizard-form select,
+.wizard-form textarea {
+  min-height: 44px;
+}
+
+.wizard-form input,
+.wizard-form select {
+  height: 44px;
+}
+
 .class-choice-grid {
   grid-template-columns: 1fr;
 }
@@ -626,6 +659,17 @@ input[readonly] {
 .class-pill:has(input:checked) {
   border-color: #1f2a8a;
   background: #eef2ff;
+}
+
+.class-pill.is-disabled,
+.class-choice.is-disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.class-pill.is-disabled .class-pill-copy,
+.class-choice.is-disabled span {
+  cursor: not-allowed;
 }
 
 .class-pill input {
@@ -2182,10 +2226,10 @@ button:hover,
 }
 
 #servico-cadastrado {
-  min-height: 48px;
-  height: 48px;
-  padding: 11px 12px;
-  line-height: 1.35;
+  min-height: 44px;
+  height: 44px;
+  padding: 10px 12px;
+  line-height: 1.25;
 }
 
 .service-selection-grid .wide,

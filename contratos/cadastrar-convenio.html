@@ -143,35 +143,61 @@
 
           <h3 class="section-title">Valores por classe</h3>
 
-          <div class="values-grid">
-            <section class="class-box">
-              <h4>Classe A</h4>
-              <label>Serviço 12h <input id="valor-a-12" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
-              <label>Serviço 8h <input id="valor-a-8" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
-              <label>Serviço 6h <input id="valor-a-6" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
-            </section>
-
-            <section class="class-box">
-              <h4>Classe B</h4>
-              <label>Serviço 12h <input id="valor-b-12" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
-              <label>Serviço 8h <input id="valor-b-8" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
-              <label>Serviço 6h <input id="valor-b-6" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
-            </section>
-
-            <section class="class-box">
-              <h4>Classe C</h4>
-              <label>Serviço 12h <input id="valor-c-12" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
-              <label>Serviço 8h <input id="valor-c-8" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
-              <label>Serviço 6h <input id="valor-c-6" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
-            </section>
-
-            <section class="class-box">
-              <h4>Classe D</h4>
-              <label>Serviço 12h <input id="valor-d-12" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
-              <label>Serviço 8h <input id="valor-d-8" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
-              <label>Serviço 6h <input id="valor-d-6" type="text" inputmode="numeric" placeholder="R$ 0,00"></label>
-            </section>
-          </div>
+          <section class="subcard values-matrix-card">
+            <!--
+              DESCRIÇÃO DO BLOCO: Captura os valores financeiros de serviço por classe e turno
+              no mesmo padrão matricial usado para os limites diários de vagas.
+              PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os inputs são
+              lidos pelo JavaScript ao salvar ou editar o contrato.
+              ARMAZENAMENTO E PERSISTÊNCIA: Os valores são gravados no LocalStorage na chave
+              `cproeis_contratos_valores` e também embutidos no objeto do convênio.
+              TODO: Em produção, migrar estes valores para tabela financeira versionada por
+              contrato, aditivo e data de vigência.
+            -->
+            <div class="table-wrap">
+              <table class="compact-table values-matrix-table">
+                <thead>
+                  <tr>
+                    <th>Classe</th>
+                    <th>Grupo</th>
+                    <th>Serviço 12h</th>
+                    <th>Serviço 8h</th>
+                    <th>Serviço 6h</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Classe A</td>
+                    <td>Oficiais superiores</td>
+                    <td><input id="valor-a-12" type="text" inputmode="numeric" placeholder="R$ 0,00"></td>
+                    <td><input id="valor-a-8" type="text" inputmode="numeric" placeholder="R$ 0,00"></td>
+                    <td><input id="valor-a-6" type="text" inputmode="numeric" placeholder="R$ 0,00"></td>
+                  </tr>
+                  <tr>
+                    <td>Classe B</td>
+                    <td>Oficiais intermediários e subalternos</td>
+                    <td><input id="valor-b-12" type="text" inputmode="numeric" placeholder="R$ 0,00"></td>
+                    <td><input id="valor-b-8" type="text" inputmode="numeric" placeholder="R$ 0,00"></td>
+                    <td><input id="valor-b-6" type="text" inputmode="numeric" placeholder="R$ 0,00"></td>
+                  </tr>
+                  <tr>
+                    <td>Classe C</td>
+                    <td>Praças subtenentes e sargentos</td>
+                    <td><input id="valor-c-12" type="text" inputmode="numeric" placeholder="R$ 0,00"></td>
+                    <td><input id="valor-c-8" type="text" inputmode="numeric" placeholder="R$ 0,00"></td>
+                    <td><input id="valor-c-6" type="text" inputmode="numeric" placeholder="R$ 0,00"></td>
+                  </tr>
+                  <tr>
+                    <td>Classe D</td>
+                    <td>Cabos e soldados</td>
+                    <td><input id="valor-d-12" type="text" inputmode="numeric" placeholder="R$ 0,00"></td>
+                    <td><input id="valor-d-8" type="text" inputmode="numeric" placeholder="R$ 0,00"></td>
+                    <td><input id="valor-d-6" type="text" inputmode="numeric" placeholder="R$ 0,00"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
 
           <section class="subcard">
             <h4>Passagem e alimentação</h4>
@@ -185,6 +211,63 @@
                 Alimentação
                 <input id="valor-alimentacao" type="text" inputmode="numeric" placeholder="R$ 0,00">
               </label>
+            </div>
+          </section>
+
+          <section class="subcard daily-limits-card">
+            <!--
+              DESCRIÇÃO DO BLOCO: Captura o total diário de vagas permitido por classe e turno
+              de serviço dentro do contrato cadastrado.
+              PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os inputs são
+              lidos pelo JavaScript no envio do formulário.
+              ARMAZENAMENTO E PERSISTÊNCIA: Os dados são gravados no LocalStorage junto ao
+              convênio e na chave `cproeis_contratos_limites_vagas`.
+              TODO: Em produção, substituir estes campos locais por tabela relacional vinculada
+              ao contrato e validada pelo backend antes da geração de vagas.
+            -->
+            <h4>Total diário de vagas por classe e turno</h4>
+            <div class="table-wrap">
+              <table class="compact-table daily-limits-table">
+                <thead>
+                  <tr>
+                    <th>Classe</th>
+                    <th>Grupo</th>
+                    <th>12h por dia</th>
+                    <th>8h por dia</th>
+                    <th>6h por dia</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Classe A</td>
+                    <td>Oficiais superiores</td>
+                    <td><input id="limite-a-12" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
+                    <td><input id="limite-a-8" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
+                    <td><input id="limite-a-6" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
+                  </tr>
+                  <tr>
+                    <td>Classe B</td>
+                    <td>Oficiais intermediários e subalternos</td>
+                    <td><input id="limite-b-12" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
+                    <td><input id="limite-b-8" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
+                    <td><input id="limite-b-6" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
+                  </tr>
+                  <tr>
+                    <td>Classe C</td>
+                    <td>Praças subtenentes e sargentos</td>
+                    <td><input id="limite-c-12" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
+                    <td><input id="limite-c-8" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
+                    <td><input id="limite-c-6" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
+                  </tr>
+                  <tr>
+                    <td>Classe D</td>
+                    <td>Cabos e soldados</td>
+                    <td><input id="limite-d-12" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
+                    <td><input id="limite-d-8" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
+                    <td><input id="limite-d-6" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </section>
 

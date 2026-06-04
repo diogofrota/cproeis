@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Operação P/1 Unidade</title>
+  <link rel="stylesheet" href="../css/style-p1-unidade.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Menu operacional da P/1 Unidade após login administrativo do responsável
+    ativo no RAS.
+    PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os links recebem id/unidade
+    pelo script de sessão local.
+    ARMAZENAMENTO E PERSISTÊNCIA: O HTML não grava dados; o script lê cproeis_cadastro_policiais,
+    cproeis_ras_acessos_p1 e mantém a sessão em cproeis_p1_unidade_policial_atual/unidade_atual.
+    TODO: Em produção, transformar esta tela em rota protegida por autenticação administrativa.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="p1-page-title" data-base-title="P/1 Unidade">P/1 Unidade</h1>
+        <p id="p1-page-subtitle">Selecione uma operação disponível para a unidade.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="p1-unidade-menu" aria-label="Menu operacional da P/1 Unidade">
+      <a href="criar-vagas.html" data-p1-session-link>Criar vagas RAS</a>
+      <a href="criar-servico.html" data-p1-session-link>Criar serviço</a>
+      <a href="vagas.html" data-p1-session-link>Vagas criadas</a>
+      <a href="vagas-calendario.html" data-p1-session-link>Vagas calendário</a>
+      <a href="servicos.html" data-p1-session-link>Serviços cadastrados</a>
+      <a href="acompanhamento.html" data-p1-session-link>Acompanhamento</a>
+      <a href="perfil.html" data-p1-session-link>Perfil</a>
+      <a href="dados-contrato.html" data-p1-session-link>Dados da autorização</a>
+      <a href="criar-curso.html" data-p1-session-link>Criar curso</a>
+      <a href="cursos.html" data-p1-session-link>Cursos</a>
+      <a href="historico-curso.html" data-p1-session-link>Histórico de curso</a>
+      <a href="inscritos-curso.html" data-p1-session-link>Inscritos em cursos</a>
+      <a class="menu-back-link" href="p1-unidade.html" data-history-back="false">Sair</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="session-status" id="p1-session-status">
+      <strong>Validando acesso.</strong><span>Carregando vínculo P/1 RAS ativo.</span>
+    </div>
+
+    <section class="card" aria-labelledby="p1-menu-title">
+      <div class="section-heading">
+        <h2 id="p1-menu-title">Operações da unidade</h2>
+        <p class="hint">Estrutura criada para seguir o mesmo conjunto de páginas do acesso do convênio.</p>
+      </div>
+
+      <div class="p1-module-grid">
+        <a class="p1-module-card" href="criar-vagas.html" data-p1-session-link>
+          <strong>Criar vagas RAS</strong>
+          <span>Criação de vagas normais e compulsórias pela P/1.</span>
+        </a>
+        <a class="p1-module-card" href="criar-servico.html" data-p1-session-link>
+          <strong>Criar serviço</strong>
+          <span>Base para serviços/eventos da unidade antes das vagas.</span>
+        </a>
+        <a class="p1-module-card" href="vagas.html" data-p1-session-link>
+          <strong>Vagas criadas</strong>
+          <span>Consulta das vagas RAS cadastradas pela unidade.</span>
+        </a>
+        <a class="p1-module-card" href="perfil.html" data-p1-session-link>
+          <strong>Perfil</strong>
+          <span>Dados do responsável P/1 e unidade vinculada.</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-p1-unidade-session.js"></script>
+  <script src="../js/script-p1-unidade.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

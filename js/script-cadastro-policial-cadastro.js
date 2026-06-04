@@ -678,42 +678,6 @@ function hasStatusData(historico) {
   );
 }
 
-function fillForm(policial) {
-  /*
-   * DESCRIÇÃO DA FUNÇÃO: Preenche o formulário de cadastro para edição, exibindo apenas números nos
-   * campos que possuem máscara salva, como RG, ID Funcional e telefone.
-   * PARÂMETROS E RETORNO: Recebe um objeto de policial e não retorna valor; atualiza os campos do DOM.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Lê o objeto já carregado do localStorage e não grava dados até o submit.
-   * TODO: Em ambiente online, carregar o registro por ID real do banco e tratar falhas de consulta.
-   */
-  const data = normalizePolicial(policial);
-  editingId.value = data.id;
-
-  fieldIds.forEach((id) => {
-    if (fields[id] && id in data) fields[id].value = data[id];
-  });
-  fields.rg.value = onlyDigits(data.rg);
-  fields.idFuncional.value = onlyDigits(data.idFuncional);
-  fields.telefone.value = onlyDigits(data.telefone);
-  fields.email.value = data.email.toLowerCase();
-  fields.nomeCompleto.value = toTitleCase(data.nomeCompleto);
-  fields.nomeGuerra.value = toTitleCase(data.nomeGuerra);
-
-  const currentFunctional = getCurrentFunctional(data);
-  initialFields.initialPostoGraduacao.value = currentFunctional.postoGraduacao;
-  initialFields.initialGrupoHierarquico.value = currentFunctional.grupoHierarquico;
-  initialFields.initialGrupoOficial.value = currentFunctional.grupoOficial;
-  initialFields.initialComportamento.value = getCurrentBehavior(data);
-  initialFields.initialSituacaoFuncional.value = getCurrentStatus(data);
-  initialFields.initialUnidade.value = getCurrentUnit(data);
-  initialFields.initialSituacaoSanitaria.value = getCurrentSituacaoSanitaria(data);
-  updateInitialBehaviorVisibility();
-
-  saveButton.textContent = 'Atualizar';
-  updateMainFormValidation();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
 function clearForm() {
   form.reset();
   editingId.value = '';
@@ -1008,7 +972,6 @@ function render() {
     const actions = document.createElement('div');
     actions.className = 'actions';
     actions.appendChild(createActionButton('Detalhes', 'details', policial.id, 'action-details'));
-    actions.appendChild(createActionButton('Editar', 'edit', policial.id, 'action-edit'));
     actions.appendChild(createActionButton('Excluir', 'delete', policial.id, 'action-delete'));
     actionsCell.appendChild(actions);
     row.appendChild(actionsCell);
@@ -2111,10 +2074,6 @@ document.addEventListener('click', (event) => {
   const { action, id } = button.dataset;
   const policial = loadPoliciais().map(normalizePolicial).find((item) => item.id === id);
 
-  if (action === 'edit' && policial) {
-    setActiveView('form-view');
-    fillForm(policial);
-  }
   if (action === 'delete') deletePolicial(id);
   if (action === 'details') {
     setActiveView('details-view');

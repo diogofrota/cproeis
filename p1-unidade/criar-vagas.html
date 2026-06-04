@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Criar Vagas P/1</title>
+  <link rel="stylesheet" href="../css/style-convenios-criar-vagas.css">
+  <link rel="stylesheet" href="../css/style-forms.css">
+  <link rel="stylesheet" href="../css/style-p1-unidade.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página de criação de vagas da P/1 Unidade replicando a experiência do
+    acesso do convênio, mas com origem RAS, unidade vinculada e escala compulsória.
+    PARÂMETROS E RETORNO: Recebe id/unidade pela URL ou sessão local; não retorna valores.
+    ARMAZENAMENTO E PERSISTÊNCIA: Lê cproeis_p1_unidade_servicos, cproeis_ras_acessos_p1 e
+    cproeis_cadastro_policiais; grava vagas em cproeis_ras_vagas no LocalStorage.
+    TODO: Em produção, enviar o lote ao workflow do GSI para validar liberação, disponibilidade,
+    conflito de escala e autorização oficial antes de publicar para os policiais.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="p1-page-title" data-base-title="Acesso da P/1 Unidade">Acesso da P/1 Unidade</h1>
+        <p id="p1-page-subtitle">Criação de vagas RAS pela unidade responsável.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="p1-unidade-menu" aria-label="Menu operacional da P/1 Unidade"></nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Gerar vagas de serviço</h2>
+          <p class="hint">As vagas da P/1 ficam pendentes de conferência do GSI antes da liberação final.</p>
+        </div>
+      </div>
+
+      <form id="vaga-form" class="wizard-form">
+        <section class="wizard-card service-card" id="service-selection-card" aria-label="Serviço cadastrado para criação de vagas">
+          <div class="wizard-card-header">
+            <span>01</span>
+            <div>
+              <h3>Selecione o Serviço</h3>
+              <p class="hint">Escolha um serviço cadastrado pela P/1 com nome e endereço de apresentação.</p>
+            </div>
+          </div>
+
+          <div class="service-grid service-selection-grid">
+            <label class="wide">
+              Serviço cadastrado
+              <select id="servico-cadastrado" required>
+                <option value="">Nenhum serviço cadastrado</option>
+              </select>
+            </label>
+
+            <div class="form-actions">
+              <a class="button-link ghost" href="criar-servico.html" data-p1-session-link>Criar novo serviço</a>
+              <button type="button" data-step-next="class-selection-card">Avançar</button>
+            </div>
+
+            <div class="selected-service-card wide" id="selected-service-preview">
+              <strong>Nenhum serviço selecionado</strong>
+              <span>Cadastre um serviço para usar nome, local e endereço nas vagas.</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="wizard-card class-selection-card is-hidden" id="class-selection-card" aria-label="Classes, turnos e quantidades">
+          <div class="wizard-card-header">
+            <span>02</span>
+            <div>
+              <h3>Classes, turnos e vagas</h3>
+              <p class="hint">Configure classe, turno, quantidade e se a escala será normal ou compulsória.</p>
+            </div>
+          </div>
+
+          <div class="class-choice-grid" id="class-choice-grid"></div>
+
+          <div class="form-actions">
+            <button type="button" class="secondary" data-step-back="service-selection-card">Voltar</button>
+            <button type="button" data-step-next="date-selection-card">Avançar</button>
+          </div>
+        </section>
+
+        <section class="wizard-card calendar-card is-hidden" id="date-selection-card" aria-label="Seleção de período para criação de vagas">
+          <div class="wizard-card-header">
+            <span>03</span>
+            <div>
+              <h3>Período de criação</h3>
+              <p class="hint">Informe data inicial e data final do período que será enviado para conferência do GSI.</p>
+            </div>
+          </div>
+
+          <div class="date-mode" id="date-mode-fields">
+            <label>
+              Início
+              <input id="data-inicio" type="date" required>
+            </label>
+
+            <label>
+              Fim
+              <input id="data-fim" type="date">
+            </label>
+
+            <div class="form-actions">
+              <button type="button" class="secondary" data-step-back="class-selection-card">Voltar</button>
+              <button type="button" id="preview-button">Avançar</button>
+            </div>
+          </div>
+        </section>
+
+        <div class="creation-modal is-hidden" id="creation-summary-modal" role="dialog" aria-modal="true" aria-labelledby="creation-summary-title">
+          <div class="creation-modal-panel">
+            <div class="wizard-card-header">
+              <span>04</span>
+              <div>
+                <h3 id="creation-summary-title">Resumo antes de criar</h3>
+                <p class="hint">Confirme as informações antes de enviar para o fluxo do GSI.</p>
+              </div>
+            </div>
+
+            <div id="creation-summary"></div>
+
+            <div class="form-actions modal-actions">
+              <button type="button" class="modal-back-button" id="edit-summary-button">Voltar</button>
+              <button type="submit" class="modal-create-button" id="submit-button">Criar vagas</button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="../js/script-p1-unidade-session.js"></script>
+  <script src="../js/script-p1-unidade-criar-vagas.js"></script>
+  <script src="../js/script-p1-unidade.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

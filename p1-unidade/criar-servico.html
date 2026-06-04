@@ -3,40 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CPROEIS - Criar Serviço</title>
+  <title>CPROEIS - Criar Serviço P/1</title>
   <link rel="stylesheet" href="../css/style-convenios-criar-vagas.css">
   <link rel="stylesheet" href="../css/style-forms.css">
+  <link rel="stylesheet" href="../css/style-p1-unidade.css">
 </head>
 <body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página de cadastro de serviço da P/1 Unidade, seguindo o padrão do
+    cadastro de serviço do convênio.
+    PARÂMETROS E RETORNO: Recebe id/unidade pela URL ou sessão local; não retorna valores.
+    ARMAZENAMENTO E PERSISTÊNCIA: O script grava serviços em cproeis_p1_unidade_servicos no
+    LocalStorage para serem usados na criação de vagas RAS.
+    TODO: Em produção, persistir serviço/evento em banco com validação da unidade e autorização GSI.
+  -->
   <header class="module-header">
     <div class="header-top">
       <div class="header-copy">
-        <h1 id="page-title">Criar serviço</h1>
-        <p id="page-subtitle">Cadastre um ponto de apresentação para usar na criação de vagas.</p>
+        <h1 id="p1-page-title" data-base-title="Criar serviço P/1">Criar serviço P/1</h1>
+        <p id="p1-page-subtitle">Cadastre um ponto de apresentação para usar na criação de vagas.</p>
       </div>
     </div>
 
-    <!--
-      DESCRIÇÃO DO BLOCO: Menu do acesso do convênio com as novas rotas de serviços.
-      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os links são normalizados pelo script de sessão.
-      ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; navega entre páginas HTML locais.
-      TODO: Em produção, gerar este menu a partir de rotas autenticadas e permissões do responsável.
-    -->
-    <nav class="module-menu" id="convenios-menu" aria-label="Menu operacional do convênio">
-      <a id="menu-criar-vagas" href="criar-vagas.html">Criar vagas de serviço</a>
-      <a id="menu-acompanhamento" href="acompanhamento.html">Acompanhar limite mensal</a>
-      <a id="menu-vagas" href="vagas.html">Vagas criadas</a>
-      <a id="menu-vagas-calendario" href="vagas-calendario.html">Vagas calendário</a>
-      <a id="menu-perfil-convenio" href="perfil.html">Perfil</a>
-      <a id="menu-dados-contrato" href="dados-contrato.html">Dados do contrato</a>
-      <a id="menu-servicos" href="servicos.html">Serviços cadastrados</a>
-      <a id="menu-criar-servico" href="criar-servico.html">Criar serviço</a>
-      <a id="menu-criar-curso" href="criar-curso.html">Criar curso</a>
-      <a id="menu-historico-curso" href="historico-curso.html">Histórico de curso</a>
-      <a id="menu-inscritos-curso" href="inscritos-curso.html">Inscritos em cursos</a>
-      <a id="menu-renovacao-contrato" href="renovacao-contrato.html">Renovação de contrato</a>
-      <a class="menu-logout-link" href="acesso.html" data-logout-convenio="true">Sair</a>
-    </nav>
+    <nav class="module-menu" id="p1-unidade-menu" aria-label="Menu operacional da P/1 Unidade"></nav>
   </header>
 
   <main>
@@ -53,19 +42,19 @@
             <span>01</span>
             <div>
               <h3>Dados do serviço</h3>
-              <p class="hint">Defina o nome operacional e o local de apresentação.</p>
+              <p class="hint">Defina o nome operacional, classe padrão e local de apresentação.</p>
             </div>
           </div>
 
           <div class="service-grid service-main-grid">
             <label class="service-name-field">
               Nome do serviço
-              <input id="nome-servico" type="text" placeholder="Ex.: Reforço Aeroporto Executivo" required>
+              <input id="nome-servico" type="text" placeholder="Ex.: Operação Praia" required>
             </label>
 
             <label>
-              Classe do serviço
-              <select id="classe-servico" required>
+              Classe padrão
+              <select id="classe-padrao" required>
                 <option value="A">Classe A</option>
                 <option value="B">Classe B</option>
                 <option value="C/D">Classe C/D</option>
@@ -126,13 +115,13 @@
 
             <label class="wide">
               Ponto de referência
-              <input id="ponto-referencia" type="text" placeholder="Ex.: Ao lado do terminal, entrada pela rua lateral...">
+              <input id="ponto-referencia" type="text" placeholder="Ex.: Entrada pela rua lateral...">
             </label>
           </div>
         </section>
 
         <div class="form-actions page-actions">
-          <a class="button-link ghost" id="voltar-servicos-link" href="servicos.html">Voltar</a>
+          <a class="button-link ghost" id="voltar-servicos-link" href="servicos.html" data-p1-session-link>Voltar</a>
           <button type="submit">Salvar serviço</button>
         </div>
 
@@ -141,8 +130,9 @@
     </section>
   </main>
 
-  <script src="../js/script-convenios-criar-servico.js"></script>
-  <script src="../js/script-convenios-session.js"></script>
+  <script src="../js/script-p1-unidade-session.js"></script>
+  <script src="../js/script-p1-unidade-criar-servico.js"></script>
+  <script src="../js/script-p1-unidade.js"></script>
   <script src="../js/script-navigation.js"></script>
 </body>
 </html>

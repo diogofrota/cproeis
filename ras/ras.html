@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - RAS</title>
+  <link rel="stylesheet" href="../css/style-ras.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Cabeçalho do módulo RAS, separando o serviço extra pago pelo Estado
+    dos fluxos de convênio. O módulo organiza contrato/orçamento, liberação pelo GSI e criação
+    de eventos pela P/1 Unidade.
+    PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os links fazem navegação
+    estática entre páginas locais do protótipo.
+    ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; o script da página controla apenas
+    formulários e LocalStorage.
+    TODO: Em produção, vincular este acesso a perfis distintos: GSI, P/1 Unidade, comandante
+    e gestores financeiros responsáveis pelo orçamento anual do RAS.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>RAS</h1>
+        <p>Serviço extra pago pelo Estado com controle de orçamento, liberação do GSI e eventos por unidade.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="ras-menu" aria-label="Menu do RAS">
+      <a href="ras.html">RAS</a>
+      <a href="acessos-p1.html">P/1 Unidade</a>
+      <a class="menu-back-link" href="../index.html" data-history-back="false">Página inicial</a>
+    </nav>
+  </header>
+
+  <main class="ras-layout">
+    <section class="form-panel" aria-labelledby="ras-contract-title">
+      <div class="panel-heading">
+        <h2 id="ras-contract-title">Cadastro do contrato RAS</h2>
+        <p>Contrato anual do RAS, com publicação em Diário Oficial e valores por classe.</p>
+      </div>
+      <form id="ras-contract-form" class="ras-form">
+        <label>
+          Exercício
+          <input type="number" id="ras-contract-year" min="2024" max="2100" required>
+        </label>
+        <label>
+          Nº do contrato
+          <input type="text" id="ras-contract-number" placeholder="SEI-000000/000000/0000" required>
+        </label>
+        <label>
+          Data da publicação
+          <input type="date" id="ras-publication-date" required>
+        </label>
+        <label>
+          Página do Diário Oficial
+          <input type="text" id="ras-publication-page" placeholder="Ex: DOERJ pág. 12" required>
+        </label>
+        <label>
+          Valor anual do contrato
+          <input type="number" id="ras-contract-budget" min="0" step="0.01" placeholder="500000000" required>
+        </label>
+        <label>
+          Início da vigência
+          <input type="date" id="ras-contract-start" required>
+        </label>
+        <label>
+          Fim da vigência
+          <input type="date" id="ras-contract-end" required>
+        </label>
+        <label class="full-field">
+          Observação
+          <textarea id="ras-contract-note" rows="3" placeholder="Resumo da autorização anual"></textarea>
+        </label>
+
+        <section class="ras-contract-block full-field" aria-labelledby="ras-values-title">
+          <h3 id="ras-values-title">Valores por classe</h3>
+          <div class="table-wrap">
+            <table class="ras-values-table">
+              <thead>
+                <tr>
+                  <th>Classe</th>
+                  <th>Grupo</th>
+                  <th>Serviço 24h</th>
+                  <th>Serviço 12h</th>
+                  <th>Serviço 8h</th>
+                  <th>Serviço 6h</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Classe A</td>
+                  <td>Oficiais superiores</td>
+                  <td><input type="number" id="ras-value-A-24" min="0" step="0.01" placeholder="R$ 0,00"></td>
+                  <td><input type="number" id="ras-value-A-12" min="0" step="0.01" placeholder="R$ 0,00"></td>
+                  <td><input type="number" id="ras-value-A-8" min="0" step="0.01" placeholder="R$ 0,00"></td>
+                  <td><input type="number" id="ras-value-A-6" min="0" step="0.01" placeholder="R$ 0,00"></td>
+                </tr>
+                <tr>
+                  <td>Classe B</td>
+                  <td>Oficiais intermediários e subalternos</td>
+                  <td><input type="number" id="ras-value-B-24" min="0" step="0.01" placeholder="R$ 0,00"></td>
+                  <td><input type="number" id="ras-value-B-12" min="0" step="0.01" placeholder="R$ 0,00"></td>
+                  <td><input type="number" id="ras-value-B-8" min="0" step="0.01" placeholder="R$ 0,00"></td>
+                  <td><input type="number" id="ras-value-B-6" min="0" step="0.01" placeholder="R$ 0,00"></td>
+                </tr>
+                <tr>
+                  <td>Classe C</td>
+                  <td>Praças subtenentes e sargentos</td>
+                  <td><input type="number" id="ras-value-C-24" min="0" step="0.01" placeholder="R$ 0,00"></td>
+                  <td><input type="number" id="ras-value-C-12" min="0" step="0.01" placeholder="R$ 0,00"></td>
+                  <td><input type="number" id="ras-value-C-8" min="0" step="0.01" placeholder="R$ 0,00"></td>
+                  <td><input type="number" id="ras-value-C-6" min="0" step="0.01" placeholder="R$ 0,00"></td>
+                </tr>
+                <tr>
+                  <td>Classe D</td>
+                  <td>Cabos e soldados</td>
+                  <td><input type="number" id="ras-value-D-24" min="0" step="0.01" placeholder="R$ 0,00"></td>
+                  <td><input type="number" id="ras-value-D-12" min="0" step="0.01" placeholder="R$ 0,00"></td>
+                  <td><input type="number" id="ras-value-D-8" min="0" step="0.01" placeholder="R$ 0,00"></td>
+                  <td><input type="number" id="ras-value-D-6" min="0" step="0.01" placeholder="R$ 0,00"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="ras-contract-block full-field" aria-labelledby="ras-benefits-title">
+          <h3 id="ras-benefits-title">Passagem e alimentação</h3>
+          <div class="ras-benefit-grid">
+            <label>
+              Passagem
+              <input type="number" id="ras-value-passage" min="0" step="0.01" placeholder="R$ 0,00">
+            </label>
+            <label>
+              Alimentação
+              <input type="number" id="ras-value-food" min="0" step="0.01" placeholder="R$ 0,00">
+            </label>
+          </div>
+        </section>
+
+        <div class="form-actions full-field">
+          <button type="submit">Salvar contrato RAS</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="table-panel" aria-labelledby="ras-records-title">
+      <div class="panel-heading">
+        <h2 id="ras-records-title">Registros RAS</h2>
+        <p>Visão local dos contratos, liberações e eventos cadastrados no protótipo.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Unidade</th>
+              <th>Descrição</th>
+              <th>Classe</th>
+              <th>Quantidade</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="ras-records-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-ras.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

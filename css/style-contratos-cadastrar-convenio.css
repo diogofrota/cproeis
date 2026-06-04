@@ -551,6 +551,55 @@ table {
   min-width: 760px;
 }
 
+.values-matrix-table,
+.daily-limits-table,
+.daily-limits-details-table {
+  /*
+   * DESCRIÇÃO DO BLOCO: Define largura estável para matrizes contratuais por classe e turno,
+   * evitando quebra visual dos campos financeiros, numéricos e da tabela de detalhes.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica somente layout CSS.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os valores são renderizados pelo HTML/JavaScript.
+   * TODO: Em produção, avaliar componente reutilizável para matrizes contratuais com colunas configuráveis.
+   */
+  min-width: 820px;
+}
+
+.contract-values-details-table {
+  /*
+   * DESCRIÇÃO DO BLOCO: Mantém a tabela de valores unitários por classe com largura estável
+   * e separada da matriz operacional de total diário de vagas.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica somente layout CSS.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; a renderização vem do JavaScript de detalhes.
+   * TODO: Em produção, transformar tabelas contratuais em componente reutilizável com colunas configuráveis.
+   */
+  min-width: 820px;
+}
+
+.contract-values-details-table th:nth-child(n + 3),
+.contract-values-details-table td:nth-child(n + 3),
+.daily-limits-details-table th:nth-child(n + 3),
+.daily-limits-details-table td:nth-child(n + 3) {
+  /*
+   * DESCRIÇÃO DO BLOCO: Centraliza apenas as colunas numéricas das tabelas de valores unitários
+   * e limite diário, mantendo classe e grupo alinhados à esquerda.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica alinhamento visual CSS.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; atua somente na apresentação das tabelas.
+   * TODO: Em produção, mover alinhamentos numéricos para tokens do componente de tabela do design system.
+   */
+  text-align: center;
+}
+
+.values-matrix-table input,
+.daily-limits-table input {
+  width: 100%;
+  min-width: 84px;
+  padding: 10px 12px;
+}
+
+.daily-limits-table input {
+  text-align: center;
+}
+
 .responsaveis-details-table {
   /*
    * DESCRIÇÃO DO BLOCO: Dá largura estável à tabela de responsáveis quando as permissões são exibidas

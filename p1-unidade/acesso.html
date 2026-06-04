@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Acesso P/1 Unidade</title>
+  <link rel="stylesheet" href="../css/style-p1-unidade.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página estrutural de acesso interno da P/1 Unidade, criada para acompanhar
+    o mesmo mapa de páginas do responsável de convênio.
+    PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; a sessão é resolvida pelo
+    script quando id/unidade vierem na URL.
+    ARMAZENAMENTO E PERSISTÊNCIA: Lê sessão local da P/1 no LocalStorage, sem gravar dados de negócio.
+    TODO: Em produção, substituir esta estrutura por login administrativo com autenticação no backend.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1 id="p1-page-title" data-base-title="Acesso P/1 Unidade">Acesso P/1 Unidade</h1>
+        <p id="p1-page-subtitle">Entrada administrativa preparada para a P/1 da unidade.</p>
+      </div>
+    </div>
+    <nav class="module-menu" id="p1-unidade-menu" aria-label="Menu operacional da P/1 Unidade">
+      <a href="operacao.html" data-p1-session-link>P/1 Unidade</a>
+      <a href="criar-vagas.html" data-p1-session-link>Criar vagas RAS</a>
+      <a href="criar-servico.html" data-p1-session-link>Criar serviço</a>
+      <a href="vagas.html" data-p1-session-link>Vagas criadas</a>
+      <a href="servicos.html" data-p1-session-link>Serviços</a>
+      <a href="perfil.html" data-p1-session-link>Perfil</a>
+      <a class="menu-back-link" href="p1-unidade.html" data-history-back="false">Sair</a>
+    </nav>
+  </header>
+  <main>
+    <div class="session-status" id="p1-session-status">
+      <strong>Validando acesso.</strong><span>Carregando vínculo P/1 RAS ativo.</span>
+    </div>
+    <section class="card">
+      <div class="section-heading">
+        <h2>Acesso administrativo</h2>
+        <p class="hint">Tela preparada para receber a autenticação específica da P/1 Unidade.</p>
+      </div>
+    </section>
+  </main>
+  <script src="../js/script-p1-unidade-session.js"></script>
+  <script src="../js/script-p1-unidade.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>
