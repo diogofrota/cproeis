@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Incluir Responsável</title>
+  <link rel="stylesheet" href="../css/style-contratos-tabela-convenios.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Cabeçalho da inclusão avulsa de responsável de convênio. Ele mantém
+    o usuário dentro do módulo de contratos e oferece retorno direto para a tabela.
+    PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os links navegam entre
+    páginas HTML locais do protótipo.
+    ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; a identificação do convênio é tratada
+    pelo script da página a partir da URL.
+    TODO: Em produção, substituir navegação local por rota autenticada com autorização por perfil.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>Incluir responsável</h1>
+        <p>Vincule um novo responsável a um convênio já cadastrado.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="contratos-menu" aria-label="Funcionalidades de contratos">
+      <a class="tab-button" href="cadastrar-convenio.html">Cadastrar convênio</a>
+      <a class="tab-button active" href="tabela-convenios.html">Tabela Convênios</a>
+      <a class="tab-button" href="renovacoes.html">Renovações</a>
+      <a class="menu-back-link" href="../index.html" data-history-back="false">Página inicial</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="view active">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 id="responsavel-page-title">Novo responsável</h2>
+            <p class="hint" id="responsavel-page-subtitle">Carregando convênio selecionado.</p>
+          </div>
+        </div>
+
+        <!--
+          DESCRIÇÃO DO BLOCO: Formulário independente para adicionar responsável a contrato existente.
+          Ele separa a operação de inclusão da edição completa do convênio.
+          PARÂMETROS E RETORNO: O formulário não recebe parâmetros HTML; no submit, o JavaScript valida
+          campos e grava o novo responsável.
+          ARMAZENAMENTO E PERSISTÊNCIA: Os dados são gravados no LocalStorage dentro de
+          cproeis_contratos_convenios e cproeis_contratos_responsaveis.
+          TODO: Em produção, enviar estes dados para endpoint transacional com validação de CPF,
+          autenticação do operador e trilha de auditoria.
+        -->
+        <form id="responsavel-form">
+          <label class="wide">
+            Nome
+            <input id="responsavel-nome" type="text" autocomplete="name">
+            <small class="field-hint hidden" id="responsavel-nome-hint">Informe o nome com pelo menos 3 caracteres.</small>
+          </label>
+
+          <label>
+            CPF
+            <input id="responsavel-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00">
+            <small class="field-hint hidden" id="responsavel-cpf-hint">Digite os 11 números do CPF ou deixe em branco.</small>
+          </label>
+
+          <label class="wide">
+            Email
+            <input id="responsavel-email" type="email" autocomplete="email">
+            <small class="field-hint hidden" id="responsavel-email-hint">Informe um email válido ou deixe em branco.</small>
+          </label>
+
+          <label>
+            Telefone
+            <input id="responsavel-telefone" type="tel" autocomplete="tel">
+            <small class="field-hint hidden" id="responsavel-telefone-hint">Digite DDD e telefone com 10 ou 11 números, ou deixe em branco.</small>
+          </label>
+
+          <label>
+            Início de atuação
+            <input id="responsavel-inicio" type="date">
+            <small class="field-hint hidden" id="responsavel-inicio-hint">Informe uma data dentro da vigência do contrato.</small>
+          </label>
+
+          <div class="form-actions wide">
+            <button type="submit">Salvar responsável</button>
+            <button type="button" class="secondary" id="cancel-responsavel">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-contratos-incluir-responsavel.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

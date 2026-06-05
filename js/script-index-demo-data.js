@@ -395,15 +395,17 @@ function demoBuildLimitesVagasDiarias(convenioId, offset) {
  * @param {string} convenioId - ID do convênio.
  * @param {string} convenioNome - Nome usado para montar o responsável.
  * @param {number} index - Índice numérico para CPF, telefone e e-mail.
+ * @param {string} inicioContrato - Data inicial do contrato usada como início do primeiro responsável.
  * @returns {object} Responsável apto a acessar o módulo de convênio.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
  * Não grava diretamente; o retorno é salvo dentro do convênio e em `cproeis_contratos_responsaveis`.
  *
  * NOTAS DE EXPANSÃO:
- * TODO: Relacionar responsáveis a usuários autenticados e perfis oficiais.
+ * TODO: Relacionar responsáveis a usuários autenticados e perfis oficiais, sem reintroduzir níveis
+ * de acesso no cadastro do convênio.
  */
-function demoBuildResponsavel(convenioId, convenioNome, index) {
+function demoBuildResponsavel(convenioId, convenioNome, index, inicioContrato) {
   const base = convenioNome.split(' ')[0];
   const nomeResponsavel = DEMO_CONTRATOS_DATA.responsaveisConvenio?.[index - 1] || `Responsável Operacional ${index}`;
   return {
@@ -413,9 +415,10 @@ function demoBuildResponsavel(convenioId, convenioNome, index) {
     cpf: `123.45${index}.${String(600 + index).padStart(3, '0')}-${String(10 + index).slice(-2)}`,
     email: `${base.toLowerCase()}.operacional@demo.cproeis.local`,
     telefone: `(21) 99${index}10-${String(4500 + index).padStart(4, '0')}`,
-    funcoes: ['Gerar vagas'],
-    inicio: DEMO_TODAY,
-    fim: demoAddDays(DEMO_TODAY, 420)
+    funcoes: [],
+    funcao: '',
+    inicio: inicioContrato,
+    fim: ''
   };
 }
 
@@ -443,11 +446,11 @@ function demoBuildConvenios() {
 
   names.forEach((nome, index) => {
     const convenioId = demoId('conv-demo', index + 1);
-    const responsavel = demoBuildResponsavel(convenioId, nome, index + 1);
     const convenioValores = demoBuildValores(convenioId, index * 10);
     const convenioLimitesVagas = demoBuildLimitesVagasDiarias(convenioId, index);
     const inicio = demoAddDays(DEMO_TODAY, -90 - index);
     const fim = demoAddDays(DEMO_TODAY, 150 + (index * 20));
+    const responsavel = demoBuildResponsavel(convenioId, nome, index + 1, inicio);
     const valorContratoCalculado = demoCalculateValorContrato(convenioValores, convenioLimitesVagas, inicio, fim);
 
     convenios.push({
@@ -486,6 +489,36 @@ function demoBuildConvenios() {
   });
 
   return { convenios, responsaveis, valores, limitesVagas };
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Limpa o escopo local de contratos e dados operacionais dependentes antes de carregar a massa
+ * demo no formato vigente.
+ *
+ * PARÂMETROS E RETORNO:
+ * @returns {void}
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Remove chaves de LocalStorage ligadas a contratos, responsáveis, sessão de convênio, serviços
+ * e vagas para evitar mistura com registros antigos fora do formato atual.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, substituir esta limpeza total por ambiente de homologação isolado e scripts
+ * de reset controlados por autorização administrativa.
+ */
+function demoClearContratosWorkspace() {
+  [
+    DEMO_KEYS.convenios,
+    DEMO_KEYS.valores,
+    DEMO_KEYS.responsaveis,
+    DEMO_KEYS.limitesVagas,
+    DEMO_KEYS.contratosHistoricos,
+    DEMO_KEYS.convenioAtual,
+    DEMO_KEYS.convenioResponsavelAtual,
+    DEMO_KEYS.servicos,
+    DEMO_KEYS.vagas
+  ].forEach((key) => localStorage.removeItem(key));
 }
 
 /**
@@ -608,9 +641,10 @@ function demoBuildHistoricos(policiais) {
  * validação de vigência antes da persistência.
  */
 function seedDemoContratos() {
+  demoClearContratosWorkspace();
   const { convenios, responsaveis, valores, limitesVagas } = demoBuildConvenios();
 
-  localStorage.setItem(DEMO_KEYS.contratosSchema, '2026-05-15-endereco-separado');
+  localStorage.setItem(DEMO_KEYS.contratosSchema, '2026-06-05-responsaveis-sem-nivel');
   demoSaveList(DEMO_KEYS.convenios, convenios);
   demoSaveList(DEMO_KEYS.responsaveis, responsaveis);
   demoSaveList(DEMO_KEYS.valores, valores);

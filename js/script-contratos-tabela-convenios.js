@@ -4,7 +4,7 @@ const STORAGE_RESPONSAVEIS = 'cproeis_contratos_responsaveis';
 const STORAGE_LIMITES_VAGAS = 'cproeis_contratos_limites_vagas';
 const STORAGE_HISTORICOS = 'cproeis_contratos_historicos';
 const STORAGE_SCHEMA_VERSION = 'cproeis_contratos_schema_version';
-const CURRENT_SCHEMA_VERSION = '2026-05-15-endereco-separado';
+const CURRENT_SCHEMA_VERSION = '2026-06-05-responsaveis-sem-nivel';
 
 window.CPROEIS_CONTRATOS_STORAGE = {
   valores: STORAGE_VALORES,
@@ -33,14 +33,6 @@ const gruposClasse = {
   C: 'Praças subtenentes e sargentos',
   D: 'Cabos e soldados'
 };
-
-const responsavelFuncoesColumns = [
-  { label: 'Gerar vagas', value: 'Gerar vagas' },
-  { label: 'Chefe Operacional', value: 'Ordena - Chefe Operacional' },
-  { label: 'Despachante', value: 'Ordena - Despachante' },
-  { label: 'Mapa', value: 'Ordena - Visualização de Mapa' },
-  { label: 'Outra', value: 'Outra' }
-];
 
 const tipoConveniadoLabels = {
   municipio: 'Município',
@@ -1099,32 +1091,6 @@ function formatResponsavelFuncoes(responsavel) {
   return funcoes.length ? funcoes.join(', ') : '-';
 }
 
-function hasResponsavelFuncao(responsavel, funcao) {
-  /*
-   * DESCRIÇÃO DA FUNÇÃO: Verifica se uma função/permissão específica está cadastrada para o responsável.
-   * PARÂMETROS E RETORNO: Recebe o objeto responsavel e funcao como string; retorna booleano.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; lê apenas o array salvo em memória ou campo legado de compatibilidade.
-   * TODO: Em produção, trocar comparação textual por identificadores de permissão persistidos no banco.
-   */
-  const funcoes = Array.isArray(responsavel.funcoes)
-    ? responsavel.funcoes
-    : String(responsavel.funcao || '').split(',').map((item) => normalizeText(item)).filter(Boolean);
-
-  return funcoes.includes(funcao);
-}
-
-function permissionMark(isEnabled) {
-  /*
-   * DESCRIÇÃO DA FUNÇÃO: Renderiza o marcador visual de permissão com V para função cadastrada e X para
-   * função não cadastrada.
-   * PARÂMETROS E RETORNO: Recebe booleano e retorna string HTML segura, sem dados externos.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; apenas compõe a célula da tabela de detalhes.
-   * TODO: Em produção, substituir marcadores por componente acessível com aria-label descritivo.
-   */
-  const className = isEnabled ? 'yes' : 'no';
-  return `<span class="permission-mark ${className}">${isEnabled ? 'V' : 'X'}</span>`;
-}
-
 function formatDateOrBlank(value) {
   /*
    * DESCRIÇÃO DA FUNÇÃO: Formata uma data para a tabela de responsáveis e deixa vazio quando não houver
@@ -1638,6 +1604,21 @@ function bindContractTableFilters() {
   }
 }
 
+function resetContractTableFiltersOnLoad() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Limpa os campos de filtro da tabela ao carregar a página, evitando que
+   * valores restaurados pelo navegador limitem a massa demo sem ação explícita do usuário.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valores.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê apenas inputs do DOM e altera seus valores; não usa LocalStorage.
+   * TODO: Em produção, decidir se filtros devem vir da URL, sessão do usuário ou sempre vazios.
+   */
+  ['contract-filter-text', 'contract-filter-status', 'contract-filter-type', 'contract-filter-start-from', 'contract-filter-start-to']
+    .forEach((id) => {
+      const input = document.getElementById(id);
+      if (input) input.value = '';
+    });
+}
+
 function renderTableRows(target, convenios) {
   if (!convenios.length) {
     target.innerHTML = '<tr><td class="empty" colspan="9">Nenhum contrato encontrado para os filtros selecionados.</td></tr>';
@@ -1671,17 +1652,18 @@ function renderTableRows(target, convenios) {
         <td>
           <!--
             DESCRIÇÃO DO BLOCO: Ações diretas da linha de contrato, limitadas a consulta,
-            edição e exclusão para simplificar a operação da tabela.
+            inclusão de responsável e exclusão para simplificar a operação da tabela.
             PARÂMETROS E RETORNO: Não recebe parâmetros no HTML; cada botão entrega
             data-action e data-id para o listener da tabela tratar o clique.
             ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados diretamente; a ação de exclusão
-            remove registros do LocalStorage somente após confirmação no handler JavaScript.
+            remove registros do LocalStorage somente após confirmação no handler JavaScript,
+            enquanto a inclusão navega para formulário próprio do responsável.
             TODO: Em produção, trocar data-id local por identificador de banco e validar
             permissões de ação no backend antes de qualquer alteração.
           -->
           <div class="actions">
             <button type="button" class="action-details" data-action="details" data-id="${convenio.id}">Detalhes</button>
-            <button type="button" class="action-edit" data-action="edit" data-id="${convenio.id}">Editar</button>
+            <button type="button" class="action-include" data-action="include-responsavel" data-id="${convenio.id}">Incluir responsável</button>
             <button type="button" class="action-delete" data-action="delete" data-id="${convenio.id}">Excluir</button>
           </div>
         </td>
@@ -1759,9 +1741,9 @@ function renderDetails(id) {
           <tr>
             <th>Classe</th>
             <th>Grupo</th>
-            <th>12h</th>
-            <th>8h</th>
             <th>6h</th>
+            <th>8h</th>
+            <th>12h</th>
           </tr>
         </thead>
         <tbody>
@@ -1772,9 +1754,9 @@ function renderDetails(id) {
               <tr>
                 <td>Classe ${escapeHtml(classe)}</td>
                 <td>${escapeHtml(valor.grupo || gruposClasse[classe])}</td>
-                <td>${dinheiro.format(Number(valor.servico12 || 0))}</td>
-                <td>${dinheiro.format(Number(valor.servico8 || 0))}</td>
                 <td>${dinheiro.format(Number(valor.servico6 || 0))}</td>
+                <td>${dinheiro.format(Number(valor.servico8 || 0))}</td>
+                <td>${dinheiro.format(Number(valor.servico12 || 0))}</td>
               </tr>
             `;
           }).join('')}
@@ -1791,9 +1773,9 @@ function renderDetails(id) {
           <tr>
             <th>Classe</th>
             <th>Grupo</th>
-            <th>12h por dia</th>
-            <th>8h por dia</th>
             <th>6h por dia</th>
+            <th>8h por dia</th>
+            <th>12h por dia</th>
           </tr>
         </thead>
         <tbody>
@@ -1804,9 +1786,9 @@ function renderDetails(id) {
               <tr>
                 <td>Classe ${escapeHtml(classe)}</td>
                 <td>${escapeHtml(limite.grupo || gruposClasse[classe])}</td>
-                <td>${Number(limite.servico12 || 0)}</td>
-                <td>${Number(limite.servico8 || 0)}</td>
                 <td>${Number(limite.servico6 || 0)}</td>
+                <td>${Number(limite.servico8 || 0)}</td>
+                <td>${Number(limite.servico12 || 0)}</td>
               </tr>
             `;
           }).join('')}
@@ -1904,7 +1886,7 @@ function renderDetails(id) {
             <th>Telefone</th>
             <th>Início</th>
             <th>Fim</th>
-            ${responsavelFuncoesColumns.map((funcao) => `<th class="permission-heading">${escapeHtml(funcao.label)}</th>`).join('')}
+            <th>Situação</th>
           </tr>
         </thead>
         <tbody>
@@ -1916,7 +1898,7 @@ function renderDetails(id) {
               <td>${escapeHtml(formatPhone(responsavel.telefone) || '-')}</td>
               <td>${formatDateOrBlank(responsavel.inicio)}</td>
               <td>${formatDateOrBlank(responsavel.fim)}</td>
-              ${responsavelFuncoesColumns.map((funcao) => `<td class="permission-cell">${permissionMark(hasResponsavelFuncao(responsavel, funcao.value))}</td>`).join('')}
+              <td>${responsavel.fim ? 'Acesso retirado' : 'Ativo'}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -2191,6 +2173,9 @@ document.addEventListener('click', (event) => {
   if (!convenio) return;
 
   if (button.dataset.action === 'details') openDetailsPage(convenio.id);
+  if (button.dataset.action === 'include-responsavel') {
+    window.location.href = `incluir-responsavel.html?id=${encodeURIComponent(convenio.id)}`;
+  }
   if (button.dataset.action === 'renew') {
     if (form) {
       renewContract(convenio);
@@ -2213,5 +2198,6 @@ document.addEventListener('click', (event) => {
 createFieldHints();
 renderResponsaveisForm();
 carregarAcaoInicialDoFormulario();
+resetContractTableFiltersOnLoad();
 renderAll();
 carregarDetalheInicialDaURL();

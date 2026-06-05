@@ -4,7 +4,7 @@ const STORAGE_RESPONSAVEIS = 'cproeis_contratos_responsaveis';
 const STORAGE_LIMITES_VAGAS = 'cproeis_contratos_limites_vagas';
 const STORAGE_HISTORICOS = 'cproeis_contratos_historicos';
 const STORAGE_SCHEMA_VERSION = 'cproeis_contratos_schema_version';
-const CURRENT_SCHEMA_VERSION = '2026-05-15-endereco-separado';
+const CURRENT_SCHEMA_VERSION = '2026-06-05-responsaveis-sem-nivel';
 
 window.CPROEIS_CONTRATOS_STORAGE = {
   valores: STORAGE_VALORES,
@@ -34,14 +34,6 @@ const gruposClasse = {
   D: 'Cabos e soldados'
 };
 
-const responsavelFuncoesColumns = [
-  { label: 'Gerar vagas', value: 'Gerar vagas' },
-  { label: 'Chefe Operacional', value: 'Ordena - Chefe Operacional' },
-  { label: 'Despachante', value: 'Ordena - Despachante' },
-  { label: 'Mapa', value: 'Ordena - Visualização de Mapa' },
-  { label: 'Outra', value: 'Outra' }
-];
-
 const tipoConveniadoLabels = {
   municipio: 'Município',
   concessionaria: 'Concessionária',
@@ -61,8 +53,6 @@ const form = document.getElementById('convenio-form');
 const editingId = document.getElementById('editing-id');
 const formTitle = document.getElementById('form-title');
 const submitButton = document.getElementById('submit-button');
-const clearButton = document.getElementById('clear-button');
-const cancelButton = document.getElementById('cancel-button');
 const contratosBody = document.getElementById('contratos-body');
 const contractsCount = document.getElementById('contracts-count');
 const detailsEmpty = document.getElementById('details-empty');
@@ -73,8 +63,6 @@ const detailsContent = document.getElementById('details-content');
 const closeDetails = document.getElementById('close-details');
 const responsaveisFormBody = document.getElementById('responsaveis-form-body');
 const addResponsavelButton = document.getElementById('add-responsavel');
-const clearResponsavelButton = document.getElementById('clear-responsavel');
-const responsavelFuncaoInputs = document.querySelectorAll('input[name="responsavel-funcoes"]');
 
 const fields = {
   nome: document.getElementById('nome'),
@@ -98,9 +86,7 @@ const fields = {
   responsavelNome: document.getElementById('responsavel-nome'),
   responsavelCpf: document.getElementById('responsavel-cpf'),
   responsavelEmail: document.getElementById('responsavel-email'),
-  responsavelTelefone: document.getElementById('responsavel-telefone'),
-  responsavelInicio: document.getElementById('responsavel-inicio'),
-  responsavelFim: document.getElementById('responsavel-fim')
+  responsavelTelefone: document.getElementById('responsavel-telefone')
 };
 
 const valueInputs = {
@@ -237,14 +223,6 @@ const validationRules = {
   responsavelTelefone: {
     message: 'Digite DDD e telefone com 10 ou 11 números, ou deixe em branco.',
     validate: () => !fields.responsavelTelefone.value.trim() || [10, 11].includes(onlyDigits(fields.responsavelTelefone.value).length)
-  },
-  responsavelInicio: {
-    message: 'Informe o início de atuação ou deixe em branco.',
-    validate: () => true
-  },
-  responsavelFim: {
-    message: 'A data final deve ser igual ou posterior ao início de atuação.',
-    validate: () => !fields.responsavelInicio.value || !fields.responsavelFim.value || fields.responsavelFim.value >= fields.responsavelInicio.value
   }
 };
 
@@ -262,6 +240,7 @@ const activeValidationFields = new Set();
 
 let selectedConvenioId = '';
 let responsaveisState = [];
+let editingResponsavelDraft = null;
 
 const cnpjApiStatus = document.getElementById('cnpj-api-status');
 const cepApiStatus = document.getElementById('cep-api-status');
@@ -1051,79 +1030,8 @@ function hasResponsavelDraft() {
     fields.responsavelNome,
     fields.responsavelCpf,
     fields.responsavelEmail,
-    fields.responsavelTelefone,
-    fields.responsavelInicio,
-    fields.responsavelFim
-  ].filter(Boolean).some((field) => normalizeText(field.value)) || getSelectedResponsavelFuncoes().length > 0;
-}
-
-function getSelectedResponsavelFuncoes() {
-  /*
-   * DESCRIÇÃO DA FUNÇÃO: Lê as funções/permissões marcadas para o responsável, permitindo múltiplas
-   * opções por usuário.
-   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna array de strings com os valores selecionados.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Lê somente os checkboxes do DOM; a persistência ocorre no payload do responsável.
-   * TODO: Em produção, substituir valores fixos por perfis de acesso carregados de API.
-   */
-  return Array.from(responsavelFuncaoInputs)
-    .filter((input) => input.checked && !input.disabled)
-    .map((input) => input.value);
-}
-
-function setSelectedResponsavelFuncoes(funcoes = []) {
-  /*
-   * DESCRIÇÃO DA FUNÇÃO: Marca no formulário as funções salvas para edição de um responsável.
-   * PARÂMETROS E RETORNO: Recebe array de strings ou texto legado separado por vírgula; não retorna valor.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Altera apenas o estado checked dos inputs no DOM; não grava localStorage.
-   * TODO: Em produção, mapear permissões por identificador estável em vez de texto exibido.
-   */
-  const selected = Array.isArray(funcoes)
-    ? funcoes
-    : String(funcoes || '').split(',').map((item) => normalizeText(item));
-
-  responsavelFuncaoInputs.forEach((input) => {
-    input.checked = selected.includes(input.value);
-  });
-}
-
-function formatResponsavelFuncoes(responsavel) {
-  /*
-   * DESCRIÇÃO DA FUNÇÃO: Converte as funções de acesso do responsável em texto legível para tabelas e detalhes.
-   * PARÂMETROS E RETORNO: Recebe o objeto responsavel e retorna string formatada.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; apenas formata array salvo ou campo legado.
-   * TODO: Em produção, exibir nomes de perfis a partir da tabela oficial de permissões.
-   */
-  const funcoes = Array.isArray(responsavel.funcoes)
-    ? responsavel.funcoes
-    : String(responsavel.funcao || '').split(',').map((item) => normalizeText(item)).filter(Boolean);
-
-  return funcoes.length ? funcoes.join(', ') : '-';
-}
-
-function hasResponsavelFuncao(responsavel, funcao) {
-  /*
-   * DESCRIÇÃO DA FUNÇÃO: Verifica se uma função/permissão específica está cadastrada para o responsável.
-   * PARÂMETROS E RETORNO: Recebe o objeto responsavel e funcao como string; retorna booleano.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; lê apenas o array salvo em memória ou campo legado de compatibilidade.
-   * TODO: Em produção, trocar comparação textual por identificadores de permissão persistidos no banco.
-   */
-  const funcoes = Array.isArray(responsavel.funcoes)
-    ? responsavel.funcoes
-    : String(responsavel.funcao || '').split(',').map((item) => normalizeText(item)).filter(Boolean);
-
-  return funcoes.includes(funcao);
-}
-
-function permissionMark(isEnabled) {
-  /*
-   * DESCRIÇÃO DA FUNÇÃO: Renderiza o marcador visual de permissão com V para função cadastrada e X para
-   * função não cadastrada.
-   * PARÂMETROS E RETORNO: Recebe booleano e retorna string HTML segura, sem dados externos.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; apenas compõe a célula da tabela de detalhes.
-   * TODO: Em produção, substituir marcadores por componente acessível com aria-label descritivo.
-   */
-  const className = isEnabled ? 'yes' : 'no';
-  return `<span class="permission-mark ${className}">${isEnabled ? 'V' : 'X'}</span>`;
+    fields.responsavelTelefone
+  ].filter(Boolean).some((field) => normalizeText(field.value));
 }
 
 function formatDateOrBlank(value) {
@@ -1236,12 +1144,55 @@ function validateResponsavelDraft(options = {}) {
     'responsavelNome',
     'responsavelCpf',
     'responsavelEmail',
-    'responsavelTelefone',
-    'responsavelInicio',
-    'responsavelFim'
+    'responsavelTelefone'
   ];
 
   return keys.map((key) => runFieldValidation(key, options)).every(Boolean);
+}
+
+function encerrarAcessoResponsavelFormulario(responsavelId) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Retira o acesso de um responsável já listado no formulário, mantendo o cadastro
+   * no histórico e registrando a data atual como fim de atuação.
+   * PARÂMETROS E RETORNO: Recebe responsavelId como string e não retorna valores.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Atualiza o array local responsaveisState; quando o convênio já existe
+   * em edição, também grava imediatamente em cproeis_contratos_convenios e cproeis_contratos_responsaveis.
+   * TODO: Em produção, trocar confirm local por modal auditável e chamar endpoint que registre operador,
+   * horário do servidor e justificativa da retirada de acesso.
+   */
+  const responsavel = responsaveisState.find((item) => item.id === responsavelId);
+  if (!responsavel || responsavel.fim) return;
+
+  const nome = titleCaseText(responsavel.nome) || 'este responsável';
+  if (!confirm(`Retirar o acesso de ${nome} a partir de hoje?`)) return;
+
+  responsaveisState = responsaveisState.map((item) => (
+    item.id === responsavelId ? { ...item, fim: today } : item
+  ));
+  persistResponsaveisStateIfEditing();
+  renderResponsaveisForm();
+}
+
+function persistResponsaveisStateIfEditing() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Sincroniza a lista de responsáveis no armazenamento local quando a retirada
+   * de acesso ocorre em um convênio já cadastrado.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valores.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê editingId e responsaveisState; grava LocalStorage nas chaves
+   * cproeis_contratos_convenios e cproeis_contratos_responsaveis para refletir a data fim imediatamente.
+   * TODO: Em produção, substituir esta gravação local por requisição PATCH transacional do responsável.
+   */
+  const convenioId = editingId.value;
+  if (!convenioId) return;
+
+  const responsaveis = responsaveisState.map((responsavel) => ({ ...responsavel, convenioId }));
+  saveList(STORAGE_RESPONSAVEIS, [
+    ...getResponsaveis().filter((item) => item.convenioId !== convenioId),
+    ...responsaveis
+  ]);
+  saveList(STORAGE_CONVENIOS, getConvenios().map((convenio) => (
+    convenio.id === convenioId ? { ...convenio, responsaveis } : convenio
+  )));
 }
 
 function normalizeFieldValue(key) {
@@ -1274,27 +1225,67 @@ function normalizeFieldValue(key) {
 }
 
 function clearResponsavelFields() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Limpa o subformulário de responsáveis após inclusão ou edição cancelada,
+   * mantendo início/fim de atuação fora da digitação manual e descartando o rascunho de edição.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valores.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Altera apenas inputs do DOM e o conjunto local de validação; não grava LocalStorage.
+   * TODO: Em produção, resetar este estado a partir de um componente controlado pelo fluxo online de responsáveis.
+   */
   fields.responsavelNome.value = '';
   fields.responsavelCpf.value = '';
   fields.responsavelEmail.value = '';
   fields.responsavelTelefone.value = '';
-  fields.responsavelInicio.value = '';
-  fields.responsavelFim.value = '';
-  setSelectedResponsavelFuncoes([]);
+  editingResponsavelDraft = null;
   [
     'responsavelNome',
     'responsavelCpf',
     'responsavelEmail',
-    'responsavelTelefone',
-    'responsavelInicio',
-    'responsavelFim'
+    'responsavelTelefone'
   ].forEach((key) => {
     activeValidationFields.delete(key);
     runFieldValidation(key);
   });
 }
 
+function getResponsavelInicioForPayload() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Resolve a data inicial gravada no responsável do cadastro de convênio,
+   * herdando obrigatoriamente a data de início do contrato.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna string yyyy-mm-dd ou string vazia.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê o início do contrato no DOM e o rascunho em memória; a persistência
+   * ocorre no payload do convênio salvo em LocalStorage.
+   * TODO: Em produção, usar data do servidor/contrato retornada pela API para evitar inconsistência local.
+   */
+  return fields.inicio.value || editingResponsavelDraft?.inicio || '';
+}
+
+function formatResponsavelAccessStatus(responsavel) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Monta o texto de situação de acesso do responsável na tabela do formulário,
+   * destacando quando o acesso foi retirado por data final registrada.
+   * PARÂMETROS E RETORNO: Recebe um objeto responsavel e retorna string HTML com dados escapados.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; lê apenas o objeto em memória de responsaveisState.
+   * TODO: Em produção, substituir a leitura local por status calculado no backend com trilha de auditoria.
+   */
+  const inicio = formatDateOrBlank(responsavel.inicio) || 'Sem início informado';
+  const fim = formatDateOrBlank(responsavel.fim);
+
+  if (fim) {
+    return `<span class="access-status ended">Acesso retirado em ${escapeHtml(fim)}</span><br><small>Início: ${escapeHtml(inicio)}</small>`;
+  }
+
+  return `<span class="access-status active">Ativo</span><br><small>Início: ${escapeHtml(inicio)}</small>`;
+}
+
 function renderResponsaveisForm() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Renderiza a lista temporária de responsáveis do convênio, incluindo o botão
+   * discreto para retirar acesso sem excluir o histórico do cadastro.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valores; atualiza o tbody da tabela.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê o array local responsaveisState e escreve somente no DOM.
+   * TODO: Em produção, paginar responsáveis e buscar status/auditoria a partir de API dedicada.
+   */
   if (!responsaveisFormBody) return;
 
   if (!responsaveisState.length) {
@@ -1307,10 +1298,11 @@ function renderResponsaveisForm() {
       <td><strong>${escapeHtml(titleCaseText(responsavel.nome))}</strong></td>
       <td>${escapeHtml(formatCpf(responsavel.cpf) || '-')}</td>
       <td>${escapeHtml(normalizeText(responsavel.email).toLowerCase() || '-')}${responsavel.telefone ? `<br><small>${escapeHtml(formatPhone(responsavel.telefone))}</small>` : ''}</td>
-      <td>${escapeHtml(formatResponsavelFuncoes(responsavel))}</td>
+      <td>${formatResponsavelAccessStatus(responsavel)}</td>
       <td>
         <div class="actions">
           <button type="button" data-action="edit-form-responsavel" data-id="${responsavel.id}">Editar</button>
+          ${responsavel.fim ? '' : `<button type="button" class="danger subtle-danger" data-action="end-form-responsavel-access" data-id="${responsavel.id}">Retirar acesso</button>`}
           <button type="button" class="danger" data-action="remove-form-responsavel" data-id="${responsavel.id}">Remover</button>
         </div>
       </td>
@@ -1319,13 +1311,19 @@ function renderResponsaveisForm() {
 }
 
 function addResponsavelFromFields() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Inclui ou atualiza um responsável na lista temporária do convênio a partir dos
+   * campos visíveis, herdando o início de atuação da data inicial do contrato.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna booleano indicando se a inclusão ocorreu.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê inputs do DOM, atualiza o array local responsaveisState e só persiste
+   * no LocalStorage quando o convênio inteiro é salvo.
+   * TODO: Em produção, salvar responsáveis por endpoint transacional com validação de CPF e auditoria.
+   */
   [
     'responsavelNome',
     'responsavelCpf',
     'responsavelEmail',
-    'responsavelTelefone',
-    'responsavelInicio',
-    'responsavelFim'
+    'responsavelTelefone'
   ].forEach((key) => {
     activeValidationFields.add(key);
     normalizeFieldValue(key);
@@ -1334,10 +1332,10 @@ function addResponsavelFromFields() {
   if (normalizeText(fields.responsavelNome.value).length < 3) {
     fields.responsavelNome.classList.add('invalid');
     validationHints.responsavelNome?.classList.remove('hidden');
-    return;
+    return false;
   }
 
-  if (!validateResponsavelDraft({ showAll: true })) return;
+  if (!validateResponsavelDraft({ showAll: true })) return false;
 
   const cpf = formatCpf(fields.responsavelCpf.value);
   const existing = cpf
@@ -1345,15 +1343,15 @@ function addResponsavelFromFields() {
     : null;
 
   const payload = {
-    id: existing?.id || makeId(),
+    id: existing?.id || editingResponsavelDraft?.id || makeId(),
     nome: titleCaseText(fields.responsavelNome.value),
     cpf,
     email: normalizeText(fields.responsavelEmail.value).toLowerCase(),
     telefone: formatPhone(fields.responsavelTelefone.value),
-    funcoes: getSelectedResponsavelFuncoes(),
-    funcao: getSelectedResponsavelFuncoes().join(', '),
-    inicio: fields.responsavelInicio.value,
-    fim: fields.responsavelFim.value
+    funcoes: [],
+    funcao: '',
+    inicio: getResponsavelInicioForPayload(),
+    fim: existing?.fim || editingResponsavelDraft?.fim || ''
   };
 
   responsaveisState = existing
@@ -1362,6 +1360,25 @@ function addResponsavelFromFields() {
 
   clearResponsavelFields();
   renderResponsaveisForm();
+  return true;
+}
+
+function ensureResponsavelObrigatorio() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Garante que o convênio tenha pelo menos um responsável cadastrado antes
+   * do salvamento, tentando aproveitar um rascunho preenchido no subformulário.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna booleano.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê responsaveisState e campos do DOM; pode atualizar o array local
+   * via addResponsavelFromFields, mas a gravação em LocalStorage ocorre somente no submit do convênio.
+   * TODO: Em produção, validar esta obrigatoriedade no backend e retornar mensagem estruturada.
+   */
+  if (responsaveisState.length > 0) return true;
+  if (hasResponsavelDraft() && addResponsavelFromFields()) return true;
+
+  fields.responsavelNome.classList.add('invalid');
+  validationHints.responsavelNome?.classList.remove('hidden');
+  alert('Cadastre pelo menos um responsável antes de salvar o convênio.');
+  return false;
 }
 
 function collectPayload() {
@@ -1417,9 +1434,10 @@ function resetForm() {
   form.reset();
   editingId.value = '';
   responsaveisState = [];
+  editingResponsavelDraft = null;
   renderResponsaveisForm();
   formTitle.textContent = 'Cadastrar convênio';
-  submitButton.textContent = 'Salvar convênio';
+  submitButton.textContent = 'Cadastrar convênio';
   activeValidationFields.clear();
   Object.keys(validationRules).forEach((key) => runFieldValidation(key));
   valueValidationRules.forEach((input) => runValueValidation(input));
@@ -1478,8 +1496,8 @@ function fillForm(convenio) {
   });
   responsaveisState = getContractResponsaveis(convenio).map((responsavel) => ({ ...responsavel }));
   renderResponsaveisForm();
-  formTitle.textContent = 'Editar convênio';
-  submitButton.textContent = 'Atualizar convênio';
+  formTitle.textContent = 'Cadastrar convênio';
+  submitButton.textContent = 'Cadastrar convênio';
   setActiveView('cadastro-view');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -1658,7 +1676,6 @@ function renderTableRows(target, convenios) {
           <div class="actions">
             <button type="button" data-action="details" data-id="${convenio.id}">Detalhes</button>
             ${situacao.active ? `<button type="button" data-action="renew" data-id="${convenio.id}">Renovar</button>` : ''}
-            <button type="button" data-action="edit" data-id="${convenio.id}">Editar</button>
             <button type="button" class="danger" data-action="delete" data-id="${convenio.id}">Excluir</button>
           </div>
         </td>
@@ -1727,9 +1744,9 @@ function renderDetails(id) {
           <tr>
             <th>Classe</th>
             <th>Grupo</th>
-            <th>12h</th>
-            <th>8h</th>
             <th>6h</th>
+            <th>8h</th>
+            <th>12h</th>
           </tr>
         </thead>
         <tbody>
@@ -1740,9 +1757,9 @@ function renderDetails(id) {
               <tr>
                 <td>Classe ${escapeHtml(classe)}</td>
                 <td>${escapeHtml(valor.grupo || gruposClasse[classe])}</td>
-                <td>${dinheiro.format(Number(valor.servico12 || 0))}</td>
-                <td>${dinheiro.format(Number(valor.servico8 || 0))}</td>
                 <td>${dinheiro.format(Number(valor.servico6 || 0))}</td>
+                <td>${dinheiro.format(Number(valor.servico8 || 0))}</td>
+                <td>${dinheiro.format(Number(valor.servico12 || 0))}</td>
               </tr>
             `;
           }).join('')}
@@ -1759,9 +1776,9 @@ function renderDetails(id) {
           <tr>
             <th>Classe</th>
             <th>Grupo</th>
-            <th>12h por dia</th>
-            <th>8h por dia</th>
             <th>6h por dia</th>
+            <th>8h por dia</th>
+            <th>12h por dia</th>
           </tr>
         </thead>
         <tbody>
@@ -1772,9 +1789,9 @@ function renderDetails(id) {
               <tr>
                 <td>Classe ${escapeHtml(classe)}</td>
                 <td>${escapeHtml(limite.grupo || gruposClasse[classe])}</td>
-                <td>${Number(limite.servico12 || 0)}</td>
-                <td>${Number(limite.servico8 || 0)}</td>
                 <td>${Number(limite.servico6 || 0)}</td>
+                <td>${Number(limite.servico8 || 0)}</td>
+                <td>${Number(limite.servico12 || 0)}</td>
               </tr>
             `;
           }).join('')}
@@ -1872,7 +1889,7 @@ function renderDetails(id) {
             <th>Telefone</th>
             <th>Início</th>
             <th>Fim</th>
-            ${responsavelFuncoesColumns.map((funcao) => `<th class="permission-heading">${escapeHtml(funcao.label)}</th>`).join('')}
+            <th>Situação</th>
           </tr>
         </thead>
         <tbody>
@@ -1884,7 +1901,7 @@ function renderDetails(id) {
               <td>${escapeHtml(formatPhone(responsavel.telefone) || '-')}</td>
               <td>${formatDateOrBlank(responsavel.inicio)}</td>
               <td>${formatDateOrBlank(responsavel.fim)}</td>
-              ${responsavelFuncoesColumns.map((funcao) => `<td class="permission-cell">${permissionMark(hasResponsavelFuncao(responsavel, funcao.value))}</td>`).join('')}
+              <td>${responsavel.fim ? 'Acesso retirado' : 'Ativo'}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -1968,8 +1985,8 @@ function renderAll() {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
- * Lê parâmetros de edição/renovação na página de cadastro para reaproveitar a mesma tela como
- * destino das ações disparadas pela tabela de convênios.
+ * Lê parâmetros de renovação na página de cadastro, mantendo esta tela como fluxo de inclusão
+ * de convênio e sem reabrir edição direta.
  *
  * PARÂMETROS E RETORNO:
  * @returns {void} Não retorna valores; preenche o formulário quando há parâmetros na URL.
@@ -1985,13 +2002,7 @@ function carregarAcaoInicialDoFormulario() {
   if (!form) return;
 
   const params = new URLSearchParams(window.location.search);
-  const editId = params.get('edit');
   const renewId = params.get('renew');
-
-  if (editId) {
-    const convenio = getConvenios().find((item) => item.id === editId);
-    if (convenio) fillForm(convenio);
-  }
 
   if (renewId) {
     const convenio = getConvenios().find((item) => item.id === renewId);
@@ -2009,6 +2020,7 @@ if (form) {
     });
 
     if (!validateContractForm({ showAll: true })) return;
+    if (!ensureResponsavelObrigatorio()) return;
 
     const payload = collectPayload();
     const convenios = getConvenios();
@@ -2042,7 +2054,6 @@ Object.keys(validationRules).forEach((key) => {
     }
     runFieldValidation(key);
     if (key === 'inicio') runFieldValidation('fim');
-    if (key === 'responsavelInicio') runFieldValidation('responsavelFim');
   });
 
   field.addEventListener('blur', () => {
@@ -2057,7 +2068,6 @@ Object.keys(validationRules).forEach((key) => {
     normalizeFieldValue(key);
     runFieldValidation(key);
     if (key === 'inicio') runFieldValidation('fim');
-    if (key === 'responsavelInicio') runFieldValidation('responsavelFim');
     if (key === 'cnpj') autofillCnpjFromApi();
     if (key === 'enderecoCep') autofillCepFromApi();
   });
@@ -2089,9 +2099,6 @@ dailyLimitValidationRules.forEach((input) => {
 });
 
 if (addResponsavelButton) addResponsavelButton.addEventListener('click', addResponsavelFromFields);
-if (clearResponsavelButton) clearResponsavelButton.addEventListener('click', clearResponsavelFields);
-if (clearButton) clearButton.addEventListener('click', resetForm);
-if (cancelButton) cancelButton.addEventListener('click', resetForm);
 
 if (closeDetails) {
   closeDetails.addEventListener('click', () => {
@@ -2119,11 +2126,14 @@ document.addEventListener('click', (event) => {
     fields.responsavelCpf.value = responsavel.cpf || '';
     fields.responsavelEmail.value = responsavel.email || '';
     fields.responsavelTelefone.value = responsavel.telefone || '';
-    setSelectedResponsavelFuncoes(responsavel.funcoes || responsavel.funcao || []);
-    fields.responsavelInicio.value = responsavel.inicio || '';
-    fields.responsavelFim.value = responsavel.fim || '';
+    editingResponsavelDraft = { ...responsavel };
     responsaveisState = responsaveisState.filter((item) => item.id !== responsavel.id);
     renderResponsaveisForm();
+    return;
+  }
+
+  if (button.dataset.action === 'end-form-responsavel-access') {
+    encerrarAcessoResponsavelFormulario(button.dataset.id);
     return;
   }
 
@@ -2142,13 +2152,6 @@ document.addEventListener('click', (event) => {
       renewContract(convenio);
     } else {
       window.location.href = `cadastrar-convenio.html?renew=${encodeURIComponent(convenio.id)}`;
-    }
-  }
-  if (button.dataset.action === 'edit' || button.dataset.action === 'edit-history') {
-    if (form) {
-      fillForm(convenio);
-    } else {
-      window.location.href = `cadastrar-convenio.html?edit=${encodeURIComponent(convenio.id)}`;
     }
   }
   if ((button.dataset.action === 'delete' || button.dataset.action === 'delete-history') && confirm('Excluir este contrato e seus dados vinculados?')) {

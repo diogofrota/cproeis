@@ -246,15 +246,33 @@ label {
 input,
 select,
 textarea {
+  /*
+   * DESCRIÇÃO DO BLOCO: Mantém inputs, selects e textareas com peso visual de campo preenchível,
+   * sem herdar o negrito usado nos labels do formulário.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica tipografia CSS aos controles.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; altera apenas apresentação no DOM.
+   * TODO: Em produção, centralizar tokens de tipografia de formulário em CSS compartilhado.
+   */
   width: 100%;
   height: 42px;
   padding: 10px 12px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   font: inherit;
+  font-weight: 400;
   line-height: 20px;
-  color: #1f2937;
+  color: #334155;
   background: #fff;
+}
+
+select option {
+  font-weight: 400;
+  color: #334155;
+}
+
+select option[value=""],
+select:has(option[value=""]:checked) {
+  color: #94a3b8;
 }
 
 textarea {
@@ -391,14 +409,12 @@ textarea.invalid {
   gap: 14px;
 }
 
-.responsavel-box,
-.access-options {
+.responsavel-box {
   /*
-   * DESCRIÇÃO DO BLOCO: Separa o cadastro de responsável em quadros visuais para dados do usuário,
-   * permissões de acesso e período de atuação.
+   * DESCRIÇÃO DO BLOCO: Separa o cadastro de responsável em quadro visual para dados do usuário.
    * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica layout visual ao fieldset.
    * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os campos são lidos pelo JavaScript no cadastro.
-   * TODO: Em produção, carregar funções e permissões de uma tabela de perfis de acesso do backend.
+   * TODO: Em produção, transformar o responsável em componente próprio com validação de usuário existente.
    */
   display: grid;
   gap: 10px;
@@ -408,8 +424,7 @@ textarea.invalid {
   background: #fff;
 }
 
-.responsavel-box legend,
-.access-options legend {
+.responsavel-box legend {
   padding: 0 6px;
   color: #1f2a8a;
   font-weight: 700;
@@ -419,47 +434,6 @@ textarea.invalid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
-}
-
-.period-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  max-width: 880px;
-}
-
-.access-options p {
-  margin: 0;
-  color: #64748b;
-  font-size: 13px;
-  line-height: 1.35;
-}
-
-.access-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.check-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 38px;
-  padding: 8px 10px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  background: #f8fafc;
-  font-weight: 700;
-}
-
-.check-option input {
-  width: auto;
-  min-height: auto;
-  padding: 0;
-}
-
-.pending-option {
-  color: #64748b;
-  background: #eef2f7;
 }
 
 .form-actions {
@@ -531,6 +505,25 @@ button:hover {
 
 .danger:hover {
   background: #8f1c13;
+}
+
+.subtle-danger {
+  /*
+   * DESCRIÇÃO DO BLOCO: Define o botão de retirada de acesso como ação destrutiva discreta dentro
+   * da linha do responsável, sem competir visualmente com os botões principais do formulário.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica estilo CSS ao botão.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; o clique é tratado pelo JavaScript.
+   * TODO: Em produção, mover ações destrutivas para componente padronizado com confirmação acessível.
+   */
+  border: 1px solid #fecaca;
+  background: #fff1f2;
+  color: #b42318;
+}
+
+.subtle-danger:hover,
+.subtle-danger:focus-visible {
+  background: #ffe4e6;
+  color: #8f1c13;
 }
 
 .table-wrap {
@@ -631,36 +624,6 @@ tbody tr:last-child td {
   border-bottom: 0;
 }
 
-.permission-cell {
-  text-align: center;
-  vertical-align: middle;
-}
-
-.permission-heading {
-  text-align: center;
-}
-
-.permission-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  min-height: 26px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.permission-mark.yes {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.permission-mark.no {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
 tr:hover td {
   background: #f8fafc;
 }
@@ -675,6 +638,26 @@ tr:hover td {
   min-height: 34px;
   padding: 8px 10px;
   font-size: 13px;
+}
+
+.access-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.access-status.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.access-status.ended {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .badge {
@@ -780,10 +763,6 @@ tr:hover td {
     flex-direction: column;
   }
 
-  .access-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .responsavel-box-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -837,12 +816,7 @@ tr:hover td {
     grid-column: span 1;
   }
 
-  .access-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .responsavel-box-grid,
-  .period-grid {
+  .responsavel-box-grid {
     grid-template-columns: 1fr;
   }
 }
