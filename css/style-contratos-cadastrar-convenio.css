@@ -185,9 +185,9 @@ button {
 }
 
 .tab-button.active {
-  background: rgba(255, 255, 255, 0.24);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.64);
+  background: #fff;
+  color: #1f2a8a;
+  border-color: #fff;
 }
 
 .menu-back-link {
@@ -409,11 +409,80 @@ textarea.invalid {
   gap: 14px;
 }
 
+.weekly-limits-config {
+  /*
+   * DESCRIÇÃO DO BLOCO: Organiza a seleção de dias de funcionamento dentro do card de limites
+   * diários, mantendo a relação visual entre quantidade contratual e calendário operacional.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica somente layout CSS.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os controles são tratados pelo JavaScript.
+   * TODO: Em produção, transformar o bloco em componente reutilizável para contratos e aditivos.
+   */
+  display: grid;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.weekly-limits-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.weekly-limits-header .hint {
+  max-width: 820px;
+  margin-top: 6px;
+}
+
+.weekday-picker {
+  /*
+   * DESCRIÇÃO DO BLOCO: Exibe os dias de funcionamento como checkboxes compactos em linha,
+   * simplificando o cadastro para contratos que operam em dias específicos.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; estiliza o grupo e seus labels.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; os valores marcados são lidos pelo JavaScript.
+   * TODO: Em produção, substituir por componente de seleção múltipla do design system.
+   */
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.weekday-picker label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.weekday-picker label:has(input:checked) {
+  border-color: #1f2a8a;
+  background: #eef2ff;
+  color: #1f2a8a;
+}
+
+.weekday-picker input {
+  width: auto;
+  height: auto;
+  margin: 0 7px 0 0;
+}
+
 .responsavel-box {
   /*
-   * DESCRIÇÃO DO BLOCO: Separa o cadastro de responsável em quadro visual para dados do usuário.
+   * DESCRIÇÃO DO BLOCO: Separa o cadastro de responsáveis em quadro visual com linhas de rascunho.
    * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica layout visual ao fieldset.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os campos são lidos pelo JavaScript no cadastro.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os campos são lidos pelo JavaScript antes
+   * de entrar no array local de responsáveis.
    * TODO: Em produção, transformar o responsável em componente próprio com validação de usuário existente.
    */
   display: grid;
@@ -430,10 +499,57 @@ textarea.invalid {
   font-weight: 700;
 }
 
-.responsavel-box-grid {
+.responsavel-lines {
+  /*
+   * DESCRIÇÃO DO BLOCO: Empilha linhas temporárias de responsáveis, permitindo adicionar
+   * múltiplos usuários antes do salvamento do convênio.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; controla apenas layout CSS.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; as linhas são criadas/removidas pelo JavaScript.
+   * TODO: Em produção, incluir estados de carregamento e validação assíncrona por linha.
+   */
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.responsavel-line {
+  /*
+   * DESCRIÇÃO DO BLOCO: Organiza uma linha de responsável com campos e botão de inclusão no
+   * mesmo eixo visual, reduzindo deslocamento do cursor do usuário.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; define grid responsivo.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa dados; apenas apresenta inputs manipulados pelo JavaScript.
+   * TODO: Em produção, converter a linha em componente reutilizável com mensagens de erro por campo.
+   */
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr)) 206px;
   gap: 14px;
+  align-items: end;
+}
+
+.responsavel-line-actions {
+  display: flex;
+  gap: 8px;
+  align-self: start;
+  align-items: center;
+  padding-top: 22px;
+}
+
+.responsavel-line-actions button {
+  width: 100%;
+  height: 42px;
+  min-height: 42px;
+  white-space: nowrap;
+}
+
+.responsavel-line.is-included [data-action="include-responsavel-draft"] {
+  /*
+   * DESCRIÇÃO DO BLOCO: Oculta o botão "Incluído" depois que a linha já entrou no estado
+   * de responsável cadastrado, mantendo somente ações úteis para o operador.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica estado visual via classe.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; o estado vem do JavaScript e o submit ainda
+   * sincroniza os campos preenchidos com `responsaveisState`.
+   * TODO: Em produção, substituir este estado por componente com indicação textual acessível.
+   */
+  display: none;
 }
 
 .form-actions {
@@ -446,6 +562,41 @@ textarea.invalid {
 
 .compact-actions {
   margin-top: 0;
+}
+
+.submit-actions {
+  /*
+   * DESCRIÇÃO DO BLOCO: Destaca a ação final de cadastro no canto direito do formulário,
+   * separando visualmente o salvamento do contrato das ações internas dos cards.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica somente layout CSS.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; o clique continua tratado pelo submit
+   * do formulário em JavaScript.
+   * TODO: Em produção, padronizar ações finais de formulário em componente compartilhado.
+   */
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.submit-actions #submit-button {
+  min-width: 260px;
+}
+
+.test-fill-button {
+  /*
+   * DESCRIÇÃO DO BLOCO: Mantém o botão temporário de preenchimento de teste visualmente discreto,
+   * separado da ação principal de cadastro.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica somente CSS.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; apenas estiliza o acionador do script de teste.
+   * TODO: Remover este botão e a chamada de `dados-cadastrar-convenio-teste.js` antes
+   * da publicação em produção.
+   */
+  min-width: 150px;
+  background: #64748b;
+}
+
+.test-fill-button:hover,
+.test-fill-button:focus-visible {
+  background: #475569;
 }
 
 .filter-bar {
@@ -546,7 +697,8 @@ table {
 
 .values-matrix-table,
 .daily-limits-table,
-.daily-limits-details-table {
+.daily-limits-details-table,
+.weekly-limits-details-table {
   /*
    * DESCRIÇÃO DO BLOCO: Define largura estável para matrizes contratuais por classe e turno,
    * evitando quebra visual dos campos financeiros, numéricos e da tabela de detalhes.
@@ -571,7 +723,9 @@ table {
 .contract-values-details-table th:nth-child(n + 3),
 .contract-values-details-table td:nth-child(n + 3),
 .daily-limits-details-table th:nth-child(n + 3),
-.daily-limits-details-table td:nth-child(n + 3) {
+.daily-limits-details-table td:nth-child(n + 3),
+.weekly-limits-details-table th:nth-child(n + 2),
+.weekly-limits-details-table td:nth-child(n + 2) {
   /*
    * DESCRIÇÃO DO BLOCO: Centraliza apenas as colunas numéricas das tabelas de valores unitários
    * e limite diário, mantendo classe e grupo alinhados à esquerda.
@@ -763,12 +917,24 @@ tr:hover td {
     flex-direction: column;
   }
 
-  .responsavel-box-grid {
+  .responsavel-line {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .responsavel-line-actions {
+    grid-column: 1 / -1;
   }
 
   .filter-actions {
     grid-column: 1 / -1;
+  }
+
+  .weekly-limits-header {
+    flex-direction: column;
+  }
+
+  .weekday-picker {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
@@ -816,8 +982,16 @@ tr:hover td {
     grid-column: span 1;
   }
 
-  .responsavel-box-grid {
+  .responsavel-line {
     grid-template-columns: 1fr;
+  }
+
+  .responsavel-line-actions {
+    grid-column: auto;
+  }
+
+  .weekday-picker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -992,6 +1166,12 @@ tr:hover td {
   transform: none;
 }
 
+.module-header .module-menu a.active {
+  background: #fff;
+  color: #1f2a8a;
+  border-color: #fff;
+}
+
 .module-header .module-menu .menu-back-link {
   background: #fff;
   color: #1f2a8a;
@@ -1057,6 +1237,200 @@ tr:hover td {
 @media (max-width: 760px) {
   .module-header .header-top {
     display: flex;
+  }
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Ajusta o módulo Contrato para notebooks de 13 polegadas e telas
+ * menores, evitando que menus e cards fiquem comprimidos ou quebrem visualmente.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; apenas sobrescreve
+ * larguras fixas por bases flexíveis e altera colunas por media queries.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; controla somente apresentação CSS.
+ * TODO: Em produção, consolidar estes breakpoints em tokens globais do design system.
+ */
+.module-header .module-menu a {
+  width: auto;
+  flex: 1 1 180px;
+  max-width: 260px;
+}
+
+@media (max-width: 1360px) {
+  .module-header {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+
+  .module-header .module-menu a {
+    flex-basis: 170px;
+  }
+
+}
+
+@media (max-width: 760px) {
+  .module-header .module-menu a {
+    flex-basis: min(100%, 320px);
+    max-width: min(100%, 320px);
+  }
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Estiliza a página inicial do módulo de contratos e os cards de acesso
+ * às funcionalidades, mantendo o mesmo padrão visual das telas de cadastro.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica layout responsivo
+ * em links com classes de cards.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; atua apenas na apresentação CSS.
+ * TODO: Em produção, consolidar estes cards como componente compartilhado de hub de módulo.
+ */
+.contracts-home-panel {
+  padding-bottom: 26px;
+}
+
+.contracts-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.contracts-card-grid.compact-cards {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.contracts-feature-card {
+  min-height: 132px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid #d8e1f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2937;
+  text-decoration: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.contracts-feature-card:hover,
+.contracts-feature-card:focus-visible {
+  border-color: #1f2a8a;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.1);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.contracts-feature-card strong {
+  color: #1f2a8a;
+  font-size: 17px;
+}
+
+.contracts-feature-card span {
+  color: #52637c;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Define a mensagem de gravação e a página padrão de operação concluída.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros; estiliza alertas, botões de link e estado
+ * ocupado do painel de revisão.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa armazenamento; apenas sinaliza visualmente o fluxo.
+ * TODO: Em produção, conectar este estado a promises de API reais com tratamento de falha.
+ */
+.review-panel.is-saving {
+  position: relative;
+}
+
+.review-saving-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  margin: 18px 0 0;
+  padding: 14px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #1f2a8a;
+  font-weight: 700;
+  text-align: center;
+}
+
+.operation-result-panel {
+  text-align: center;
+}
+
+.operation-result-box {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  padding: 20px 0 8px;
+}
+
+.operation-result-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #e8f7ed;
+  color: #166534;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.operation-result-box h2 {
+  margin: 0;
+}
+
+.operation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.primary-link-button,
+.secondary-link-button {
+  min-width: 240px;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.primary-link-button {
+  background: #1f2a8a;
+  color: #fff;
+}
+
+.secondary-link-button {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #1f2a8a;
+}
+
+@media (max-width: 1360px) {
+  .contracts-card-grid,
+  .contracts-card-grid.compact-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .contracts-card-grid,
+  .contracts-card-grid.compact-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .primary-link-button,
+  .secondary-link-button {
+    width: 100%;
   }
 }
 

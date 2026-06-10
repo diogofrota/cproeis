@@ -1076,6 +1076,12 @@ tbody tr:hover td {
   transform: none;
 }
 
+.module-header .module-menu a.active {
+  background: #fff;
+  color: #1f2a8a;
+  border-color: #fff;
+}
+
 .module-header .module-menu .menu-back-link {
   background: #fff;
   color: #1f2a8a;
@@ -1141,5 +1147,37 @@ tbody tr:hover td {
 @media (max-width: 760px) {
   .module-header .header-top {
     display: flex;
+  }
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Garante que o dashboard do Banco de Dados mantenha menu proporcional
+ * em notebook e em telas menores.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; substitui largura fixa
+ * dos links por comportamento flexível.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa dados; atua apenas sobre CSS.
+ * TODO: Em produção, remover duplicação quando houver CSS global de módulos.
+ */
+.module-header .module-menu a {
+  width: auto;
+  flex: 1 1 180px;
+  max-width: 260px;
+}
+
+@media (max-width: 1360px) {
+  .module-header {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+
+  .module-header .module-menu a {
+    flex-basis: 170px;
+  }
+}
+
+@media (max-width: 760px) {
+  .module-header .module-menu a {
+    flex-basis: min(100%, 320px);
+    max-width: min(100%, 320px);
   }
 }

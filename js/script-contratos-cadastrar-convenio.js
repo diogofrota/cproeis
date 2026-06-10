@@ -4,7 +4,9 @@ const STORAGE_RESPONSAVEIS = 'cproeis_contratos_responsaveis';
 const STORAGE_LIMITES_VAGAS = 'cproeis_contratos_limites_vagas';
 const STORAGE_HISTORICOS = 'cproeis_contratos_historicos';
 const STORAGE_SCHEMA_VERSION = 'cproeis_contratos_schema_version';
+const STORAGE_REVISAO_CONVENIO = 'cproeis_contratos_revisao_convenio';
 const CURRENT_SCHEMA_VERSION = '2026-06-05-responsaveis-sem-nivel';
+const CADASTRO_CONVENIO_JSON_API = window.CPROEISContratosJsonApi || null;
 
 window.CPROEIS_CONTRATOS_STORAGE = {
   valores: STORAGE_VALORES,
@@ -33,6 +35,16 @@ const gruposClasse = {
   C: 'Praças subtenentes e sargentos',
   D: 'Cabos e soldados'
 };
+
+const diasSemanaContrato = [
+  { key: 'segunda', label: 'Segunda-feira', businessDay: true },
+  { key: 'terca', label: 'Terça-feira', businessDay: true },
+  { key: 'quarta', label: 'Quarta-feira', businessDay: true },
+  { key: 'quinta', label: 'Quinta-feira', businessDay: true },
+  { key: 'sexta', label: 'Sexta-feira', businessDay: true },
+  { key: 'sabado', label: 'Sábado', businessDay: false },
+  { key: 'domingo', label: 'Domingo', businessDay: false }
+];
 
 const tipoConveniadoLabels = {
   municipio: 'Município',
@@ -63,6 +75,7 @@ const detailsContent = document.getElementById('details-content');
 const closeDetails = document.getElementById('close-details');
 const responsaveisFormBody = document.getElementById('responsaveis-form-body');
 const addResponsavelButton = document.getElementById('add-responsavel');
+const responsavelLines = document.getElementById('responsavel-lines');
 
 const fields = {
   nome: document.getElementById('nome'),
@@ -134,6 +147,21 @@ const dailyLimitInputs = {
     servico6: document.getElementById('limite-d-6')
   }
 };
+
+const weekdayOperationInputs = document.querySelectorAll('input[name="weekday-operacao"]');
+const weekdayOperationByKey = diasSemanaContrato.reduce((acc, dia) => {
+  /*
+   * DESCRIÇÃO DO BLOCO: Mapeia os checkboxes de dias de funcionamento por chave de dia
+   * para facilitar preenchimento em edição e coleta no salvamento.
+   * PARÂMETROS E RETORNO: Usa a lista local `diasSemanaContrato` e retorna um objeto indexado
+   * por chave de dia, contendo o checkbox correspondente.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; apenas guarda referências ao DOM que serão
+   * lidas por `getWeeklyLimitPayload`.
+   * TODO: Em produção, carregar dias permitidos a partir de calendário operacional oficial.
+   */
+  acc[dia.key] = document.querySelector(`input[name="weekday-operacao"][value="${dia.key}"]`);
+  return acc;
+}, {});
 
 const validationRules = {
   nome: {
@@ -246,6 +274,15 @@ const cnpjApiStatus = document.getElementById('cnpj-api-status');
 const cepApiStatus = document.getElementById('cep-api-status');
 
 function loadList(key) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Lê listas do módulo de contratos por uma camada JSON única, mantendo
+   * compatibilidade com o LocalStorage legado do protótipo.
+   * PARÂMETROS E RETORNO: Recebe key como string e retorna array de registros.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Usa `CPROEISContratosJsonApi.readJsonList` quando disponível
+   * ou lê LocalStorage diretamente como fallback.
+   * TODO: Em produção, substituir a camada local por GET em API com autenticação e paginação.
+   */
+  if (CADASTRO_CONVENIO_JSON_API?.readJsonList) return CADASTRO_CONVENIO_JSON_API.readJsonList(key);
   try {
     return JSON.parse(localStorage.getItem(key)) || [];
   } catch (error) {
@@ -254,6 +291,17 @@ function loadList(key) {
 }
 
 function saveList(key, list) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Grava listas do módulo de contratos por uma camada JSON única.
+   * PARÂMETROS E RETORNO: Recebe key como string e list como array; não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Usa `CPROEISContratosJsonApi.writeJsonList` quando disponível
+   * ou grava LocalStorage diretamente como fallback.
+   * TODO: Em produção, substituir por POST/PUT/PATCH com resposta de erro estruturada.
+   */
+  if (CADASTRO_CONVENIO_JSON_API?.writeJsonList) {
+    CADASTRO_CONVENIO_JSON_API.writeJsonList(key, list);
+    return;
+  }
   localStorage.setItem(key, JSON.stringify(list));
 }
 
@@ -941,6 +989,123 @@ function getDailyLimitRows(convenioId) {
   }));
 }
 
+function getDailyClassTotalsFromRows(rows = getDailyLimitRows('preview')) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Soma os turnos 6h, 8h e 12h por classe para gerar a quantidade diária
+   * total aplicável aos dias de funcionamento selecionados.
+   * PARÂMETROS E RETORNO: Recebe rows como array de limites por classe e retorna objeto
+   * com totais numéricos para A, B, C e D.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; usa rows em memória ou lê inputs diários
+   * quando nenhum array é informado.
+   * TODO: Em produção, permitir derivar o total por dia considerando escalas com turnos
+   * simultâneos, sobreposição e regras de posto.
+   */
+  return ['A', 'B', 'C', 'D'].reduce((acc, classe) => {
+    const row = rows.find((item) => item.classe === classe) || {};
+    acc[classe] = Number(row.servico6 || 0) + Number(row.servico8 || 0) + Number(row.servico12 || 0);
+    return acc;
+  }, {});
+}
+
+function getSelectedWeekdayKeys() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Lê quais dias da semana foram marcados pelo usuário como dias de
+   * funcionamento do contrato.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna array de strings com chaves de dias.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê apenas checkboxes do DOM; o retorno é persistido em
+   * `limitesVagasSemana` pelo collectPayload.
+   * TODO: Em produção, validar se ao menos um dia operacional foi aprovado pela regra contratual.
+   */
+  const selected = [...weekdayOperationInputs]
+    .filter((input) => input.checked)
+    .map((input) => input.value);
+
+  return selected;
+}
+
+function buildWeeklyDaysFromTotals(totals, selectedKeys = []) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Cria a lista semanal de efetivo por classe a partir dos totais diários
+   * e dos dias de funcionamento marcados.
+   * PARÂMETROS E RETORNO: Recebe totals como objeto {A,B,C,D} e selectedKeys como array de strings;
+   * retorna array com segunda a domingo e indicador `ativo`.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa LocalStorage; monta dados em memória para coleta,
+   * edição e renderização de detalhes.
+   * TODO: Em produção, aplicar calendário oficial de feriados, suspensão temporária e exceções por evento.
+   */
+  const selectedSet = new Set(selectedKeys);
+  return diasSemanaContrato.map((dia) => {
+    const ativo = selectedSet.has(dia.key);
+    return {
+      key: dia.key,
+      label: dia.label,
+      ativo,
+      classeA: ativo ? Number(totals.A || 0) : 0,
+      classeB: ativo ? Number(totals.B || 0) : 0,
+      classeC: ativo ? Number(totals.C || 0) : 0,
+      classeD: ativo ? Number(totals.D || 0) : 0
+    };
+  });
+}
+
+function getWeeklyLimitPayload(limitesVagasDiarias = getDailyLimitRows('preview')) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Monta a configuração semanal do contrato a partir dos dias marcados
+   * e da quantidade diária definida na matriz principal.
+   * PARÂMETROS E RETORNO: Recebe limitesVagasDiarias como array e retorna objeto com modo e dias.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê checkboxes do DOM; o retorno é gravado em
+   * `limitesVagasSemana` dentro de `cproeis_contratos_convenios`.
+   * TODO: Em produção, persistir em tabela própria por contrato, dia da semana e vigência.
+   */
+  const totals = getDailyClassTotalsFromRows(limitesVagasDiarias);
+  const diasSelecionados = getSelectedWeekdayKeys();
+
+  return {
+    modo: 'dias-selecionados',
+    diasSelecionados,
+    dias: buildWeeklyDaysFromTotals(totals, diasSelecionados)
+  };
+}
+
+function getSelectedWeekdayKeysFromSavedWeek(savedWeek = {}) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Recupera os dias ativos de uma configuração semanal salva, aceitando
+   * tanto o formato novo de checkboxes quanto registros antigos com totais por dia.
+   * PARÂMETROS E RETORNO: Recebe savedWeek como objeto e retorna array de chaves de dias.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; lê apenas o objeto carregado do LocalStorage.
+   * TODO: Em produção, criar migração formal de schema quando o backend substituir o protótipo local.
+   */
+  if (Array.isArray(savedWeek.diasSelecionados) && savedWeek.diasSelecionados.length) {
+    return savedWeek.diasSelecionados;
+  }
+
+  if (Array.isArray(savedWeek.dias) && savedWeek.dias.length) {
+    return savedWeek.dias
+      .filter((dia) => dia.ativo !== false && (
+        dia.ativo === true ||
+        Number(dia.classeA || 0) + Number(dia.classeB || 0) + Number(dia.classeC || 0) + Number(dia.classeD || 0) > 0
+      ))
+      .map((dia) => dia.key)
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function setWeekdayOperationFields(selectedKeys = []) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Marca os checkboxes dos dias de funcionamento conforme uma lista de
+   * dias salva ou padrão.
+   * PARÂMETROS E RETORNO: Recebe selectedKeys como array de strings e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Escreve somente no DOM; não altera LocalStorage.
+   * TODO: Em produção, exibir dias bloqueados por contrato com estado disabled e justificativa.
+   */
+  const normalizedKeys = Array.isArray(selectedKeys) ? selectedKeys : [];
+  Object.entries(weekdayOperationByKey).forEach(([key, input]) => {
+    if (input) input.checked = normalizedKeys.includes(key);
+  });
+}
+
 function createFieldHints() {
   /*
    * DESCRIÇÃO DA FUNÇÃO: Cria automaticamente os textos de orientação abaixo dos inputs e textareas do
@@ -1020,18 +1185,13 @@ function runDailyLimitValidation(input, options = {}) {
 
 function hasResponsavelDraft() {
   /*
-   * DESCRIÇÃO DA FUNÇÃO: Identifica se o usuário começou a preencher o bloco de responsáveis para decidir
-   * quando validar campos opcionais desse subcadastro.
+   * DESCRIÇÃO DA FUNÇÃO: Identifica se o usuário começou a preencher qualquer linha temporária
+   * de responsável para decidir quando validar esse subcadastro.
    * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna booleano.
    * ARMAZENAMENTO E PERSISTÊNCIA: Lê somente os campos do DOM; não grava arrays nem localStorage.
    * TODO: Em produção, separar responsável como entidade com validação própria e feedback de API.
    */
-  return [
-    fields.responsavelNome,
-    fields.responsavelCpf,
-    fields.responsavelEmail,
-    fields.responsavelTelefone
-  ].filter(Boolean).some((field) => normalizeText(field.value));
+  return getResponsavelDraftRows().some((row) => hasResponsavelDraftInRow(row));
 }
 
 function formatDateOrBlank(value) {
@@ -1248,16 +1408,282 @@ function clearResponsavelFields() {
   });
 }
 
-function getResponsavelInicioForPayload() {
+function getResponsavelDraftRows() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Recupera todas as linhas temporárias de cadastro de responsáveis
+   * exibidas no card do formulário.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna array de elementos HTMLElement.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê somente o DOM; não grava LocalStorage nem altera arrays.
+   * TODO: Em produção, trocar linhas DOM por estado controlado de componente para evitar
+   * divergência visual em validações assíncronas.
+   */
+  return [...document.querySelectorAll('[data-responsavel-draft-row]')];
+}
+
+function getResponsavelDraftField(row, fieldName) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Localiza um input específico dentro de uma linha temporária de responsável.
+   * PARÂMETROS E RETORNO: Recebe row como HTMLElement e fieldName como string; retorna input
+   * HTML ou null quando o campo não existir.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; apenas consulta atributos no DOM.
+   * TODO: Em produção, substituir seletores por bindings declarativos do framework escolhido.
+   */
+  return row?.querySelector(`[data-responsavel-field="${fieldName}"]`) || null;
+}
+
+function hasResponsavelDraftInRow(row) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Verifica se uma linha temporária tem algum campo preenchido para
+   * decidir se ela deve ser validada ou ignorada no salvamento.
+   * PARÂMETROS E RETORNO: Recebe row como HTMLElement e retorna booleano.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê apenas valores dos inputs no DOM; não altera estado.
+   * TODO: Em produção, armazenar rascunhos incompletos por sessão quando a tela for online.
+   */
+  return ['nome', 'cpf', 'email', 'telefone']
+    .some((fieldName) => normalizeText(getResponsavelDraftField(row, fieldName)?.value));
+}
+
+function normalizeResponsavelDraftRow(row) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Aplica máscaras e padronização textual aos campos de uma linha
+   * temporária de responsável antes da validação e inclusão.
+   * PARÂMETROS E RETORNO: Recebe row como HTMLElement e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Escreve somente nos inputs da linha no DOM; a persistência
+   * ocorre depois em `addResponsavelFromFields`.
+   * TODO: Em produção, validar e normalizar documentos no backend antes de confirmar o cadastro.
+   */
+  const nome = getResponsavelDraftField(row, 'nome');
+  const cpf = getResponsavelDraftField(row, 'cpf');
+  const email = getResponsavelDraftField(row, 'email');
+  const telefone = getResponsavelDraftField(row, 'telefone');
+
+  if (nome) nome.value = titleCaseText(nome.value);
+  if (cpf) cpf.value = formatCpf(cpf.value);
+  if (email) email.value = normalizeText(email.value).toLowerCase();
+  if (telefone) telefone.value = formatPhone(telefone.value);
+}
+
+function validateResponsavelDraftRow(row, options = {}) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Valida uma linha temporária de responsável, marcando visualmente
+   * campos inválidos antes de incluir na lista do convênio.
+   * PARÂMETROS E RETORNO: Recebe row como HTMLElement e options.showAll como booleano;
+   * retorna true quando a linha está válida.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê e altera classes CSS nos inputs da linha; não grava
+   * LocalStorage nem modifica `responsaveisState`.
+   * TODO: Em produção, substituir alertas/validação local por retorno estruturado de API.
+   */
+  const nome = getResponsavelDraftField(row, 'nome');
+  const cpf = getResponsavelDraftField(row, 'cpf');
+  const email = getResponsavelDraftField(row, 'email');
+  const telefone = getResponsavelDraftField(row, 'telefone');
+
+  const rules = [
+    { input: nome, valid: normalizeText(nome?.value).length >= 3 },
+    { input: cpf, valid: !cpf?.value.trim() || onlyDigits(cpf.value).length === 11 },
+    { input: email, valid: !email?.value.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim()) },
+    { input: telefone, valid: !telefone?.value.trim() || [10, 11].includes(onlyDigits(telefone.value).length) }
+  ];
+
+  rules.forEach((rule) => {
+    const shouldMark = !rule.valid && (options.showAll || normalizeText(rule.input?.value));
+    rule.input?.classList.toggle('invalid', shouldMark);
+  });
+
+  return rules.every((rule) => rule.valid);
+}
+
+function updateResponsavelDraftActionState(row) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Ajusta o estado visual da linha de responsável depois da inclusão,
+   * trocando o botão da primeira linha obrigatória por "Adicionar mais" e ocultando "Incluído"
+   * nas demais linhas já cadastradas.
+   * PARÂMETROS E RETORNO: Recebe row como HTMLElement e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê o DOM e `dataset.includedResponsavelId`; não grava
+   * LocalStorage. A persistência continua acontecendo no submit do convênio.
+   * TODO: Em produção, controlar estes estados em um componente de formulário com regras de mínimo
+   * de responsáveis vindas da API.
+   */
+  if (!row) return;
+  const included = Boolean(row.dataset.includedResponsavelId);
+  const firstRow = getResponsavelDraftRows()[0] === row;
+  const includeButton = row.querySelector('[data-action="include-responsavel-draft"], [data-action="add-responsavel-inline"]');
+
+  row.classList.toggle('is-included', included);
+  row.classList.toggle('is-primary-included', included && firstRow);
+
+  if (includeButton && included && firstRow) {
+    includeButton.dataset.action = 'add-responsavel-inline';
+    includeButton.textContent = 'Adicionar mais';
+  } else if (includeButton) {
+    includeButton.dataset.action = 'include-responsavel-draft';
+    includeButton.textContent = included ? 'Incluído' : 'Incluir';
+  }
+}
+
+function clearResponsavelDraftRow(row) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Limpa uma linha temporária de responsável após inclusão bem-sucedida
+   * ou após descarte manual.
+   * PARÂMETROS E RETORNO: Recebe row como HTMLElement e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Escreve somente nos inputs do DOM; não altera LocalStorage.
+   * TODO: Em produção, centralizar limpeza de rascunho no estado do componente de formulário.
+   */
+  ['nome', 'cpf', 'email', 'telefone'].forEach((fieldName) => {
+    const input = getResponsavelDraftField(row, fieldName);
+    if (!input) return;
+    input.value = '';
+    input.classList.remove('invalid');
+  });
+  delete row.dataset.editingResponsavelId;
+  delete row.dataset.responsavelInicio;
+  delete row.dataset.responsavelFim;
+  delete row.dataset.includedResponsavelId;
+  row.classList.remove('is-included', 'is-primary-included');
+  const includeButton = row.querySelector('[data-action="include-responsavel-draft"], [data-action="add-responsavel-inline"]');
+  if (includeButton) includeButton.textContent = 'Incluir';
+  if (includeButton) includeButton.dataset.action = 'include-responsavel-draft';
+}
+
+function createResponsavelDraftRow() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Cria uma nova linha vazia de responsável com os mesmos campos da
+   * primeira linha e ações de incluir/remover.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna HTMLElement da linha criada.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Altera apenas o DOM; os dados só entram em `responsaveisState`
+   * quando o operador clicar em Incluir.
+   * TODO: Em produção, gerar linhas a partir de componente reutilizável com suporte a acessibilidade.
+   */
+  const row = document.createElement('div');
+  row.className = 'responsavel-line';
+  row.dataset.responsavelDraftRow = 'true';
+  row.innerHTML = `
+    <label>
+      Nome
+      <input type="text" data-responsavel-field="nome">
+    </label>
+
+    <label>
+      CPF
+      <input type="text" inputmode="numeric" placeholder="000.000.000-00" data-responsavel-field="cpf">
+    </label>
+
+    <label>
+      Email
+      <input type="email" autocomplete="email" data-responsavel-field="email">
+    </label>
+
+    <label>
+      Telefone
+      <input type="tel" autocomplete="tel" data-responsavel-field="telefone">
+    </label>
+
+    <div class="responsavel-line-actions">
+      <button type="button" data-action="include-responsavel-draft">Incluir</button>
+      <button type="button" class="danger subtle-danger" data-action="remove-responsavel-draft">Remover</button>
+    </div>
+  `;
+
+  responsavelLines?.appendChild(row);
+  getResponsavelDraftField(row, 'nome')?.focus();
+  return row;
+}
+
+function resetResponsavelDraftRows() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Restaura o card de responsáveis para uma única linha vazia após
+   * limpar ou salvar o formulário.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Remove apenas linhas temporárias do DOM; não altera o
+   * LocalStorage nem registros já incluídos em `responsaveisState`.
+   * TODO: Em produção, preservar rascunhos por usuário quando houver salvamento automático.
+   */
+  const rows = getResponsavelDraftRows();
+  rows.slice(1).forEach((row) => row.remove());
+  clearResponsavelDraftRow(rows[0]);
+}
+
+function syncResponsavelDraftRowsFromState() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Renderiza os responsáveis já incluídos como linhas preenchidas no
+   * próprio card de cadastro, substituindo a tabela visual removida do formulário.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê o array local `responsaveisState` e escreve apenas no DOM;
+   * não grava LocalStorage.
+   * TODO: Em produção, separar visualização e edição de responsáveis em componente com estado único.
+   */
+  resetResponsavelDraftRows();
+  if (!responsaveisState.length) return;
+
+  responsaveisState.forEach((responsavel, index) => {
+    const row = index === 0 ? getResponsavelDraftRows()[0] : createResponsavelDraftRow();
+    getResponsavelDraftField(row, 'nome').value = responsavel.nome || '';
+    getResponsavelDraftField(row, 'cpf').value = responsavel.cpf || '';
+    getResponsavelDraftField(row, 'email').value = responsavel.email || '';
+    getResponsavelDraftField(row, 'telefone').value = responsavel.telefone || '';
+    row.dataset.includedResponsavelId = responsavel.id || '';
+    row.dataset.responsavelInicio = responsavel.inicio || '';
+    row.dataset.responsavelFim = responsavel.fim || '';
+    updateResponsavelDraftActionState(row);
+  });
+}
+
+function restoreResponsavelDraftIfEditing(row) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Devolve para a lista temporária um responsável que estava em edição
+   * quando a linha de rascunho é removida ou descartada.
+   * PARÂMETROS E RETORNO: Recebe row como HTMLElement e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Atualiza somente o array local `responsaveisState`; a gravação
+   * em LocalStorage continua restrita ao submit do convênio.
+   * TODO: Em produção, usar controle de edição transacional com ação explícita de cancelar.
+   */
+  if (!row?.dataset.editingResponsavelId) return;
+
+  responsaveisState = [
+    ...responsaveisState.filter((item) => item.id !== row.dataset.editingResponsavelId),
+    {
+      id: row.dataset.editingResponsavelId,
+      nome: titleCaseText(getResponsavelDraftField(row, 'nome')?.value),
+      cpf: formatCpf(getResponsavelDraftField(row, 'cpf')?.value),
+      email: normalizeText(getResponsavelDraftField(row, 'email')?.value).toLowerCase(),
+      telefone: formatPhone(getResponsavelDraftField(row, 'telefone')?.value),
+      funcoes: [],
+      funcao: '',
+      inicio: row.dataset.responsavelInicio || '',
+      fim: row.dataset.responsavelFim || ''
+    }
+  ];
+  editingResponsavelDraft = null;
+  renderResponsaveisForm();
+}
+
+function removeIncludedResponsavelFromDraftRow(row) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Remove do array local o responsável que já havia sido incluído por
+   * uma linha de rascunho, quando o usuário remove essa linha antes de salvar o convênio.
+   * PARÂMETROS E RETORNO: Recebe row como HTMLElement e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Atualiza apenas `responsaveisState`; a remoção definitiva
+   * só será persistida no LocalStorage quando o formulário for salvo.
+   * TODO: Em produção, confirmar remoção de responsáveis já sincronizados com backend.
+   */
+  if (!row?.dataset.includedResponsavelId) return;
+  responsaveisState = responsaveisState.filter((item) => item.id !== row.dataset.includedResponsavelId);
+  renderResponsaveisForm();
+}
+
+
+
+function getResponsavelInicioForPayload(row = null) {
   /*
    * DESCRIÇÃO DA FUNÇÃO: Resolve a data inicial gravada no responsável do cadastro de convênio,
    * herdando obrigatoriamente a data de início do contrato.
-   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna string yyyy-mm-dd ou string vazia.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Lê o início do contrato no DOM e o rascunho em memória; a persistência
-   * ocorre no payload do convênio salvo em LocalStorage.
+   * PARÂMETROS E RETORNO: Recebe row como HTMLElement opcional e retorna string yyyy-mm-dd
+   * ou string vazia.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê o início do contrato no DOM e metadados temporários
+   * da linha; a persistência ocorre no payload do convênio salvo em LocalStorage.
    * TODO: Em produção, usar data do servidor/contrato retornada pela API para evitar inconsistência local.
    */
-  return fields.inicio.value || editingResponsavelDraft?.inicio || '';
+  return fields.inicio.value || row?.dataset.responsavelInicio || editingResponsavelDraft?.inicio || '';
 }
 
 function formatResponsavelAccessStatus(responsavel) {
@@ -1310,57 +1736,70 @@ function renderResponsaveisForm() {
   `).join('');
 }
 
-function addResponsavelFromFields() {
+function addResponsavelFromFields(row = getResponsavelDraftRows()[0]) {
   /*
    * DESCRIÇÃO DA FUNÇÃO: Inclui ou atualiza um responsável na lista temporária do convênio a partir dos
-   * campos visíveis, herdando o início de atuação da data inicial do contrato.
-   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna booleano indicando se a inclusão ocorreu.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Lê inputs do DOM, atualiza o array local responsaveisState e só persiste
-   * no LocalStorage quando o convênio inteiro é salvo.
+   * campos de uma linha visível, herdando o início de atuação da data inicial do contrato.
+   * PARÂMETROS E RETORNO: Recebe row como HTMLElement opcional e retorna booleano indicando se
+   * a inclusão ocorreu.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê inputs do DOM, atualiza o array local responsaveisState e só
+   * persiste no LocalStorage quando o convênio inteiro é salvo.
    * TODO: Em produção, salvar responsáveis por endpoint transacional com validação de CPF e auditoria.
    */
-  [
-    'responsavelNome',
-    'responsavelCpf',
-    'responsavelEmail',
-    'responsavelTelefone'
-  ].forEach((key) => {
-    activeValidationFields.add(key);
-    normalizeFieldValue(key);
-  });
+  if (!row) return false;
+  normalizeResponsavelDraftRow(row);
 
-  if (normalizeText(fields.responsavelNome.value).length < 3) {
-    fields.responsavelNome.classList.add('invalid');
-    validationHints.responsavelNome?.classList.remove('hidden');
+  if (!validateResponsavelDraftRow(row, { showAll: true })) {
     return false;
   }
 
-  if (!validateResponsavelDraft({ showAll: true })) return false;
+  const nomeInput = getResponsavelDraftField(row, 'nome');
+  const cpfInput = getResponsavelDraftField(row, 'cpf');
+  const emailInput = getResponsavelDraftField(row, 'email');
+  const telefoneInput = getResponsavelDraftField(row, 'telefone');
 
-  const cpf = formatCpf(fields.responsavelCpf.value);
+  const cpf = formatCpf(cpfInput?.value);
   const existing = cpf
     ? responsaveisState.find((item) => item.cpf === cpf)
     : null;
 
   const payload = {
-    id: existing?.id || editingResponsavelDraft?.id || makeId(),
-    nome: titleCaseText(fields.responsavelNome.value),
+    id: existing?.id || row.dataset.includedResponsavelId || row.dataset.editingResponsavelId || editingResponsavelDraft?.id || makeId(),
+    nome: titleCaseText(nomeInput?.value),
     cpf,
-    email: normalizeText(fields.responsavelEmail.value).toLowerCase(),
-    telefone: formatPhone(fields.responsavelTelefone.value),
+    email: normalizeText(emailInput?.value).toLowerCase(),
+    telefone: formatPhone(telefoneInput?.value),
     funcoes: [],
     funcao: '',
-    inicio: getResponsavelInicioForPayload(),
-    fim: existing?.fim || editingResponsavelDraft?.fim || ''
+    inicio: getResponsavelInicioForPayload(row),
+    fim: existing?.fim || row.dataset.responsavelFim || editingResponsavelDraft?.fim || ''
   };
 
   responsaveisState = existing
     ? responsaveisState.map((item) => item.id === existing.id ? payload : item)
     : [...responsaveisState, payload];
 
-  clearResponsavelFields();
+  row.dataset.includedResponsavelId = payload.id;
+  delete row.dataset.editingResponsavelId;
+  updateResponsavelDraftActionState(row);
+  editingResponsavelDraft = null;
   renderResponsaveisForm();
   return true;
+}
+
+function includeFilledResponsavelDraftRows() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Inclui todas as linhas temporárias preenchidas antes do salvamento
+   * do convênio, evitando perda de dados digitados sem clique explícito em Incluir.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna booleano indicando se todas as linhas
+   * preenchidas foram incluídas com sucesso.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Atualiza apenas `responsaveisState`; a gravação em LocalStorage
+   * acontece no submit do convênio.
+   * TODO: Em produção, transformar esta inclusão em operação transacional com resposta por linha.
+   */
+  const rows = getResponsavelDraftRows().filter((row) => hasResponsavelDraftInRow(row));
+  if (!rows.length) return true;
+  return rows.map((row) => addResponsavelFromFields(row)).every(Boolean);
 }
 
 function ensureResponsavelObrigatorio() {
@@ -1372,8 +1811,8 @@ function ensureResponsavelObrigatorio() {
    * via addResponsavelFromFields, mas a gravação em LocalStorage ocorre somente no submit do convênio.
    * TODO: Em produção, validar esta obrigatoriedade no backend e retornar mensagem estruturada.
    */
+  if (hasResponsavelDraft() && !includeFilledResponsavelDraftRows()) return false;
   if (responsaveisState.length > 0) return true;
-  if (hasResponsavelDraft() && addResponsavelFromFields()) return true;
 
   fields.responsavelNome.classList.add('invalid');
   validationHints.responsavelNome?.classList.remove('hidden');
@@ -1385,6 +1824,7 @@ function collectPayload() {
   const id = editingId.value || makeId();
   const valores = getValueRows(id);
   const limitesVagasDiarias = getDailyLimitRows(id);
+  const limitesVagasSemana = getWeeklyLimitPayload(limitesVagasDiarias);
   const responsaveis = responsaveisState.map((responsavel) => ({ ...responsavel, convenioId: id }));
   const enderecoDados = getEnderecoFromFields();
 
@@ -1407,6 +1847,7 @@ function collectPayload() {
     classeD: 0,
     valores,
     limitesVagasDiarias,
+    limitesVagasSemana,
     responsaveis
   };
 }
@@ -1435,6 +1876,7 @@ function resetForm() {
   editingId.value = '';
   responsaveisState = [];
   editingResponsavelDraft = null;
+  resetResponsavelDraftRows();
   renderResponsaveisForm();
   formTitle.textContent = 'Cadastrar convênio';
   submitButton.textContent = 'Cadastrar convênio';
@@ -1442,6 +1884,7 @@ function resetForm() {
   Object.keys(validationRules).forEach((key) => runFieldValidation(key));
   valueValidationRules.forEach((input) => runValueValidation(input));
   dailyLimitValidationRules.forEach((input) => runDailyLimitValidation(input));
+  setWeekdayOperationFields();
   setApiStatus(cnpjApiStatus);
   setApiStatus(cepApiStatus);
 }
@@ -1470,8 +1913,10 @@ function applyClientData(convenio) {
     setDailyLimitFieldValue(dailyLimitInputs[limite.classe].servico8, limite.servico8 || 0);
     setDailyLimitFieldValue(dailyLimitInputs[limite.classe].servico6, limite.servico6 || 0);
   });
+  setWeekdayOperationFields(getSelectedWeekdayKeysFromSavedWeek(convenio.limitesVagasSemana || {}));
 
   responsaveisState = getContractResponsaveis(convenio).map((responsavel) => ({ ...responsavel, id: makeId() }));
+  syncResponsavelDraftRowsFromState();
   renderResponsaveisForm();
 }
 
@@ -1495,6 +1940,7 @@ function fillForm(convenio) {
     limitesVagasDiarias: getContractDailyLimits(convenio)
   });
   responsaveisState = getContractResponsaveis(convenio).map((responsavel) => ({ ...responsavel }));
+  syncResponsavelDraftRowsFromState();
   renderResponsaveisForm();
   formTitle.textContent = 'Cadastrar convênio';
   submitButton.textContent = 'Cadastrar convênio';
@@ -1676,7 +2122,6 @@ function renderTableRows(target, convenios) {
           <div class="actions">
             <button type="button" data-action="details" data-id="${convenio.id}">Detalhes</button>
             ${situacao.active ? `<button type="button" data-action="renew" data-id="${convenio.id}">Renovar</button>` : ''}
-            <button type="button" class="danger" data-action="delete" data-id="${convenio.id}">Excluir</button>
           </div>
         </td>
       </tr>
@@ -1727,6 +2172,11 @@ function renderDetails(id) {
   selectedConvenioId = id;
   const valores = getContractValues(convenio);
   const limitesVagasDiarias = getContractDailyLimits(convenio);
+  const limitesVagasSemana = convenio.limitesVagasSemana || {
+    modo: 'dias-selecionados',
+    diasSelecionados: [],
+    dias: buildWeeklyDaysFromTotals(getDailyClassTotalsFromRows(limitesVagasDiarias))
+  };
   const responsaveis = getContractResponsaveis(convenio);
   const historicoContratos = getClientContracts(convenio.cnpj);
   const situacao = getSituacao(convenio);
@@ -1792,6 +2242,36 @@ function renderDetails(id) {
                 <td>${Number(limite.servico6 || 0)}</td>
                 <td>${Number(limite.servico8 || 0)}</td>
                 <td>${Number(limite.servico12 || 0)}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  ` : '';
+
+  const limitesSemanaHtml = limitesVagasSemana.dias?.length ? `
+    <h3 class="section-title">Dias de funcionamento do contrato</h3>
+    <p class="hint">A quantidade diária por classe e turno vale para os dias marcados como ativos.</p>
+    <div class="table-wrap">
+      <table class="compact-table weekly-limits-details-table">
+        <thead>
+          <tr>
+            <th>Dia</th>
+            <th>Funcionamento</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${limitesVagasSemana.dias.map((dia) => {
+            const ativo = dia.ativo !== false && (
+              dia.ativo === true ||
+              Number(dia.classeA || 0) + Number(dia.classeB || 0) + Number(dia.classeC || 0) + Number(dia.classeD || 0) > 0
+            );
+
+            return `
+              <tr>
+                <td>${escapeHtml(dia.label || dia.key)}</td>
+                <td><span class="badge ${ativo ? '' : 'inactive'}">${ativo ? 'Ativo' : 'Não funciona'}</span></td>
               </tr>
             `;
           }).join('')}
@@ -1962,6 +2442,7 @@ function renderDetails(id) {
       ${detailItem('Vigência', formatPeriod(convenio.inicio, convenio.fim))}
     </div>
     ${limitesVagasHtml}
+    ${limitesSemanaHtml}
     ${valoresHtml}
     ${passagemAlimentacaoHtml}
     ${resumoDiarioMensalHtml}
@@ -2003,6 +2484,33 @@ function carregarAcaoInicialDoFormulario() {
 
   const params = new URLSearchParams(window.location.search);
   const renewId = params.get('renew');
+  const draftMode = params.get('draft');
+
+  if (draftMode === '1') {
+    /*
+     * DESCRIÇÃO DO BLOCO: Restaura o rascunho enviado para revisão quando o usuário volta
+     * para corrigir dados antes da confirmação final.
+     * PARÂMETROS E RETORNO: Lê o parâmetro `draft=1` da URL e não retorna valor.
+     * ARMAZENAMENTO E PERSISTÊNCIA: Lê sessionStorage na chave `cproeis_contratos_revisao_convenio`;
+     * não grava LocalStorage nessa etapa.
+     * TODO: Em produção, buscar o rascunho pelo identificador transacional do backend.
+     */
+    try {
+      const draft = CADASTRO_CONVENIO_JSON_API?.readSessionJson
+        ? CADASTRO_CONVENIO_JSON_API.readSessionJson(STORAGE_REVISAO_CONVENIO)
+        : JSON.parse(sessionStorage.getItem(STORAGE_REVISAO_CONVENIO)) || null;
+      if (draft?.payload) {
+        fillForm(draft.payload);
+        return;
+      }
+    } catch (error) {
+      if (CADASTRO_CONVENIO_JSON_API?.removeSessionJson) {
+        CADASTRO_CONVENIO_JSON_API.removeSessionJson(STORAGE_REVISAO_CONVENIO);
+      } else {
+        sessionStorage.removeItem(STORAGE_REVISAO_CONVENIO);
+      }
+    }
+  }
 
   if (renewId) {
     const convenio = getConvenios().find((item) => item.id === renewId);
@@ -2023,17 +2531,27 @@ if (form) {
     if (!ensureResponsavelObrigatorio()) return;
 
     const payload = collectPayload();
-    const convenios = getConvenios();
-    const next = editingId.value
-      ? convenios.map((item) => item.id === payload.id ? payload : item)
-      : [...convenios, payload];
-
-    saveList(STORAGE_CONVENIOS, next);
-    syncRelatedStorage(payload.id, payload.valores, payload.responsaveis, payload.limitesVagasDiarias);
-    selectedConvenioId = payload.id;
-    resetForm();
-    renderAll();
-    window.location.href = 'tabela-convenios.html';
+    /*
+     * DESCRIÇÃO DO BLOCO: Interrompe a gravação definitiva do contrato e envia o payload para
+     * uma página de revisão textual antes da confirmação final.
+     * PARÂMETROS E RETORNO: Usa o objeto `payload` gerado por collectPayload e não retorna valor.
+     * ARMAZENAMENTO E PERSISTÊNCIA: Grava temporariamente em sessionStorage na chave
+     * `cproeis_contratos_revisao_convenio`; a gravação em LocalStorage ocorrerá apenas na
+     * página de revisão quando o usuário confirmar.
+     * TODO: Em produção, substituir sessionStorage por rascunho transacional no backend com expiração
+     * e auditoria de quem revisou os dados antes do envio definitivo.
+     */
+    const reviewDraft = {
+      payload,
+      origem: 'cadastrar-convenio',
+      criadoEm: new Date().toISOString()
+    };
+    if (CADASTRO_CONVENIO_JSON_API?.writeSessionJson) {
+      CADASTRO_CONVENIO_JSON_API.writeSessionJson(STORAGE_REVISAO_CONVENIO, reviewDraft);
+    } else {
+      sessionStorage.setItem(STORAGE_REVISAO_CONVENIO, JSON.stringify(reviewDraft));
+    }
+    window.location.assign('revisar-convenio.html');
   });
 }
 
@@ -2098,7 +2616,33 @@ dailyLimitValidationRules.forEach((input) => {
   });
 });
 
-if (addResponsavelButton) addResponsavelButton.addEventListener('click', addResponsavelFromFields);
+weekdayOperationInputs.forEach((input) => {
+  input.addEventListener('change', () => {
+    /*
+     * DESCRIÇÃO DO BLOCO: Mantém a seleção dos dias de funcionamento editável, inclusive
+     * permitindo que todos comecem ou permaneçam desmarcados.
+     * PARÂMETROS E RETORNO: O listener recebe evento de change e não retorna valores.
+     * ARMAZENAMENTO E PERSISTÊNCIA: Altera apenas o DOM; o submit grava `limitesVagasSemana`
+     * em LocalStorage dentro do contrato.
+     * TODO: Em produção, bloquear desmarcação de dias que já tenham vagas publicadas.
+     */
+    input.checked = Boolean(input.checked);
+  });
+});
+
+if (addResponsavelButton) {
+  addResponsavelButton.addEventListener('click', () => {
+    /*
+     * DESCRIÇÃO DO BLOCO: Adiciona uma nova linha de rascunho para cadastrar outro responsável
+     * sem sair do card atual.
+     * PARÂMETROS E RETORNO: O listener recebe evento de clique e não retorna valor.
+     * ARMAZENAMENTO E PERSISTÊNCIA: Altera somente o DOM; os dados só entram em
+     * `responsaveisState` quando uma linha for incluída.
+     * TODO: Em produção, limitar quantidade de linhas conforme regra de responsáveis por contrato.
+     */
+    createResponsavelDraftRow();
+  });
+}
 
 if (closeDetails) {
   closeDetails.addEventListener('click', () => {
@@ -2122,13 +2666,38 @@ document.addEventListener('click', (event) => {
     const responsavel = responsaveisState.find((item) => item.id === button.dataset.id);
     if (!responsavel) return;
 
-    fields.responsavelNome.value = responsavel.nome || '';
-    fields.responsavelCpf.value = responsavel.cpf || '';
-    fields.responsavelEmail.value = responsavel.email || '';
-    fields.responsavelTelefone.value = responsavel.telefone || '';
+    const targetRow = getResponsavelDraftRows().find((row) => !hasResponsavelDraftInRow(row)) || createResponsavelDraftRow();
+    getResponsavelDraftField(targetRow, 'nome').value = responsavel.nome || '';
+    getResponsavelDraftField(targetRow, 'cpf').value = responsavel.cpf || '';
+    getResponsavelDraftField(targetRow, 'email').value = responsavel.email || '';
+    getResponsavelDraftField(targetRow, 'telefone').value = responsavel.telefone || '';
+    targetRow.dataset.editingResponsavelId = responsavel.id || '';
+    targetRow.dataset.responsavelInicio = responsavel.inicio || '';
+    targetRow.dataset.responsavelFim = responsavel.fim || '';
     editingResponsavelDraft = { ...responsavel };
     responsaveisState = responsaveisState.filter((item) => item.id !== responsavel.id);
     renderResponsaveisForm();
+    return;
+  }
+
+  if (button.dataset.action === 'include-responsavel-draft') {
+    const row = button.closest('[data-responsavel-draft-row]');
+    addResponsavelFromFields(row);
+    return;
+  }
+
+  if (button.dataset.action === 'add-responsavel-inline') {
+    createResponsavelDraftRow();
+    return;
+  }
+
+  if (button.dataset.action === 'remove-responsavel-draft') {
+    const row = button.closest('[data-responsavel-draft-row]');
+    if (row && getResponsavelDraftRows().length > 1) {
+      restoreResponsavelDraftIfEditing(row);
+      removeIncludedResponsavelFromDraftRow(row);
+      row.remove();
+    }
     return;
   }
 
@@ -2154,12 +2723,13 @@ document.addEventListener('click', (event) => {
       window.location.href = `cadastrar-convenio.html?renew=${encodeURIComponent(convenio.id)}`;
     }
   }
-  if ((button.dataset.action === 'delete' || button.dataset.action === 'delete-history') && confirm('Excluir este contrato e seus dados vinculados?')) {
+  if (button.dataset.action === 'delete-history' && confirm('Excluir este contrato e seus dados vinculados?')) {
     removeContract(convenio.id);
   }
 });
 
 createFieldHints();
+setWeekdayOperationFields();
 renderResponsaveisForm();
 carregarAcaoInicialDoFormulario();
 renderAll();

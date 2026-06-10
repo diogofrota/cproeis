@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - RAS</title>
+  <link rel="stylesheet" href="../css/style-ras.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página inicial do módulo RAS, agrupando contrato, responsáveis P/1
+    e histórico de acessos em cards de navegação.
+    PARÂMETROS E RETORNO: Não recebe parâmetros pela URL e não retorna valores.
+    ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; apenas direciona para páginas do módulo.
+    TODO: Em produção, exibir atalhos por perfil: GSI, P/1 Unidade, comando e financeiro.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>RAS</h1>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="ras-menu" aria-label="Menu do RAS">
+      <a class="active" href="index.html" data-history-back="false">Página inicial</a>
+      <a href="ras.html">Contrato RAS</a>
+      <a href="acessos-p1.html">P/1 Unidade</a>
+      <a href="historico-acessos-p1.html">Histórico P/1</a>
+    </nav>
+  </header>
+
+  <main class="ras-layout">
+    <section class="module-home-panel">
+      <div class="module-home-header">
+        <h2>Funcionalidades do RAS</h2>
+        <p>Selecione a rotina desejada para cadastro, controle de P/1 ou consulta histórica.</p>
+      </div>
+
+      <div class="module-card-grid">
+        <a class="module-feature-card" href="ras.html">
+          <strong>Contrato RAS</strong>
+          <span>Cadastrar contrato anual, orçamento, valores por classe e registros do RAS.</span>
+        </a>
+        <a class="module-feature-card" href="acessos-p1.html">
+          <strong>P/1 Unidade</strong>
+          <span>Vincular e acompanhar responsáveis P/1 por unidade dentro do fluxo RAS.</span>
+        </a>
+        <a class="module-feature-card" href="historico-acessos-p1.html">
+          <strong>Histórico P/1</strong>
+          <span>Consultar o histórico de responsáveis vinculados às unidades no RAS.</span>
+        </a>
+        <a class="module-feature-card" href="../index.html">
+          <strong>Sistema CPROEIS</strong>
+          <span>Retorna ao menu geral para acessar os demais módulos do sistema.</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

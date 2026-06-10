@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Revisar convênio</title>
+  <link rel="stylesheet" href="../css/style-contratos-cadastrar-convenio.css">
+  <link rel="stylesheet" href="../css/style-contratos-revisar-convenio.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página de conferência final do cadastro de convênio antes da gravação
+    definitiva no armazenamento local do protótipo.
+    PARÂMETROS E RETORNO: Não recebe parâmetros obrigatórios pela URL; o JavaScript lê o rascunho
+    salvo em sessionStorage pelo formulário de cadastro.
+    ARMAZENAMENTO E PERSISTÊNCIA: Lê o rascunho JSON `cproeis_contratos_revisao_convenio`
+    no sessionStorage e, ao confirmar, envia o payload para a camada JSON local que simula a API.
+    TODO: Em produção, substituir a camada local por endpoint transacional com assinatura,
+    auditoria e controle de concorrência antes do envio ao banco real.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>Revisar cadastro do convênio</h1>
+        <p>Conferência textual dos dados antes da confirmação final.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="contratos-menu" aria-label="Funcionalidades de contratos">
+      <a class="tab-button" href="index.html" data-history-back="false">Página inicial</a>
+      <a class="tab-button active" href="cadastrar-convenio.html">Cadastrar convênio</a>
+      <a class="tab-button" href="tabela-convenios.html">Tabela Convênios</a>
+      <a class="tab-button" href="incluir-responsavel.html">Adicionar responsável</a>
+      <a class="tab-button" href="retirar-responsavel.html">Retirar responsável</a>
+      <a class="tab-button" href="renovacoes.html">Renovações</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel review-panel">
+      <div class="panel-header review-header">
+        <div>
+          <h2>Conferência antes do envio</h2>
+          <p class="hint" id="review-status">Confira os dados abaixo antes de confirmar o cadastro.</p>
+        </div>
+      </div>
+
+      <div id="review-empty" class="review-empty" hidden>
+        Nenhum cadastro pendente para revisão. Volte ao cadastro de convênio e preencha o formulário.
+      </div>
+
+      <div id="review-content" class="review-content"></div>
+
+      <div class="form-actions submit-actions review-actions">
+        <button type="button" class="secondary" id="review-edit">Voltar para corrigir</button>
+        <button type="button" id="review-confirm">Confirmar e enviar</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-contratos-json-api.js"></script>
+  <script src="../js/script-contratos-revisar-convenio.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

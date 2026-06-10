@@ -1131,6 +1131,12 @@ tbody tr:hover td {
   transform: none;
 }
 
+.module-header .module-menu a.active {
+  background: #fff;
+  color: #1f2a8a;
+  border-color: #fff;
+}
+
 .module-header .module-menu .menu-back-link {
   background: #fff;
   color: #1f2a8a;
@@ -1166,6 +1172,89 @@ tbody tr:hover td {
 }
 
 /*
+ * DESCRIÇÃO DO BLOCO: Estiliza a página inicial do módulo Banco de Dados, com cards
+ * equivalentes ao padrão usado em Contrato.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica grid responsivo
+ * aos links de funcionalidades do módulo.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa dados; controla apenas apresentação visual.
+ * TODO: Em produção, transformar estes cards em componente compartilhado da administração.
+ */
+.database-home-panel {
+  padding: 24px;
+  border: 1px solid #d8e1f0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+}
+
+.database-home-header {
+  margin-bottom: 18px;
+}
+
+.database-home-header h2 {
+  margin: 0 0 8px;
+  color: #1f2a8a;
+  font-size: 24px;
+}
+
+.database-home-header p {
+  margin: 0;
+  color: #52637c;
+  line-height: 1.5;
+}
+
+.database-card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.database-feature-card {
+  min-height: 136px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid #d8e1f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2937;
+  text-decoration: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.database-feature-card:hover,
+.database-feature-card:focus-visible {
+  border-color: #1f2a8a;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.1);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.database-feature-card strong {
+  color: #1f2a8a;
+  font-size: 17px;
+}
+
+.database-feature-card span {
+  color: #52637c;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+@media (max-width: 1100px) {
+  .database-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .database-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/*
  * DESCRIÇÃO DO BLOCO: Padroniza os headers do projeto para manter os menus sempre visíveis,
  * sem depender do antigo botão hamburger.
  * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; sobrescreve classes de menu
@@ -1196,5 +1285,41 @@ tbody tr:hover td {
 @media (max-width: 760px) {
   .module-header .header-top {
     display: flex;
+  }
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Prepara o Banco de Dados para telas de notebook, reduzindo colunas
+ * antes de os cards e botões perderem leitura.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; sobrescreve largura dos
+ * links do menu e quantidade de colunas dos cards.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa dados; controla somente apresentação CSS.
+ * TODO: Em produção, reutilizar estes breakpoints em todos os portais administrativos.
+ */
+.module-header .module-menu a {
+  width: auto;
+  flex: 1 1 180px;
+  max-width: 260px;
+}
+
+@media (min-width: 621px) and (max-width: 1360px) {
+  .module-header {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+
+  .module-header .module-menu a {
+    flex-basis: 170px;
+  }
+
+  .database-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .module-header .module-menu a {
+    flex-basis: min(100%, 320px);
+    max-width: min(100%, 320px);
   }
 }

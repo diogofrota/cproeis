@@ -1,14 +1,16 @@
 const STORAGE_CONVENIOS = 'cproeis_contratos_convenios';
-const STORAGE_RESPONSAVEIS = 'cproeis_contratos_responsaveis';
+const STORAGE_REVISAO_RESPONSAVEL = 'cproeis_contratos_revisao_responsavel';
+const RESPONSAVEL_JSON_API = window.CPROEISContratosJsonApi || null;
 
 const params = new URLSearchParams(window.location.search);
-const convenioId = params.get('id') || '';
+let convenioId = params.get('id') || '';
 const form = document.getElementById('responsavel-form');
 const pageTitle = document.getElementById('responsavel-page-title');
 const pageSubtitle = document.getElementById('responsavel-page-subtitle');
 const cancelButton = document.getElementById('cancel-responsavel');
 
 const fields = {
+  convenio: document.getElementById('responsavel-convenio'),
   nome: document.getElementById('responsavel-nome'),
   cpf: document.getElementById('responsavel-cpf'),
   email: document.getElementById('responsavel-email'),
@@ -17,6 +19,7 @@ const fields = {
 };
 
 const hints = {
+  convenio: document.getElementById('responsavel-convenio-hint'),
   nome: document.getElementById('responsavel-nome-hint'),
   cpf: document.getElementById('responsavel-cpf-hint'),
   email: document.getElementById('responsavel-email-hint'),
@@ -33,22 +36,12 @@ function loadList(key) {
    * ARMAZENAMENTO E PERSISTÊNCIA: Lê LocalStorage na chave informada; não grava dados.
    * TODO: Em produção, trocar leitura local por consulta autenticada à API de contratos.
    */
+  if (RESPONSAVEL_JSON_API?.readJsonList) return RESPONSAVEL_JSON_API.readJsonList(key);
   try {
     return JSON.parse(localStorage.getItem(key)) || [];
   } catch (error) {
     return [];
   }
-}
-
-function saveList(key, list) {
-  /*
-   * DESCRIÇÃO DA FUNÇÃO: Persiste uma lista serializada no LocalStorage para manter compatibilidade
-   * com o protótipo atual de contratos.
-   * PARÂMETROS E RETORNO: Recebe key como string e list como array; não retorna valores.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Grava LocalStorage na chave informada.
-   * TODO: Em produção, substituir por chamada assíncrona com tratamento de erro e confirmação do servidor.
-   */
-  localStorage.setItem(key, JSON.stringify(list));
 }
 
 function onlyDigits(value) {
@@ -154,6 +147,7 @@ function validateForm() {
   const phoneDigits = onlyDigits(fields.telefone.value);
 
   return [
+    setFieldState('convenio', Boolean(convenioAtual)),
     setFieldState('nome', normalizeText(fields.nome.value).length >= 3),
     setFieldState('cpf', !cpfDigits || cpfDigits.length === 11),
     setFieldState('email', !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)),
@@ -184,45 +178,63 @@ function buildResponsavelPayload() {
   };
 }
 
-function saveResponsavel(responsavel) {
+function saveResponsavelReviewDraft(responsavel) {
   /*
-   * DESCRIÇÃO DA FUNÇÃO: Insere o novo responsável no convênio selecionado e na lista auxiliar de responsáveis.
-   * PARÂMETROS E RETORNO: Recebe responsavel como objeto e não retorna valores.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Grava LocalStorage nas chaves cproeis_contratos_convenios e
-   * cproeis_contratos_responsaveis, preservando os demais convênios e responsáveis.
-   * TODO: Em produção, substituir por transação de backend para evitar divergência entre coleções.
+   * DESCRIÇÃO DA FUNÇÃO: Salva a inclusão de responsável como rascunho para conferência antes
+   * da gravação definitiva.
+   * PARÂMETROS E RETORNO: Recebe responsavel como objeto e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Grava sessionStorage em `cproeis_contratos_revisao_responsavel`;
+   * não altera LocalStorage.
+   * TODO: Em produção, armazenar este rascunho em fluxo transacional do backend com expiração.
    */
-  const convenios = loadList(STORAGE_CONVENIOS);
-  const updatedConvenios = convenios.map((convenio) => {
-    if (convenio.id !== convenioId) return convenio;
-
-    const responsaveis = Array.isArray(convenio.responsaveis) ? convenio.responsaveis : [];
-    return {
-      ...convenio,
-      responsaveis: [...responsaveis, responsavel]
-    };
-  });
-
-  saveList(STORAGE_CONVENIOS, updatedConvenios);
-  saveList(STORAGE_RESPONSAVEIS, [
-    ...loadList(STORAGE_RESPONSAVEIS),
+  const draft = {
+    tipo: 'adicionar',
+    convenioId,
+    convenio: {
+      id: convenioAtual?.id || '',
+      nome: convenioAtual?.nome || '',
+      cnpj: convenioAtual?.cnpj || '',
+      numero: convenioAtual?.numero || ''
+    },
     responsavel
-  ]);
+  };
+
+  if (RESPONSAVEL_JSON_API?.writeSessionJson) {
+    RESPONSAVEL_JSON_API.writeSessionJson(STORAGE_REVISAO_RESPONSAVEL, draft);
+    return;
+  }
+  sessionStorage.setItem(STORAGE_REVISAO_RESPONSAVEL, JSON.stringify(draft));
 }
 
 function loadConvenio() {
   /*
-   * DESCRIÇÃO DA FUNÇÃO: Carrega o convênio informado na URL e prepara o formulário de inclusão.
+   * DESCRIÇÃO DA FUNÇÃO: Carrega a lista de convênios, seleciona o contrato escolhido e prepara
+   * o formulário de inclusão de responsável.
    * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valores.
    * ARMAZENAMENTO E PERSISTÊNCIA: Lê cproeis_contratos_convenios no LocalStorage e escreve somente no DOM.
    * TODO: Em produção, buscar o contrato por endpoint com tratamento para acesso negado ou registro inexistente.
    */
-  convenioAtual = loadList(STORAGE_CONVENIOS).find((convenio) => convenio.id === convenioId) || null;
+  const convenios = RESPONSAVEL_JSON_API?.listarConvenios
+    ? RESPONSAVEL_JSON_API.listarConvenios().data
+    : loadList(STORAGE_CONVENIOS);
+  if (fields.convenio) {
+    fields.convenio.innerHTML = [
+      '<option value="">Selecione um contrato</option>',
+      ...convenios.map((convenio) => `<option value="${convenio.id}">${convenio.nome || 'Convênio sem nome'} | ${convenio.numero || '-'}</option>`)
+    ].join('');
+    fields.convenio.value = convenioId;
+  }
+
+  convenioAtual = convenios.find((convenio) => convenio.id === convenioId) || null;
 
   if (!convenioAtual) {
-    if (pageTitle) pageTitle.textContent = 'Convênio não encontrado';
-    if (pageSubtitle) pageSubtitle.textContent = 'Volte para a tabela e selecione um contrato válido.';
-    if (form) form.hidden = true;
+    if (pageTitle) pageTitle.textContent = 'Novo responsável';
+    if (pageSubtitle) pageSubtitle.textContent = 'Selecione o contrato que receberá o novo responsável.';
+    if (fields.inicio) {
+      fields.inicio.value = '';
+      fields.inicio.removeAttribute('min');
+      fields.inicio.removeAttribute('max');
+    }
     return;
   }
 
@@ -231,6 +243,36 @@ function loadConvenio() {
   fields.inicio.value = convenioAtual.inicio || '';
   fields.inicio.min = convenioAtual.inicio || '';
   fields.inicio.max = convenioAtual.fim || '';
+}
+
+function restoreResponsavelReviewDraft() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Restaura os campos da inclusão quando o usuário volta da página de revisão
+   * para corrigir dados antes da confirmação.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê sessionStorage em `cproeis_contratos_revisao_responsavel`;
+   * escreve somente nos inputs do DOM.
+   * TODO: Em produção, restaurar rascunhos por ID de fluxo retornado pelo backend.
+   */
+  if (params.get('draft') !== '1') return;
+  let draft = null;
+  try {
+    draft = RESPONSAVEL_JSON_API?.readSessionJson
+      ? RESPONSAVEL_JSON_API.readSessionJson(STORAGE_REVISAO_RESPONSAVEL)
+      : JSON.parse(sessionStorage.getItem(STORAGE_REVISAO_RESPONSAVEL));
+  } catch (error) {
+    draft = null;
+  }
+  if (draft?.tipo !== 'adicionar') return;
+
+  convenioId = draft.convenioId || convenioId;
+  if (fields.convenio) fields.convenio.value = convenioId;
+  loadConvenio();
+  fields.nome.value = draft.responsavel?.nome || '';
+  fields.cpf.value = draft.responsavel?.cpf || '';
+  fields.email.value = draft.responsavel?.email || '';
+  fields.telefone.value = draft.responsavel?.telefone || '';
+  fields.inicio.value = draft.responsavel?.inicio || fields.inicio.value;
 }
 
 Object.entries(fields).forEach(([key, field]) => {
@@ -248,8 +290,26 @@ Object.entries(fields).forEach(([key, field]) => {
     if (key === 'telefone') field.value = formatPhone(field.value);
     if (key === 'nome') field.value = titleCaseText(field.value);
     if (key === 'email') field.value = normalizeText(field.value).toLowerCase();
+    if (key === 'convenio') {
+      convenioId = field.value;
+      loadConvenio();
+    }
     validateForm();
   });
+});
+
+fields.convenio?.addEventListener('change', () => {
+  /*
+   * DESCRIÇÃO DO BLOCO: Atualiza o contrato selecionado quando o usuário escolhe outro convênio
+   * no seletor principal da página.
+   * PARÂMETROS E RETORNO: O listener recebe evento change e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê apenas o valor do select e atualiza estado em memória; a
+   * gravação acontece somente no submit.
+   * TODO: Em produção, carregar dados do convênio selecionado por API e exibir loading.
+   */
+  convenioId = fields.convenio.value;
+  loadConvenio();
+  validateForm();
 });
 
 if (form) {
@@ -264,8 +324,8 @@ if (form) {
     event.preventDefault();
     if (!convenioAtual || !validateForm()) return;
 
-    saveResponsavel(buildResponsavelPayload());
-    window.location.href = `detalhes-convenio.html?id=${encodeURIComponent(convenioId)}`;
+    saveResponsavelReviewDraft(buildResponsavelPayload());
+    window.location.href = 'revisar-responsavel.html';
   });
 }
 
@@ -277,10 +337,9 @@ if (cancelButton) {
      * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; altera apenas window.location.
      * TODO: Em produção, pedir confirmação se houver rascunho preenchido.
      */
-    window.location.href = convenioId
-      ? `detalhes-convenio.html?id=${encodeURIComponent(convenioId)}`
-      : 'tabela-convenios.html';
+    window.location.href = 'tabela-convenios.html';
   });
 }
 
 loadConvenio();
+restoreResponsavelReviewDraft();

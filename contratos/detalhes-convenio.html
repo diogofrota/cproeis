@@ -4,54 +4,45 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CPROEIS - Detalhes do Convênio</title>
-  <link rel="stylesheet" href="../css/style-contratos-tabela-convenios.css">
+  <link rel="stylesheet" href="../css/style-contratos-cadastrar-convenio.css">
+  <link rel="stylesheet" href="../css/style-contratos-revisar-convenio.css">
 </head>
 <body>
   <!--
-    DESCRIÇÃO DO BLOCO: Página compartilhada de consulta detalhada do convênio. Ela serve tanto
-    ao clique de Detalhes na tabela de contratos quanto ao menu interno do acesso do convênio,
-    preservando o responsável logado quando a origem for a área operacional.
+    DESCRIÇÃO DO BLOCO: Página de consulta detalhada do convênio dentro do módulo de Contratos.
+    Ela é aberta pelo clique de Detalhes na tabela de contratos e mantém a navegação administrativa.
     PARÂMETROS E RETORNO: Recebe o identificador do convênio pelo parâmetro `id` da URL e não
     retorna valores; o JavaScript renderiza os dados no painel abaixo.
     ARMAZENAMENTO E PERSISTÊNCIA: Lê os dados em `cproeis_contratos_convenios`,
     `cproeis_contratos_valores`, `cproeis_contratos_responsaveis`,
-    `cproeis_contratos_limites_vagas`, `cproeis_convenio_atual` e
-    `cproeis_convenio_responsavel_atual` no LocalStorage.
+    `cproeis_contratos_limites_vagas` no LocalStorage.
     TODO: Em produção, substituir o parâmetro local por rota autenticada e buscar os detalhes em API segura.
   -->
   <header class="module-header">
     <div class="header-top">
       <div class="header-copy">
-        <h1 id="page-title">Detalhes do Convênio</h1>
-        <p id="page-subtitle">Consulta consolidada de contrato, vigência, valores e responsáveis cadastrados.</p>
+        <h1 id="page-title">Contrato</h1>
       </div>
     </div>
 
-    <nav class="module-menu" id="convenios-menu" aria-label="Menu operacional do convênio">
-      <a id="menu-criar-vagas" href="../convenios/criar-vagas.html">Criar vagas de serviço</a>
-      <a id="menu-acompanhamento" href="../convenios/acompanhamento.html">Acompanhar limite mensal</a>
-      <a id="menu-vagas" href="../convenios/vagas.html">Vagas criadas</a>
-      <a id="menu-vagas-calendario" href="../convenios/vagas-calendario.html">Vagas calendário</a>
-      <a id="menu-perfil-convenio" href="../convenios/perfil.html">Perfil</a>
-      <a id="menu-dados-contrato" href="../convenios/dados-contrato.html">Dados do contrato</a>
-      <a id="menu-servicos" href="../convenios/servicos.html">Serviços cadastrados</a>
-      <a id="menu-criar-servico" href="../convenios/criar-servico.html">Criar serviço</a>
-      <a id="menu-criar-curso" href="../convenios/criar-curso.html">Criar curso</a>
-      <a id="menu-historico-curso" href="../convenios/historico-curso.html">Histórico de curso</a>
-      <a id="menu-renovacao-contrato" href="../convenios/renovacao-contrato.html">Renovação de contrato</a>
-      <a id="menu-detalhes-convenio" href="detalhes-convenio.html">Detalhes do convênio</a>
-      <a class="menu-logout-link" href="../convenios/acesso.html" data-logout-convenio="true">Sair</a>
+    <nav class="module-menu" id="contratos-menu" aria-label="Funcionalidades de contratos">
+      <a class="tab-button" href="index.html" data-history-back="false">Página inicial</a>
+      <a class="tab-button" href="cadastrar-convenio.html">Cadastrar convênio</a>
+      <a class="tab-button active" href="tabela-convenios.html">Tabela Convênios</a>
+      <a class="tab-button" href="incluir-responsavel.html">Adicionar responsável</a>
+      <a class="tab-button" href="retirar-responsavel.html">Retirar responsável</a>
+      <a class="tab-button" href="renovacoes.html">Renovações</a>
     </nav>
   </header>
 
   <main>
     <section class="view active" id="detalhes-view">
-      <div class="panel" id="details-empty">
+      <div class="panel" id="details-empty" hidden>
         <h2>Detalhes do convênio</h2>
         <p class="hint">Nenhum convênio foi informado para consulta.</p>
       </div>
 
-      <div class="panel" id="details-panel" hidden>
+      <div class="panel review-panel details-review-panel" id="details-panel">
         <div class="panel-header">
           <div>
             <h2 id="details-heading">Detalhes do convênio</h2>
@@ -64,8 +55,8 @@
     </section>
   </main>
 
+  <script src="../js/script-contratos-json-api.js"></script>
   <script src="../js/script-contratos-tabela-convenios.js"></script>
-  <script src="../js/script-convenios-session.js"></script>
   <script src="../js/script-navigation.js"></script>
 </body>
 </html>

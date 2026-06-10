@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Operação concluída</title>
+  <link rel="stylesheet" href="../css/style-contratos-cadastrar-convenio.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página padrão exibida depois que uma operação revisada é confirmada.
+    PARÂMETROS E RETORNO: Pode receber `tipo` e `id` pela URL; o JavaScript também lê o último
+    resultado em sessionStorage para montar a mensagem.
+    ARMAZENAMENTO E PERSISTÊNCIA: Lê `cproeis_contratos_operacao_concluida` em sessionStorage;
+    não grava dados definitivos.
+    TODO: Em produção, alimentar esta página com o retorno real da API, incluindo protocolo,
+    data/hora do servidor e identificador de auditoria.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>Operação concluída</h1>
+        <p id="success-header-text">Aguarde a confirmação da ação solicitada.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="contratos-menu" aria-label="Funcionalidades de contratos">
+      <a class="tab-button" href="index.html" data-history-back="false">Página inicial</a>
+      <a class="tab-button" href="cadastrar-convenio.html">Cadastrar convênio</a>
+      <a class="tab-button" href="tabela-convenios.html">Tabela Convênios</a>
+      <a class="tab-button" href="incluir-responsavel.html">Adicionar responsável</a>
+      <a class="tab-button" href="retirar-responsavel.html">Retirar responsável</a>
+      <a class="tab-button" href="renovacoes.html">Renovações</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel operation-result-panel">
+      <div class="operation-result-box" aria-live="polite">
+        <span class="operation-result-badge">Concluído</span>
+        <h2 id="success-title">Registro salvo</h2>
+        <p class="hint" id="success-message">Os dados foram gravados com sucesso.</p>
+      </div>
+
+      <div class="operation-actions">
+        <a class="primary-link-button" id="success-primary-link" href="tabela-convenios.html">Ver contratos cadastrados</a>
+        <a class="secondary-link-button" href="index.html">Página inicial de contratos</a>
+      </div>
+    </section>
+
+    <section class="panel contracts-home-panel">
+      <div class="panel-header">
+        <div>
+          <h2>O que você pode fazer agora</h2>
+          <p class="hint">Acesse outra função do módulo sem voltar pelo navegador.</p>
+        </div>
+      </div>
+
+      <div class="contracts-card-grid compact-cards">
+        <a class="contracts-feature-card" href="cadastrar-convenio.html">
+          <strong>Cadastrar convênio</strong>
+          <span>Iniciar um novo cadastro contratual.</span>
+        </a>
+        <a class="contracts-feature-card" href="tabela-convenios.html">
+          <strong>Tabela Convênios</strong>
+          <span>Consultar e abrir detalhes dos contratos.</span>
+        </a>
+        <a class="contracts-feature-card" href="incluir-responsavel.html">
+          <strong>Adicionar responsável</strong>
+          <span>Vincular novo responsável a um contrato.</span>
+        </a>
+        <a class="contracts-feature-card" href="retirar-responsavel.html">
+          <strong>Retirar responsável</strong>
+          <span>Encerrar acesso de responsável ativo.</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-contratos-operacao-concluida.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

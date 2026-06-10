@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Bloqueio / Desbloqueio</title>
+  <link rel="stylesheet" href="../css/style-bloqueio-desbloqueio.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página inicial do módulo Bloqueio / Desbloqueio, mantendo o mesmo
+    padrão de navegação por cards dos demais módulos administrativos.
+    PARÂMETROS E RETORNO: Não recebe parâmetros pela URL e não retorna valores.
+    ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; apenas navega para páginas locais.
+    TODO: Em produção, exibir atalhos por tipo de bloqueio conforme perfil do operador.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>Bloqueio / Desbloqueio</h1>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="bloqueio-desbloqueio-menu" aria-label="Menu de bloqueio e desbloqueio">
+      <a class="active" href="index.html" data-history-back="false">Página inicial</a>
+      <a href="bloqueio-desbloqueio.html">Bloqueio / Desbloqueio</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="module-home-panel">
+      <div class="module-home-header">
+        <h2>Funcionalidades de bloqueio</h2>
+        <p>Acesse a rotina administrativa para controle de bloqueios e desbloqueios.</p>
+      </div>
+
+      <div class="module-card-grid">
+        <a class="module-feature-card" href="bloqueio-desbloqueio.html">
+          <strong>Bloqueio / Desbloqueio</strong>
+          <span>Consultar ou preparar rotinas de restrição e liberação de acesso operacional.</span>
+        </a>
+        <a class="module-feature-card" href="../index.html">
+          <strong>Sistema CPROEIS</strong>
+          <span>Retorna ao menu geral para acessar os demais módulos do sistema.</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

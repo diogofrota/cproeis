@@ -1,0 +1,235 @@
+.review-panel {
+  /*
+   * DESCRIÇÃO DO BLOCO: Ajusta a página de revisão para leitura densa e organizada antes
+   * da confirmação final do convênio.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica somente CSS.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; o conteúdo vem do JavaScript de revisão.
+   * TODO: Em produção, extrair o padrão de revisão para componente compartilhado entre cadastros.
+   */
+  display: grid;
+  gap: 18px;
+}
+
+.review-header {
+  margin-bottom: 0;
+}
+
+.review-content {
+  display: grid;
+  gap: 18px;
+}
+
+.review-section {
+  /*
+   * DESCRIÇÃO DO BLOCO: Separa grupos de dados por faixa horizontal para evitar uma tela com
+   * excesso de caixas e facilitar a conferência sequencial.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; define layout visual.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa dados; apenas apresenta HTML renderizado pelo script.
+   * TODO: Em produção, adicionar marcação de alterações quando o usuário voltar e corrigir dados.
+   */
+  display: grid;
+  gap: 10px;
+  padding: 0 0 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.review-section:last-child {
+  border-bottom: 0;
+}
+
+.review-section h3 {
+  margin: 0;
+  color: #1f2a8a;
+  font-size: 17px;
+}
+
+.details-review-panel .review-section {
+  /*
+   * DESCRIÇÃO DO BLOCO: Dá mais respiro vertical à página de detalhes, que é uma consulta
+   * fixa e tende a ser lida de cima para baixo depois da seleção do convênio.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica somente CSS.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os dados continuam vindo do LocalStorage.
+   * TODO: Em produção, parametrizar densidade de leitura entre telas de revisão e consulta.
+   */
+  gap: 14px;
+  padding-bottom: 22px;
+}
+
+.details-review-panel .review-section h3 {
+  margin-top: 4px;
+}
+
+.details-review-panel .review-grid {
+  row-gap: 18px;
+}
+
+.details-review-panel .review-field span {
+  margin-bottom: 5px;
+}
+
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 24px;
+  row-gap: 12px;
+}
+
+.review-field {
+  min-width: 0;
+}
+
+.review-field span {
+  display: block;
+  margin-bottom: 3px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.review-field strong {
+  display: block;
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.35;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.review-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.review-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.review-table th,
+.review-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #1f2937;
+  font-size: 14px;
+  text-align: left;
+}
+
+.review-table th {
+  background: #eef2ff;
+  color: #1f2a8a;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.review-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.review-table th:nth-child(n + 3),
+.review-table td:nth-child(n + 3) {
+  /*
+   * DESCRIÇÃO DO BLOCO: Centraliza colunas numéricas das tabelas de revisão, alinhando
+   * valores de turno com seus cabeçalhos.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica somente CSS.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados.
+   * TODO: Em produção, mover alinhamento numérico para componente de tabela reutilizável.
+   */
+  text-align: center;
+}
+
+.review-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.review-weekdays {
+  /*
+   * DESCRIÇÃO DO BLOCO: Distribui os sete dias da semana em colunas iguais, mantendo borda
+   * vazia nos dias não marcados para o usuário perceber a ausência de seleção.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica somente CSS.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os dias são renderizados pelo JavaScript.
+   * TODO: Em produção, transformar este padrão em componente de calendário semanal reutilizável.
+   */
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.review-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.review-chip.active {
+  border-color: #1f2a8a;
+  background: #eef2ff;
+  color: #1f2a8a;
+}
+
+.review-chip.inactive {
+  background: #fff;
+  color: #334155;
+}
+
+.review-empty {
+  padding: 18px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #475569;
+  text-align: center;
+}
+
+.review-actions {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 16px;
+}
+
+.review-actions button {
+  min-width: 220px;
+}
+
+@media (max-width: 980px) {
+  .review-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .review-weekdays {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .review-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .review-actions {
+    justify-content: stretch;
+  }
+
+  .review-weekdays {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .review-actions button {
+    width: 100%;
+  }
+}

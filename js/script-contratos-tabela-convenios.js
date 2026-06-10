@@ -5,6 +5,7 @@ const STORAGE_LIMITES_VAGAS = 'cproeis_contratos_limites_vagas';
 const STORAGE_HISTORICOS = 'cproeis_contratos_historicos';
 const STORAGE_SCHEMA_VERSION = 'cproeis_contratos_schema_version';
 const CURRENT_SCHEMA_VERSION = '2026-06-05-responsaveis-sem-nivel';
+const TABELA_CONVENIOS_JSON_API = window.CPROEISContratosJsonApi || null;
 
 window.CPROEIS_CONTRATOS_STORAGE = {
   valores: STORAGE_VALORES,
@@ -49,6 +50,7 @@ const menuToggle = document.querySelector('.menu-toggle');
 const moduleMenu = document.querySelector('#contratos-menu');
 const tabs = document.querySelectorAll('.tab-button[data-view]');
 const views = document.querySelectorAll('.view');
+const isDedicatedDetailsPage = window.location.pathname.endsWith('/detalhes-convenio.html');
 const form = document.getElementById('convenio-form');
 const editingId = document.getElementById('editing-id');
 const formTitle = document.getElementById('form-title');
@@ -258,6 +260,14 @@ const cnpjApiStatus = document.getElementById('cnpj-api-status');
 const cepApiStatus = document.getElementById('cep-api-status');
 
 function loadList(key) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Lê listas de contratos para tabela e detalhes por meio da camada JSON local.
+   * PARÂMETROS E RETORNO: Recebe key como string e retorna array de registros.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Usa `CPROEISContratosJsonApi.readJsonList` ou LocalStorage
+   * como fallback de compatibilidade.
+   * TODO: Em produção, trocar por endpoints de consulta com filtros e paginação.
+   */
+  if (TABELA_CONVENIOS_JSON_API?.readJsonList) return TABELA_CONVENIOS_JSON_API.readJsonList(key);
   try {
     return JSON.parse(localStorage.getItem(key)) || [];
   } catch (error) {
@@ -266,6 +276,17 @@ function loadList(key) {
 }
 
 function saveList(key, list) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Persiste listas alteradas pela tabela usando o mesmo contrato JSON do módulo.
+   * PARÂMETROS E RETORNO: Recebe key como string e list como array; não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Usa `CPROEISContratosJsonApi.writeJsonList` quando disponível
+   * ou LocalStorage diretamente como fallback.
+   * TODO: Em produção, limitar esta gravação a endpoints autorizados e auditados.
+   */
+  if (TABELA_CONVENIOS_JSON_API?.writeJsonList) {
+    TABELA_CONVENIOS_JSON_API.writeJsonList(key, list);
+    return;
+  }
   localStorage.setItem(key, JSON.stringify(list));
 }
 
@@ -1651,20 +1672,17 @@ function renderTableRows(target, convenios) {
         </td>
         <td>
           <!--
-            DESCRIÇÃO DO BLOCO: Ações diretas da linha de contrato, limitadas a consulta,
-            inclusão de responsável e exclusão para simplificar a operação da tabela.
+            DESCRIÇÃO DO BLOCO: Ação direta da linha de contrato, limitada à consulta detalhada
+            para manter alterações cadastrais em páginas próprias.
             PARÂMETROS E RETORNO: Não recebe parâmetros no HTML; cada botão entrega
             data-action e data-id para o listener da tabela tratar o clique.
-            ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados diretamente; a ação de exclusão
-            remove registros do LocalStorage somente após confirmação no handler JavaScript,
-            enquanto a inclusão navega para formulário próprio do responsável.
+            ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados diretamente; apenas entrega o ID
+            para abertura da página de detalhes.
             TODO: Em produção, trocar data-id local por identificador de banco e validar
             permissões de ação no backend antes de qualquer alteração.
           -->
           <div class="actions">
             <button type="button" class="action-details" data-action="details" data-id="${convenio.id}">Detalhes</button>
-            <button type="button" class="action-include" data-action="include-responsavel" data-id="${convenio.id}">Incluir responsável</button>
-            <button type="button" class="action-delete" data-action="delete" data-id="${convenio.id}">Excluir</button>
           </div>
         </td>
       </tr>
@@ -1689,6 +1707,80 @@ function detailItem(label, value) {
   return `<div class="detail-item"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value || '-')}</strong></div>`;
 }
 
+function detailReviewField(label, value) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Monta um campo textual no padrão visual da página de revisão, usado
+   * também pela página dedicada de detalhes para manter layout fixo mesmo sem convênio selecionado.
+   * PARÂMETROS E RETORNO: Recebe label e value como strings e retorna HTML seguro.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa armazenamento; apenas formata dados já carregados.
+   * TODO: Em produção, extrair este helper para componente compartilhado entre revisão e detalhes.
+   */
+  return `<div class="review-field"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value || '-')}</strong></div>`;
+}
+
+function detailReviewSection(title, content) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Agrupa conteúdo da página de detalhes em seções horizontais idênticas
+   * ao modelo de conferência antes do envio.
+   * PARÂMETROS E RETORNO: Recebe title e content como strings e retorna HTML da seção.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; só organiza o HTML renderizado.
+   * TODO: Em produção, transformar seções de detalhes/revisão em componente único versionado.
+   */
+  return `<section class="review-section"><h3>${escapeHtml(title)}</h3>${content}</section>`;
+}
+
+function detailReviewTable(headers, rows) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Renderiza tabelas compactas de detalhes usando o mesmo padrão visual
+   * da página de revisão do cadastro.
+   * PARÂMETROS E RETORNO: Recebe headers como array de strings e rows como matriz de valores;
+   * retorna string HTML da tabela.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa LocalStorage; usa apenas arrays já resolvidos.
+   * TODO: Em produção, mover render de tabelas para componente com ordenação e acessibilidade.
+   */
+  return `
+    <div class="review-table-wrap">
+      <table class="review-table">
+        <thead>
+          <tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join('')}</tr>
+        </thead>
+        <tbody>
+          ${rows.map((row) => `
+            <tr>${row.map((cell) => `<td>${escapeHtml(cell ?? '-')}</td>`).join('')}</tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function detailCreateEmptyConvenio() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Cria um objeto vazio para renderizar a página de detalhes com todos os
+   * campos fixos antes de uma seleção real de convênio.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna objeto no formato mínimo do convênio.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; fornece apenas fallback em memória.
+   * TODO: Em produção, o estado vazio deve vir acompanhado de skeleton/loading quando houver API.
+   */
+  return {
+    id: '',
+    nome: '',
+    cnpj: '',
+    tipoConveniado: '',
+    enderecoDados: {},
+    numero: '',
+    diarioData: '',
+    diarioPagina: '',
+    valorContrato: 0,
+    inicio: '',
+    fim: '',
+    valores: [],
+    limitesVagasDiarias: [],
+    limitesVagasSemana: { diasSelecionados: [], dias: [] },
+    responsaveis: []
+  };
+}
+
 function removeContract(id) {
   saveList(STORAGE_CONVENIOS, getConvenios().filter((item) => item.id !== id));
   saveList(STORAGE_VALORES, getValores().filter((item) => item.convenioId !== id));
@@ -1697,8 +1789,7 @@ function removeContract(id) {
 
   if (selectedConvenioId === id) {
     selectedConvenioId = '';
-    if (detailsPanel) detailsPanel.hidden = true;
-    if (detailsEmpty) detailsEmpty.hidden = false;
+    renderDetails('');
   }
 
   renderAll();
@@ -1706,10 +1797,10 @@ function removeContract(id) {
 
 function renderDetails(id) {
   /*
-   * DESCRIÇÃO DA FUNÇÃO: Renderiza a ficha completa de um convênio selecionado, consolidando dados
-   * contratuais, valores por classe, limites diários de vagas, responsáveis e histórico de contratos do mesmo CNPJ.
-   * PARÂMETROS E RETORNO: Recebe id como string do convênio e não retorna valores; atualiza o DOM
-   * com os dados encontrados ou mantém o estado vazio quando não há registro.
+   * DESCRIÇÃO DA FUNÇÃO: Renderiza a página dedicada de detalhes em layout fixo, preenchendo os
+   * campos quando há convênio selecionado e mantendo o modelo vazio quando não há seleção.
+   * PARÂMETROS E RETORNO: Recebe id como string opcional do convênio e não retorna valores; atualiza
+   * o DOM com dados de identificação, contrato, vigência, valores, limites e responsáveis.
    * ARMAZENAMENTO E PERSISTÊNCIA: Lê cproeis_contratos_convenios, cproeis_contratos_valores,
    * cproeis_contratos_limites_vagas e cproeis_contratos_responsaveis no LocalStorage.
    * TODO: Em produção, buscar os detalhes por endpoint autenticado e aplicar controle de acesso por perfil.
@@ -1718,254 +1809,133 @@ function renderDetails(id) {
     return;
   }
 
-  const convenio = getConvenios().find((item) => item.id === id);
-  if (!convenio) return;
+  const convenioEncontrado = id ? getConvenios().find((item) => item.id === id) : null;
+  if (!convenioEncontrado && !isDedicatedDetailsPage) {
+    return;
+  }
 
-  selectedConvenioId = id;
+  const convenio = convenioEncontrado || detailCreateEmptyConvenio();
+  const hasDetailsData = Boolean(convenioEncontrado);
+  selectedConvenioId = convenioEncontrado ? id : '';
+
   const valores = getContractValues(convenio);
   const limitesVagasDiarias = getContractDailyLimits(convenio);
   const responsaveis = getContractResponsaveis(convenio);
-  const historicoContratos = getClientContracts(convenio.cnpj);
-  const situacao = getSituacao(convenio);
-
-  detailsHeading.textContent = titleCaseText(convenio.nome) || 'Detalhes do convênio';
-  detailsSubtitle.textContent = `Contrato ${convenio.numero || '-'} | ${situacao.label}`;
-
+  const situacao = convenioEncontrado ? getSituacao(convenio) : { label: '', active: false, className: '' };
   const valorBase = valores[0] || {};
   const classesContratuais = ['A', 'B', 'C', 'D'];
-  const valoresHtml = classesContratuais.length ? `
-    <h3 class="section-title">Valores unitários por classe</h3>
-    <div class="table-wrap">
-      <table class="compact-table contract-values-details-table">
-        <thead>
-          <tr>
-            <th>Classe</th>
-            <th>Grupo</th>
-            <th>6h</th>
-            <th>8h</th>
-            <th>12h</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${classesContratuais.map((classe) => {
-            const valor = valores.find((item) => item.classe === classe) || {};
-
-            return `
-              <tr>
-                <td>Classe ${escapeHtml(classe)}</td>
-                <td>${escapeHtml(valor.grupo || gruposClasse[classe])}</td>
-                <td>${dinheiro.format(Number(valor.servico6 || 0))}</td>
-                <td>${dinheiro.format(Number(valor.servico8 || 0))}</td>
-                <td>${dinheiro.format(Number(valor.servico12 || 0))}</td>
-              </tr>
-            `;
-          }).join('')}
-        </tbody>
-      </table>
-    </div>
-  ` : '';
-
-  const limitesVagasHtml = classesContratuais.length ? `
-    <h3 class="section-title">Total diário de vagas</h3>
-    <div class="table-wrap">
-      <table class="compact-table daily-limits-details-table">
-        <thead>
-          <tr>
-            <th>Classe</th>
-            <th>Grupo</th>
-            <th>6h por dia</th>
-            <th>8h por dia</th>
-            <th>12h por dia</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${classesContratuais.map((classe) => {
-            const limite = limitesVagasDiarias.find((item) => item.classe === classe) || {};
-
-            return `
-              <tr>
-                <td>Classe ${escapeHtml(classe)}</td>
-                <td>${escapeHtml(limite.grupo || gruposClasse[classe])}</td>
-                <td>${Number(limite.servico6 || 0)}</td>
-                <td>${Number(limite.servico8 || 0)}</td>
-                <td>${Number(limite.servico12 || 0)}</td>
-              </tr>
-            `;
-          }).join('')}
-        </tbody>
-      </table>
-    </div>
-  ` : '';
-
-  const passagemAlimentacaoHtml = `
-    <h3 class="section-title">Passagem e alimentação</h3>
-    <div class="details-grid compact-details-grid">
-      ${detailItem('Passagem', dinheiro.format(Number(valorBase.passagem || 0)))}
-      ${detailItem('Alimentação', dinheiro.format(Number(valorBase.alimentacao || 0)))}
+  const diasSemana = [
+    { key: 'segunda', label: 'Segunda' },
+    { key: 'terca', label: 'Terça' },
+    { key: 'quarta', label: 'Quarta' },
+    { key: 'quinta', label: 'Quinta' },
+    { key: 'sexta', label: 'Sexta' },
+    { key: 'sabado', label: 'Sábado' },
+    { key: 'domingo', label: 'Domingo' }
+  ];
+  const diasSelecionados = new Set(convenio.limitesVagasSemana?.diasSelecionados || []);
+  const diasHtml = `
+    <p class="hint">Dias marcados no cadastro para uso da quantidade diária informada.</p>
+    <div class="review-weekdays">
+      ${diasSemana.map((dia) => {
+        const ativo = diasSelecionados.has(dia.key)
+          || (convenio.limitesVagasSemana?.dias || []).some((item) => item.key === dia.key && item.ativo);
+        return `<span class="review-chip ${ativo ? 'active' : 'inactive'}">${ativo ? escapeHtml(dia.label) : '&nbsp;'}</span>`;
+      }).join('')}
     </div>
   `;
 
-  /*
-   * DESCRIÇÃO DO BLOCO: Calcula o teto financeiro diário do contrato por turno, multiplicando
-   * a quantidade máxima de vagas pelo valor unitário de cada classe/turno.
-   * PARÂMETROS E RETORNO: Usa arrays locais `valores`, `limitesVagasDiarias` e `classesContratuais`;
-   * gera objetos em memória para renderizar a tabela e o card resumo.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; apenas lê os registros já carregados do LocalStorage.
-   * TODO: Em produção, mover este cálculo para endpoint financeiro auditável, considerando aditivos,
-   * regras de arredondamento e possíveis exceções por período.
-   */
-  const totaisFinanceirosPorClasse = classesContratuais.map((classe) => {
-    const valor = valores.find((item) => item.classe === classe) || {};
-    const limite = limitesVagasDiarias.find((item) => item.classe === classe) || {};
-    const total12 = Number(valor.servico12 || 0) * Number(limite.servico12 || 0);
-    const total8 = Number(valor.servico8 || 0) * Number(limite.servico8 || 0);
-    const total6 = Number(valor.servico6 || 0) * Number(limite.servico6 || 0);
-
-    return {
-      classe,
-      grupo: valor.grupo || limite.grupo || gruposClasse[classe],
-      total12,
-      total8,
-      total6,
-      totalClasse: total12 + total8 + total6,
-      vagasClasse: Number(limite.servico12 || 0) + Number(limite.servico8 || 0) + Number(limite.servico6 || 0)
-    };
-  });
-  const totalFinanceiroTurnos = totaisFinanceirosPorClasse.reduce((acc, item) => ({
-    total12: acc.total12 + item.total12,
-    total8: acc.total8 + item.total8,
-    total6: acc.total6 + item.total6,
-    totalGeral: acc.totalGeral + item.totalClasse,
-    totalVagas: acc.totalVagas + item.vagasClasse
-  }), { total12: 0, total8: 0, total6: 0, totalGeral: 0, totalVagas: 0 });
-  const valorPassagemAlimentacaoUnitario = Number(valorBase.passagem || 0) + Number(valorBase.alimentacao || 0);
-  const valorPassagemAlimentacaoDiario = totalFinanceiroTurnos.totalVagas * valorPassagemAlimentacaoUnitario;
-  const valorTotalDiarioMaximo = totalFinanceiroTurnos.totalGeral + valorPassagemAlimentacaoDiario;
-  const diasLimiteMensal = 30;
-  const diasContrato = countContractDays(convenio.inicio, convenio.fim);
-  const valorTurnosContrato = totalFinanceiroTurnos.totalGeral * diasContrato;
-  const valorPassagemAlimentacaoContrato = valorPassagemAlimentacaoDiario * diasContrato;
-  const valorTotalContratoCalculado = valorTotalDiarioMaximo * diasContrato;
-  const valorContratoInformado = Number(convenio.valorContrato ?? convenio.valorMensal ?? 0);
-  const diferencaContrato = valorContratoInformado - valorTotalContratoCalculado;
-  const contratoConfere = Math.abs(diferencaContrato) < 0.01;
-
-  const resumoFinanceiroHtml = `
-    <h3 class="section-title">Prova real do valor do contrato</h3>
-    <div class="details-grid compact-details-grid financial-summary-grid">
-      ${detailItem('Valor dos turnos no contrato inteiro', dinheiro.format(valorTurnosContrato))}
-      ${detailItem('Valor com passagem/alimentação no contrato inteiro', dinheiro.format(valorPassagemAlimentacaoContrato))}
-      ${detailItem('Valor total calculado do contrato', dinheiro.format(valorTotalContratoCalculado))}
-      ${detailItem('Valor informado no contrato', dinheiro.format(valorContratoInformado))}
-      ${detailItem('Diferença', dinheiro.format(diferencaContrato))}
-      ${detailItem('Conferência', contratoConfere ? 'Valor informado confere' : 'Valor informado divergente')}
+  const identificacaoHtml = `
+    <div class="review-grid">
+      ${detailReviewField('Nome do convênio', titleCaseText(convenio.nome))}
+      ${detailReviewField('CNPJ', formatCnpj(convenio.cnpj))}
+      ${detailReviewField('Tipo de conveniado', normalizeTipoConveniado(convenio.tipoConveniado))}
+      ${detailReviewField('Situação pela vigência', situacao.label)}
     </div>
   `;
-
-  const resumoDiarioMensalHtml = `
-    <h3 class="section-title">Resumo financeiro por período</h3>
-    <div class="details-grid compact-details-grid financial-summary-grid">
-      ${detailItem('Valor dos turnos por dia', dinheiro.format(totalFinanceiroTurnos.totalGeral))}
-      ${detailItem('Passagem/alimentação por dia', dinheiro.format(valorPassagemAlimentacaoDiario))}
-      ${detailItem('Valor total diário máximo', dinheiro.format(valorTotalDiarioMaximo))}
-      ${detailItem('Valor total mensal estimado', dinheiro.format(valorTotalDiarioMaximo * diasLimiteMensal))}
-      ${detailItem('Valor total do contrato inteiro', dinheiro.format(valorTotalContratoCalculado))}
-      ${detailItem('Dias de vigência usados', String(diasContrato))}
+  const endereco = convenio.enderecoDados || {};
+  const enderecoHtml = `
+    <div class="review-grid">
+      ${detailReviewField('Endereço', [endereco.logradouro, endereco.numero].filter(Boolean).join(', ') + (endereco.complemento ? ` - ${endereco.complemento}` : ''))}
+      ${detailReviewField('Bairro', endereco.bairro)}
+      ${detailReviewField('Cidade/UF', [endereco.cidade, endereco.uf].filter(Boolean).join('/'))}
+      ${detailReviewField('CEP', endereco.cep)}
     </div>
   `;
-
-  const responsaveisHtml = responsaveis.length ? `
-    <h3 class="section-title">Responsáveis</h3>
-    <div class="table-wrap">
-      <table class="compact-table responsaveis-details-table">
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>CPF</th>
-            <th>Email</th>
-            <th>Telefone</th>
-            <th>Início</th>
-            <th>Fim</th>
-            <th>Situação</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${responsaveis.map((responsavel) => `
-            <tr>
-              <td><strong>${escapeHtml(titleCaseText(responsavel.nome) || '-')}</strong></td>
-              <td>${escapeHtml(maskCpfForDisplay(responsavel.cpf))}</td>
-              <td>${escapeHtml(normalizeText(responsavel.email).toLowerCase() || '-')}</td>
-              <td>${escapeHtml(formatPhone(responsavel.telefone) || '-')}</td>
-              <td>${formatDateOrBlank(responsavel.inicio)}</td>
-              <td>${formatDateOrBlank(responsavel.fim)}</td>
-              <td>${responsavel.fim ? 'Acesso retirado' : 'Ativo'}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
+  const contratoHtml = `
+    <div class="review-grid">
+      ${detailReviewField('Nº do contrato', convenio.numero)}
+      ${detailReviewField('Data da publicação', formatDateOrDash(convenio.diarioData))}
+      ${detailReviewField('Página do diário oficial', convenio.diarioPagina)}
+      ${detailReviewField('Valor do contrato', hasDetailsData ? dinheiro.format(Number(convenio.valorContrato ?? convenio.valorMensal ?? 0)) : '-')}
     </div>
-  ` : '';
-
-  const historicoHtml = historicoContratos.length > 1 ? `
-    <h3 class="section-title">Histórico de contratos do cliente</h3>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Contrato</th>
-            <th>Valor</th>
-            <th>Vigência</th>
-            <th>Diário Oficial</th>
-            <th>Situação</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${historicoContratos.map((item) => {
-            const itemSituacao = getSituacao(item);
-
-            return `
-              <tr>
-                <td>${escapeHtml(item.numero || '-')}</td>
-                <td>${dinheiro.format(Number(item.valorContrato ?? item.valorMensal ?? 0))}</td>
-                <td>${formatPeriod(item.inicio, item.fim)}</td>
-                <td>${formatDateOrDash(item.diarioData)}${item.diarioPagina ? `<br><small>Página ${escapeHtml(item.diarioPagina)}</small>` : ''}</td>
-                <td><span class="badge ${itemSituacao.className}">${itemSituacao.label}</span></td>
-                <td>
-                  <div class="actions">
-                    <button type="button" data-action="edit-history" data-id="${item.id}">Editar</button>
-                    <button type="button" class="danger" data-action="delete-history" data-id="${item.id}">Apagar</button>
-                  </div>
-                </td>
-              </tr>
-            `;
-          }).join('')}
-        </tbody>
-      </table>
-    </div>
-  ` : '';
-
-  detailsContent.innerHTML = `
-    <h3 class="section-title">Dados do convênio</h3>
-    <div class="details-grid">
-      ${detailItem('Nome', titleCaseText(convenio.nome))}
-      ${detailItem('CNPJ', formatCnpj(convenio.cnpj))}
-      ${detailItem('Tipo de conveniado', normalizeTipoConveniado(convenio.tipoConveniado) || 'Não informado')}
-      ${detailItem('Situação pela vigência', situacao.label)}
-      ${detailItem('Endereço', formatEndereco(convenio.enderecoDados, convenio.endereco))}
-      ${detailItem('Nº do contrato', convenio.numero)}
-      ${detailItem('Valor do contrato', dinheiro.format(Number(convenio.valorContrato ?? convenio.valorMensal ?? 0)))}
-      ${detailItem('Publicação no Diário Oficial', `${formatDateOrDash(convenio.diarioData)}\nPágina ${convenio.diarioPagina || '-'}`)}
-      ${detailItem('Vigência', formatPeriod(convenio.inicio, convenio.fim))}
-    </div>
-    ${limitesVagasHtml}
-    ${valoresHtml}
-    ${passagemAlimentacaoHtml}
-    ${resumoDiarioMensalHtml}
-    ${resumoFinanceiroHtml}
-    ${responsaveisHtml}
-    ${historicoHtml}
   `;
+  const vigenciaHtml = `
+    <div class="review-grid">
+      ${detailReviewField('Início da vigência', formatDateOrDash(convenio.inicio))}
+      ${detailReviewField('Fim da vigência', formatDateOrDash(convenio.fim))}
+    </div>
+  `;
+  const valoresHtml = detailReviewTable(
+    ['Classe', 'Grupo', '6h', '8h', '12h'],
+    classesContratuais.map((classe) => {
+      const valor = valores.find((item) => item.classe === classe) || {};
+      return [
+        `Classe ${classe}`,
+        valor.grupo || gruposClasse[classe],
+        hasDetailsData ? dinheiro.format(Number(valor.servico6 || 0)) : '-',
+        hasDetailsData ? dinheiro.format(Number(valor.servico8 || 0)) : '-',
+        hasDetailsData ? dinheiro.format(Number(valor.servico12 || 0)) : '-'
+      ];
+    })
+  );
+  const beneficiosHtml = `
+    <div class="review-grid">
+      ${detailReviewField('Passagem', hasDetailsData ? dinheiro.format(Number(valorBase.passagem || 0)) : '-')}
+      ${detailReviewField('Alimentação', hasDetailsData ? dinheiro.format(Number(valorBase.alimentacao || 0)) : '-')}
+    </div>
+  `;
+  const limitesVagasHtml = detailReviewTable(
+    ['Classe', 'Grupo', '6h por dia', '8h por dia', '12h por dia'],
+    classesContratuais.map((classe) => {
+      const limite = limitesVagasDiarias.find((item) => item.classe === classe) || {};
+      return [
+        `Classe ${classe}`,
+        limite.grupo || gruposClasse[classe],
+        hasDetailsData ? Number(limite.servico6 || 0) : '-',
+        hasDetailsData ? Number(limite.servico8 || 0) : '-',
+        hasDetailsData ? Number(limite.servico12 || 0) : '-'
+      ];
+    })
+  );
+  const responsaveisHtml = detailReviewTable(
+    ['Nome', 'CPF', 'Email', 'Telefone', 'Início', 'Fim', 'Situação'],
+    (responsaveis.length ? responsaveis : [{}]).map((responsavel) => [
+      titleCaseText(responsavel.nome) || '-',
+      maskCpfForDisplay(responsavel.cpf),
+      normalizeText(responsavel.email).toLowerCase() || '-',
+      formatPhone(responsavel.telefone) || '-',
+      formatDateOrBlank(responsavel.inicio) || '-',
+      formatDateOrBlank(responsavel.fim) || '-',
+      responsavel.fim ? 'Acesso retirado' : (responsavel.nome ? 'Ativo' : '-')
+    ])
+  );
+
+  detailsHeading.textContent = titleCaseText(convenio.nome) || 'Detalhes do convênio';
+  detailsSubtitle.textContent = convenioEncontrado
+    ? `Contrato ${convenio.numero || '-'} | ${situacao.label}`
+    : 'Modelo de consulta. Selecione um convênio na tabela para carregar os dados.';
+  detailsContent.innerHTML = [
+    detailReviewSection('Identificação do conveniado', identificacaoHtml),
+    detailReviewSection('Endereço', enderecoHtml),
+    detailReviewSection('Contrato e publicação', contratoHtml),
+    detailReviewSection('Vigência do contrato', vigenciaHtml),
+    detailReviewSection('Valores por classe', valoresHtml),
+    detailReviewSection('Passagem e alimentação', beneficiosHtml),
+    detailReviewSection('Total diário de vagas por classe e turno', limitesVagasHtml),
+    detailReviewSection('Dias de funcionamento do contrato', diasHtml),
+    detailReviewSection('Responsáveis', responsaveisHtml)
+  ].join('');
 
   detailsEmpty.hidden = true;
   detailsPanel.hidden = false;
@@ -2036,10 +2006,12 @@ function carregarDetalheInicialDaURL() {
   if (!detailsPanel || !detailsContent) return;
 
   const params = new URLSearchParams(window.location.search);
-  const detailId = params.get('id') || params.get('details') || localStorage.getItem('cproeis_convenio_atual') || '';
+  const detailId = params.get('id') || params.get('details') || (isDedicatedDetailsPage ? localStorage.getItem('cproeis_convenio_atual') : '') || '';
 
   if (detailId) {
     renderDetails(detailId);
+  } else if (isDedicatedDetailsPage) {
+    renderDetails('');
   }
 }
 
@@ -2173,9 +2145,6 @@ document.addEventListener('click', (event) => {
   if (!convenio) return;
 
   if (button.dataset.action === 'details') openDetailsPage(convenio.id);
-  if (button.dataset.action === 'include-responsavel') {
-    window.location.href = `incluir-responsavel.html?id=${encodeURIComponent(convenio.id)}`;
-  }
   if (button.dataset.action === 'renew') {
     if (form) {
       renewContract(convenio);
@@ -2190,7 +2159,7 @@ document.addEventListener('click', (event) => {
       window.location.href = `cadastrar-convenio.html?edit=${encodeURIComponent(convenio.id)}`;
     }
   }
-  if ((button.dataset.action === 'delete' || button.dataset.action === 'delete-history') && confirm('Excluir este contrato e seus dados vinculados?')) {
+  if (button.dataset.action === 'delete-history' && confirm('Excluir este contrato e seus dados vinculados?')) {
     removeContract(convenio.id);
   }
 });

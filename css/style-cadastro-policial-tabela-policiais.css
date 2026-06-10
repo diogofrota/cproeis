@@ -1131,6 +1131,12 @@ tbody tr:hover td {
   transform: none;
 }
 
+.module-header .module-menu a.active {
+  background: #fff;
+  color: #1f2a8a;
+  border-color: #fff;
+}
+
 .module-header .module-menu .menu-back-link {
   background: #fff;
   color: #1f2a8a;
@@ -1196,5 +1202,37 @@ tbody tr:hover td {
 @media (max-width: 760px) {
   .module-header .header-top {
     display: flex;
+  }
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Ajusta a navegação do Banco de Dados para notebooks menores sem
+ * alterar a estrutura de consulta da tabela.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; usa flex-basis para
+ * permitir quebra organizada dos botões.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; altera somente apresentação CSS.
+ * TODO: Em produção, consolidar esta navegação em componente compartilhado.
+ */
+.module-header .module-menu a {
+  width: auto;
+  flex: 1 1 180px;
+  max-width: 260px;
+}
+
+@media (max-width: 1360px) {
+  .module-header {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+
+  .module-header .module-menu a {
+    flex-basis: 170px;
+  }
+}
+
+@media (max-width: 760px) {
+  .module-header .module-menu a {
+    flex-basis: min(100%, 320px);
+    max-width: min(100%, 320px);
   }
 }

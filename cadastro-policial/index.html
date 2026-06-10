@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Banco de Dados</title>
+  <link rel="stylesheet" href="../css/style-cadastro-policial-cadastro.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página inicial do módulo Banco de Dados, usada como hub para
+    cadastro, consulta e indicadores dos policiais.
+    PARÂMETROS E RETORNO: Não recebe parâmetros pela URL e não retorna valores; os cards
+    navegam para páginas HTML locais do módulo.
+    ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; atua apenas como navegação estática.
+    TODO: Em produção, carregar permissões do usuário para mostrar somente ações autorizadas.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>Banco de Dados</h1>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="cadastro-policial-menu" aria-label="Menu do banco de dados">
+      <a class="tab-button active" href="index.html" data-history-back="false">Página inicial</a>
+      <a class="tab-button" href="cadastro.html">Adicionar registro</a>
+      <a class="tab-button" href="tabela-policiais.html">Tabela de policiais</a>
+      <a class="tab-button" href="dashboard.html">Dashboard</a>
+    </nav>
+  </header>
+
+  <main class="page-shell">
+    <section class="database-home-panel">
+      <div class="database-home-header">
+        <h2>Funcionalidades do banco de dados</h2>
+        <p>Escolha a etapa desejada para cadastrar, consultar ou acompanhar indicadores.</p>
+      </div>
+
+      <div class="database-card-grid">
+        <a class="database-feature-card" href="cadastro.html">
+          <strong>Adicionar registro</strong>
+          <span>Cadastrar dados pessoais, funcionais, administrativos, comportamento, saúde e histórico do policial.</span>
+        </a>
+
+        <a class="database-feature-card" href="tabela-policiais.html">
+          <strong>Tabela de policiais</strong>
+          <span>Pesquisar, filtrar, visualizar detalhes e atualizar registros já cadastrados na base local.</span>
+        </a>
+
+        <a class="database-feature-card" href="dashboard.html">
+          <strong>Dashboard</strong>
+          <span>Acompanhar totais e indicadores consolidados por posto, unidade, situação e comportamento.</span>
+        </a>
+
+        <a class="database-feature-card" href="../index.html">
+          <strong>Sistema CPROEIS</strong>
+          <span>Retorna ao menu geral para acessar os demais módulos do sistema.</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

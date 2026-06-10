@@ -20,16 +20,17 @@
   <header class="module-header">
     <div class="header-top">
       <div class="header-copy">
-        <h1>Contratos e Convênios</h1>
-        <p>Cadastro local de convênios, contratos, valores, responsáveis e histórico.</p>
+        <h1>Contrato</h1>
       </div>
     </div>
 
     <nav class="module-menu" id="contratos-menu" aria-label="Funcionalidades de contratos">
+      <a class="tab-button" href="index.html" data-history-back="false">Página inicial</a>
       <a class="tab-button active" href="cadastrar-convenio.html">Cadastrar convênio</a>
       <a class="tab-button" href="tabela-convenios.html">Tabela Convênios</a>
+      <a class="tab-button" href="incluir-responsavel.html">Adicionar responsável</a>
+      <a class="tab-button" href="retirar-responsavel.html">Retirar responsável</a>
       <a class="tab-button" href="renovacoes.html">Renovações</a>
-      <a class="menu-back-link" href="../index.html" data-history-back="false">Página inicial</a>
     </nav>
   </header>
 
@@ -217,11 +218,12 @@
           <section class="subcard daily-limits-card">
             <!--
               DESCRIÇÃO DO BLOCO: Captura o total diário de vagas permitido por classe e turno
-              de serviço dentro do contrato cadastrado.
+              de serviço dentro do contrato cadastrado e a distribuição operacional por dia da semana.
               PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os inputs são
               lidos pelo JavaScript no envio do formulário.
               ARMAZENAMENTO E PERSISTÊNCIA: Os dados são gravados no LocalStorage junto ao
-              convênio e na chave `cproeis_contratos_limites_vagas`.
+              convênio, na chave `cproeis_contratos_limites_vagas` e no objeto
+              `limitesVagasSemana` embutido no contrato.
               TODO: Em produção, substituir estes campos locais por tabela relacional vinculada
               ao contrato e validada pelo backend antes da geração de vagas.
             -->
@@ -269,6 +271,36 @@
                 </tbody>
               </table>
             </div>
+
+            <div class="weekly-limits-config" aria-labelledby="weekly-limits-title">
+              <!--
+                DESCRIÇÃO DO BLOCO: Permite marcar os dias da semana em que o contrato funciona,
+                usando a matriz de classe/turno acima como quantidade aplicável aos dias selecionados.
+                PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os checkboxes são
+                lidos pelo JavaScript no submit.
+                ARMAZENAMENTO E PERSISTÊNCIA: Os dias selecionados são gravados em `limitesVagasSemana`
+                dentro de `cproeis_contratos_convenios`, preservando a tabela diária oficial em
+                `cproeis_contratos_limites_vagas`.
+                TODO: Em produção, transformar os dias operacionais em agenda contratual versionada
+                por período, feriado e aditivo.
+              -->
+              <div class="weekly-limits-header">
+                <div>
+                  <h4 id="weekly-limits-title">Dias de funcionamento do contrato</h4>
+                  <p class="hint">Marque os dias em que a quantidade diária da tabela acima pode ser usada para criar vagas.</p>
+                </div>
+              </div>
+
+              <div class="weekday-picker" aria-label="Dias de funcionamento do contrato">
+                <label><input type="checkbox" name="weekday-operacao" value="segunda"> Segunda</label>
+                <label><input type="checkbox" name="weekday-operacao" value="terca"> Terça</label>
+                <label><input type="checkbox" name="weekday-operacao" value="quarta"> Quarta</label>
+                <label><input type="checkbox" name="weekday-operacao" value="quinta"> Quinta</label>
+                <label><input type="checkbox" name="weekday-operacao" value="sexta"> Sexta</label>
+                <label><input type="checkbox" name="weekday-operacao" value="sabado"> Sábado</label>
+                <label><input type="checkbox" name="weekday-operacao" value="domingo"> Domingo</label>
+              </div>
+            </div>
           </section>
 
           <h3 class="section-title">Responsáveis</h3>
@@ -277,52 +309,52 @@
             <div class="subcard-grid">
               <fieldset class="responsavel-box full">
                 <legend>Dados do usuário</legend>
-                <div class="responsavel-box-grid">
-                  <label>
-                    Nome
-                    <input id="responsavel-nome" type="text">
-                  </label>
+                <!--
+                  DESCRIÇÃO DO BLOCO: Exibe responsáveis em linhas de rascunho, permitindo incluir
+                  cada usuário na mesma linha e adicionar novas linhas quando houver mais responsáveis.
+                  PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os inputs e botões
+                  são lidos pelo JavaScript do cadastro.
+                  ARMAZENAMENTO E PERSISTÊNCIA: As linhas são temporárias no DOM; ao clicar em Incluir,
+                  o JavaScript move os dados para o array local `responsaveisState`, que será persistido
+                  no LocalStorage junto ao convênio.
+                  TODO: Em produção, substituir o rascunho local por componente transacional com validação
+                  online de CPF, email e usuário já existente.
+                -->
+                <div class="responsavel-lines" id="responsavel-lines">
+                  <div class="responsavel-line" data-responsavel-draft-row>
+                    <label>
+                      Nome
+                      <input id="responsavel-nome" type="text" data-responsavel-field="nome">
+                    </label>
 
-                  <label>
-                    CPF
-                    <input id="responsavel-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00">
-                  </label>
+                    <label>
+                      CPF
+                      <input id="responsavel-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" data-responsavel-field="cpf">
+                    </label>
 
-                  <label>
-                    Email
-                    <input id="responsavel-email" type="email" autocomplete="email">
-                  </label>
+                    <label>
+                      Email
+                      <input id="responsavel-email" type="email" autocomplete="email" data-responsavel-field="email">
+                    </label>
 
-                  <label>
-                    Telefone
-                    <input id="responsavel-telefone" type="tel" autocomplete="tel">
-                  </label>
+                    <label>
+                      Telefone
+                      <input id="responsavel-telefone" type="tel" autocomplete="tel" data-responsavel-field="telefone">
+                    </label>
+
+                    <div class="responsavel-line-actions">
+                      <button type="button" data-action="include-responsavel-draft">Incluir</button>
+                    </div>
+                  </div>
                 </div>
               </fieldset>
 
             </div>
 
-            <div class="form-actions compact-actions">
-              <button type="button" id="add-responsavel">Adicionar responsável</button>
-            </div>
           </section>
 
-          <div class="table-wrap full">
-            <table class="compact-table">
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>CPF</th>
-                  <th>Contato</th>
-                  <th>Acesso</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="responsaveis-form-body"></tbody>
-            </table>
-          </div>
-
-          <div class="form-actions">
+          <div class="form-actions submit-actions">
+            <button type="button" class="secondary test-fill-button" id="fill-test-convenio">Preencher teste</button>
             <button type="submit" id="submit-button">Cadastrar convênio</button>
           </div>
         </form>
@@ -331,7 +363,9 @@
 
   </main>
 
+  <script src="../js/script-contratos-json-api.js"></script>
   <script src="../js/script-contratos-cadastrar-convenio.js"></script>
+  <script src="../dados-simulados/dados-cadastrar-convenio-teste.js"></script>
   <script src="../js/script-navigation.js"></script>
 </body>
 </html>

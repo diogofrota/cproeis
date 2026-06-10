@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Início de Contratos</title>
+  <link rel="stylesheet" href="../css/style-contratos-cadastrar-convenio.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página inicial do módulo de contratos com cards de orientação para
+    cada funcionalidade disponível no menu.
+    PARÂMETROS E RETORNO: Não recebe parâmetros pela URL e não retorna valores; os cards são
+    links de navegação para páginas HTML do módulo.
+    ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; funciona como hub estático de acesso.
+    TODO: Em produção, adaptar os cards conforme perfil do usuário autenticado e permissões reais.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>Contrato</h1>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="contratos-menu" aria-label="Funcionalidades de contratos">
+      <a class="tab-button active" href="index.html" data-history-back="false">Página inicial</a>
+      <a class="tab-button" href="cadastrar-convenio.html">Cadastrar convênio</a>
+      <a class="tab-button" href="tabela-convenios.html">Tabela Convênios</a>
+      <a class="tab-button" href="incluir-responsavel.html">Adicionar responsável</a>
+      <a class="tab-button" href="retirar-responsavel.html">Retirar responsável</a>
+      <a class="tab-button" href="renovacoes.html">Renovações</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel contracts-home-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Funcionalidades do módulo</h2>
+          <p class="hint">Use os cards para acessar a etapa correta do fluxo de contratos.</p>
+        </div>
+      </div>
+
+      <div class="contracts-card-grid">
+        <a class="contracts-feature-card" href="cadastrar-convenio.html">
+          <strong>Cadastrar convênio</strong>
+          <span>Registra o conveniado, contrato, vigência, valores, limites diários, dias de funcionamento e responsáveis iniciais.</span>
+        </a>
+
+        <a class="contracts-feature-card" href="tabela-convenios.html">
+          <strong>Tabela Convênios</strong>
+          <span>Consulta os contratos cadastrados, aplica filtros e abre a tela de detalhes de cada convênio.</span>
+        </a>
+
+        <a class="contracts-feature-card" href="incluir-responsavel.html">
+          <strong>Adicionar responsável</strong>
+          <span>Seleciona um contrato e envia a inclusão de um novo responsável para revisão antes da gravação.</span>
+        </a>
+
+        <a class="contracts-feature-card" href="retirar-responsavel.html">
+          <strong>Retirar responsável</strong>
+          <span>Seleciona o contrato, escolhe o responsável ativo e informa a data final de acesso antes da revisão.</span>
+        </a>
+
+        <a class="contracts-feature-card" href="renovacoes.html">
+          <strong>Renovações</strong>
+          <span>Acompanha solicitações de renovação, documentos e finalização de novo contrato quando aprovado.</span>
+        </a>
+
+        <a class="contracts-feature-card" href="../index.html">
+          <strong>Sistema CPROEIS</strong>
+          <span>Retorna ao menu geral para acessar os demais módulos do sistema.</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

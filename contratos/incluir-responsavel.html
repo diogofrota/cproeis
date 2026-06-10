@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CPROEIS - Incluir Responsável</title>
-  <link rel="stylesheet" href="../css/style-contratos-tabela-convenios.css">
+  <link rel="stylesheet" href="../css/style-contratos-cadastrar-convenio.css">
 </head>
 <body>
   <!--
@@ -19,16 +19,17 @@
   <header class="module-header">
     <div class="header-top">
       <div class="header-copy">
-        <h1>Incluir responsável</h1>
-        <p>Vincule um novo responsável a um convênio já cadastrado.</p>
+        <h1>Contrato</h1>
       </div>
     </div>
 
     <nav class="module-menu" id="contratos-menu" aria-label="Funcionalidades de contratos">
+      <a class="tab-button" href="index.html" data-history-back="false">Página inicial</a>
       <a class="tab-button" href="cadastrar-convenio.html">Cadastrar convênio</a>
-      <a class="tab-button active" href="tabela-convenios.html">Tabela Convênios</a>
+      <a class="tab-button" href="tabela-convenios.html">Tabela Convênios</a>
+      <a class="tab-button active" href="incluir-responsavel.html">Adicionar responsável</a>
+      <a class="tab-button" href="retirar-responsavel.html">Retirar responsável</a>
       <a class="tab-button" href="renovacoes.html">Renovações</a>
-      <a class="menu-back-link" href="../index.html" data-history-back="false">Página inicial</a>
     </nav>
   </header>
 
@@ -46,13 +47,19 @@
           DESCRIÇÃO DO BLOCO: Formulário independente para adicionar responsável a contrato existente.
           Ele separa a operação de inclusão da edição completa do convênio.
           PARÂMETROS E RETORNO: O formulário não recebe parâmetros HTML; no submit, o JavaScript valida
-          campos e grava o novo responsável.
-          ARMAZENAMENTO E PERSISTÊNCIA: Os dados são gravados no LocalStorage dentro de
-          cproeis_contratos_convenios e cproeis_contratos_responsaveis.
+          campos e salva um rascunho JSON para a página de revisão.
+          ARMAZENAMENTO E PERSISTÊNCIA: Os dados ficam em sessionStorage até a confirmação;
+          depois a camada JSON local grava LocalStorage, simulando o envio ao banco.
           TODO: Em produção, enviar estes dados para endpoint transacional com validação de CPF,
           autenticação do operador e trilha de auditoria.
         -->
         <form id="responsavel-form">
+          <label class="full">
+            Convênio
+            <select id="responsavel-convenio"></select>
+            <small class="field-hint hidden" id="responsavel-convenio-hint">Selecione o contrato que receberá o novo responsável.</small>
+          </label>
+
           <label class="wide">
             Nome
             <input id="responsavel-nome" type="text" autocomplete="name">
@@ -92,6 +99,7 @@
     </section>
   </main>
 
+  <script src="../js/script-contratos-json-api.js"></script>
   <script src="../js/script-contratos-incluir-responsavel.js"></script>
   <script src="../js/script-navigation.js"></script>
 </body>

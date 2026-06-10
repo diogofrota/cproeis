@@ -602,6 +602,93 @@ tbody tr:last-child td {
   transform: none;
 }
 
+.module-header .module-menu a.active {
+  background: #fff;
+  color: #1f2a8a;
+  border-color: #fff;
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Cards da página inicial do GSI, seguindo o padrão de hub usado nos
+ * demais módulos administrativos.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; controla grid responsivo.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa dados; apenas apresentação.
+ * TODO: Em produção, extrair para componente compartilhado da administração.
+ */
+.module-home-panel {
+  padding: 24px;
+  border: 1px solid #d8e1f0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+}
+
+.module-home-header {
+  margin-bottom: 18px;
+}
+
+.module-home-header h2 {
+  margin: 0 0 8px;
+  color: #1f2a8a;
+  font-size: 24px;
+}
+
+.module-home-header p {
+  margin: 0;
+  color: #52637c;
+  line-height: 1.5;
+}
+
+.module-card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.module-feature-card {
+  min-height: 136px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid #d8e1f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2937;
+  text-decoration: none;
+}
+
+.module-feature-card strong {
+  color: #1f2a8a;
+  font-size: 17px;
+}
+
+.module-feature-card span {
+  color: #52637c;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.module-feature-placeholder {
+  min-height: 136px;
+  display: block;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+}
+
+@media (max-width: 1100px) {
+  .module-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .module-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .module-header .module-menu .menu-back-link {
   background: #fff;
   color: #1f2a8a;
@@ -667,5 +754,41 @@ tbody tr:last-child td {
 @media (max-width: 760px) {
   .module-header .header-top {
     display: flex;
+  }
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Ajusta o hub e o menu do GSI para notebooks de 13 polegadas,
+ * reduzindo colunas antes que os cards fiquem estreitos.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; sobrescreve grid e
+ * largura dos links por breakpoints.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; altera somente o layout.
+ * TODO: Em produção, compartilhar estes breakpoints com todos os módulos administrativos.
+ */
+.module-header .module-menu a {
+  width: auto;
+  flex: 1 1 180px;
+  max-width: 260px;
+}
+
+@media (min-width: 621px) and (max-width: 1360px) {
+  .module-header {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+
+  .module-header .module-menu a {
+    flex-basis: 170px;
+  }
+
+  .module-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .module-header .module-menu a {
+    flex-basis: min(100%, 320px);
+    max-width: min(100%, 320px);
   }
 }

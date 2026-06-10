@@ -299,11 +299,82 @@ function demoId(prefix, index) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
+ * Cria um texto simples de endereço a partir dos campos separados do cadastro novo de convênio.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object} endereco - Objeto com logradouro, número, complemento, bairro, cidade, UF e CEP.
+ * @returns {string} Endereço consolidado para compatibilidade com telas antigas.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados; apenas transforma o objeto em memória antes de persistir o convênio demo.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, manter endereço normalizado em tabela própria e montar textos somente na camada de apresentação.
+ */
+function demoFormatEndereco(endereco = {}) {
+  const via = [endereco.logradouro, endereco.numero].filter(Boolean).join(', ');
+  const complemento = endereco.complemento ? ` - ${endereco.complemento}` : '';
+  const localidade = [endereco.bairro, `${endereco.cidade || ''}/${endereco.uf || ''}`].filter(Boolean).join(' - ');
+  const cep = endereco.cep ? `CEP ${endereco.cep}` : '';
+
+  return [via ? `${via}${complemento}` : '', localidade, cep].filter(Boolean).join(' - ');
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Resolve um campo que pode estar no formato novo organizado por seção ou no formato antigo plano.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {object} config - Convênio de demonstração carregado da fixture.
+ * @param {string} section - Nome da seção organizada, como `identificacao` ou `contrato`.
+ * @param {string} field - Nome do campo dentro da seção.
+ * @param {*} fallback - Valor usado quando o campo não existe.
+ * @returns {*} Valor encontrado na seção, no objeto raiz ou o fallback.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não acessa armazenamento; apenas lê o objeto em memória antes da persistência em LocalStorage.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Quando houver backend, validar schema da fixture antes de carregar o seed administrativo.
+ */
+function demoField(config = {}, section, field, fallback = '') {
+  if (config[section] && config[section][field] !== undefined) return config[section][field];
+  if (config[field] !== undefined) return config[field];
+  return fallback;
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
+ * Gera texto curto sem acentos para e-mails de teste dos responsáveis de convênio.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {string} value - Texto base do convênio ou responsável.
+ * @returns {string} Slug seguro para compor e-mail fictício.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não acessa armazenamento; o retorno é usado no objeto do responsável antes da gravação local.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, substituir e-mails sintéticos por identidade autenticada do responsável.
+ */
+function demoSlug(value) {
+  return String(value || 'convenio')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '.')
+    .replace(/(^\.|\.$)/g, '');
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
  * Cria valores de serviço por classe para um convênio de demonstração.
  *
  * PARÂMETROS E RETORNO:
  * @param {string} convenioId - ID do convênio vinculado aos valores.
  * @param {number} offset - Índice usado para variar discretamente os valores.
+ * @param {object} config - Convênio de demonstração, preferencialmente com `valoresPorClasse`
+ * e `beneficios` explícitos.
  * @returns {Array<object>} Lista de valores por classe e tipo de serviço.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
@@ -312,9 +383,29 @@ function demoId(prefix, index) {
  * NOTAS DE EXPANSÃO:
  * TODO: Versionar valores por vigência e por publicação oficial.
  */
-function demoBuildValores(convenioId, offset) {
-  const passagem = 18 + (offset % 3);
-  const alimentacao = 32 + (offset % 4);
+function demoBuildValores(convenioId, offset, config = {}) {
+  const passagem = Number(demoField(config, 'beneficios', 'passagem', 18 + (offset % 3)));
+  const alimentacao = Number(demoField(config, 'beneficios', 'alimentacao', 32 + (offset % 4)));
+  const valoresConfigurados = Array.isArray(config.valoresPorClasse) ? config.valoresPorClasse : null;
+
+  if (valoresConfigurados?.length) {
+    return valoresConfigurados.map((item) => ({
+      id: `${convenioId}-valor-${String(item.classe || '').toLowerCase()}`,
+      convenioId,
+      classe: item.classe,
+      grupo: item.grupo || '',
+      servico12: Number(item.servico12 || 0),
+      servico8: Number(item.servico8 || 0),
+      servico6: Number(item.servico6 || 0),
+      passagem: Number(item.passagem ?? passagem),
+      alimentacao: Number(item.alimentacao ?? alimentacao),
+      decreto: item.decreto || '',
+      inicio: item.inicio || '',
+      fim: item.fim || '',
+      publicacao: item.publicacao || '',
+      status: item.status || 'Vigente'
+    }));
+  }
 
   return [
     { id: `${convenioId}-valor-a`, convenioId, classe: 'A', servico12: 780 + offset, servico8: 540 + offset, servico6: 420 + offset, passagem, alimentacao },
@@ -366,6 +457,7 @@ function demoCalculateValorContrato(valores, limites, inicio, fim) {
  * PARÂMETROS E RETORNO:
  * @param {string} convenioId - ID do convênio vinculado aos limites operacionais.
  * @param {number} offset - Índice usado para variar os limites entre contratos demo.
+ * @param {object} config - Convênio de demonstração, preferencialmente com `limitesVagasDiarias`.
  * @returns {Array<object>} Lista de limites por classe com totais para 12h, 8h e 6h.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
@@ -376,7 +468,19 @@ function demoCalculateValorContrato(valores, limites, inicio, fim) {
  * TODO: Em produção, validar estes limites em tabela contratual própria e bloquear geração
  * de vagas no backend quando a quantidade diária por classe/turno for excedida.
  */
-function demoBuildLimitesVagasDiarias(convenioId, offset) {
+function demoBuildLimitesVagasDiarias(convenioId, offset, config = {}) {
+  if (Array.isArray(config.limitesVagasDiarias) && config.limitesVagasDiarias.length) {
+    return config.limitesVagasDiarias.map((item) => ({
+      id: `${convenioId}-limite-classe-${item.classe}`,
+      convenioId,
+      classe: item.classe,
+      grupo: item.grupo || '',
+      servico12: Number(item.servico12 || 0),
+      servico8: Number(item.servico8 || 0),
+      servico6: Number(item.servico6 || 0)
+    }));
+  }
+
   const variation = offset % 4;
 
   return [
@@ -389,6 +493,56 @@ function demoBuildLimitesVagasDiarias(convenioId, offset) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
+ * Monta a configuração semanal de funcionamento no mesmo formato gravado pela tela nova de cadastro.
+ *
+ * PARÂMETROS E RETORNO:
+ * @param {Array<object>} limites - Linhas de total diário por classe e turno.
+ * @param {Array<string>} selectedKeys - Chaves de dias marcados no contrato.
+ * @returns {{modo: string, diasSelecionados: Array<string>, dias: Array<object>}} Configuração semanal persistível.
+ *
+ * ARMAZENAMENTO E PERSISTÊNCIA:
+ * Não grava dados diretamente; o retorno é embutido em cada convênio salvo no LocalStorage.
+ *
+ * NOTAS DE EXPANSÃO:
+ * TODO: Em produção, validar os dias selecionados contra calendário oficial e exceções contratuais.
+ */
+function demoBuildLimitesVagasSemana(limites, selectedKeys = []) {
+  const diasSemana = [
+    { key: 'segunda', label: 'Segunda-feira' },
+    { key: 'terca', label: 'Terça-feira' },
+    { key: 'quarta', label: 'Quarta-feira' },
+    { key: 'quinta', label: 'Quinta-feira' },
+    { key: 'sexta', label: 'Sexta-feira' },
+    { key: 'sabado', label: 'Sábado' },
+    { key: 'domingo', label: 'Domingo' }
+  ];
+  const selectedSet = new Set(selectedKeys);
+  const totalPorClasse = ['A', 'B', 'C', 'D'].reduce((acc, classe) => {
+    const row = limites.find((item) => item.classe === classe) || {};
+    acc[classe] = Number(row.servico6 || 0) + Number(row.servico8 || 0) + Number(row.servico12 || 0);
+    return acc;
+  }, {});
+
+  return {
+    modo: 'dias-selecionados',
+    diasSelecionados: selectedKeys,
+    dias: diasSemana.map((dia) => {
+      const ativo = selectedSet.has(dia.key);
+      return {
+        key: dia.key,
+        label: dia.label,
+        ativo,
+        classeA: ativo ? totalPorClasse.A : 0,
+        classeB: ativo ? totalPorClasse.B : 0,
+        classeC: ativo ? totalPorClasse.C : 0,
+        classeD: ativo ? totalPorClasse.D : 0
+      };
+    })
+  };
+}
+
+/**
+ * DESCRIÇÃO DA FUNÇÃO:
  * Cria exatamente um responsável operacional para o convênio de demonstração.
  *
  * PARÂMETROS E RETORNO:
@@ -396,6 +550,7 @@ function demoBuildLimitesVagasDiarias(convenioId, offset) {
  * @param {string} convenioNome - Nome usado para montar o responsável.
  * @param {number} index - Índice numérico para CPF, telefone e e-mail.
  * @param {string} inicioContrato - Data inicial do contrato usada como início do primeiro responsável.
+ * @param {object} config - Convênio de demonstração com `responsaveis` explícitos, quando houver.
  * @returns {object} Responsável apto a acessar o módulo de convênio.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
@@ -405,27 +560,31 @@ function demoBuildLimitesVagasDiarias(convenioId, offset) {
  * TODO: Relacionar responsáveis a usuários autenticados e perfis oficiais, sem reintroduzir níveis
  * de acesso no cadastro do convênio.
  */
-function demoBuildResponsavel(convenioId, convenioNome, index, inicioContrato) {
-  const base = convenioNome.split(' ')[0];
-  const nomeResponsavel = DEMO_CONTRATOS_DATA.responsaveisConvenio?.[index - 1] || `Responsável Operacional ${index}`;
+function demoBuildResponsavel(convenioId, convenioNome, index, inicioContrato, config = {}) {
+  const responsavelConfigurado = Array.isArray(config.responsaveis) ? config.responsaveis[0] : null;
+  const nomeResponsavel = responsavelConfigurado?.nome
+    || config.responsavel
+    || DEMO_CONTRATOS_DATA.responsaveisConvenio?.[index - 1]
+    || `Responsável Operacional ${index}`;
+
   return {
     id: `${convenioId}-resp-01`,
     convenioId,
     nome: nomeResponsavel,
-    cpf: `123.45${index}.${String(600 + index).padStart(3, '0')}-${String(10 + index).slice(-2)}`,
-    email: `${base.toLowerCase()}.operacional@demo.cproeis.local`,
-    telefone: `(21) 99${index}10-${String(4500 + index).padStart(4, '0')}`,
+    cpf: responsavelConfigurado?.cpf || `123.45${index}.${String(600 + index).padStart(3, '0')}-${String(10 + index).slice(-2)}`,
+    email: responsavelConfigurado?.email || `${demoSlug(nomeResponsavel)}@demo.cproeis.local`,
+    telefone: responsavelConfigurado?.telefone || `(21) 99${index}10-${String(4500 + index).padStart(4, '0')}`,
     funcoes: [],
     funcao: '',
-    inicio: inicioContrato,
-    fim: ''
+    inicio: responsavelConfigurado?.inicio || inicioContrato,
+    fim: responsavelConfigurado?.fim || ''
   };
 }
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
- * Monta 10 convênios vigentes de demonstração, cada um com um responsável, valores por classe
- * e limites diários de vagas por classe/turno.
+ * Monta convênios vigentes de demonstração, usando a massa completa atual quando disponível e
+ * mantendo compatibilidade com a lista antiga de nomes.
  *
  * PARÂMETROS E RETORNO:
  * @returns {{convenios: Array<object>, responsaveis: Array<object>, valores: Array<object>, limitesVagas: Array<object>}} Base sintética.
@@ -437,41 +596,48 @@ function demoBuildResponsavel(convenioId, convenioNome, index, inicioContrato) {
  * TODO: Substituir dados fictícios por fixtures oficiais de homologação quando disponíveis.
  */
 function demoBuildConvenios() {
-  const names = DEMO_CONTRATOS_DATA.convenios;
+  const rows = DEMO_CONTRATOS_DATA.convenios;
 
   const convenios = [];
   const responsaveis = [];
   const valores = [];
   const limitesVagas = [];
 
-  names.forEach((nome, index) => {
+  rows.forEach((row, index) => {
+    const config = typeof row === 'string' ? { nome: row } : row;
     const convenioId = demoId('conv-demo', index + 1);
-    const convenioValores = demoBuildValores(convenioId, index * 10);
-    const convenioLimitesVagas = demoBuildLimitesVagasDiarias(convenioId, index);
-    const inicio = demoAddDays(DEMO_TODAY, -90 - index);
-    const fim = demoAddDays(DEMO_TODAY, 150 + (index * 20));
-    const responsavel = demoBuildResponsavel(convenioId, nome, index + 1, inicio);
+    const nome = demoField(config, 'identificacao', 'nome', `Convênio Demo ${index + 1}`);
+    const convenioValores = demoBuildValores(convenioId, index * 10, config);
+    const convenioLimitesVagas = demoBuildLimitesVagasDiarias(convenioId, index, config);
+    const selectedDays = Array.isArray(config.diasSelecionados) && config.diasSelecionados.length
+      ? config.diasSelecionados
+      : ['segunda', 'terca', 'quarta', 'quinta', 'sexta'];
+    const limitesVagasSemana = demoBuildLimitesVagasSemana(convenioLimitesVagas, selectedDays);
+    const inicio = demoField(config, 'vigencia', 'inicio', demoAddDays(DEMO_TODAY, -90 - index));
+    const fim = demoField(config, 'vigencia', 'fim', demoAddDays(DEMO_TODAY, 150 + (index * 20)));
+    const responsavel = demoBuildResponsavel(convenioId, nome, index + 1, inicio, config);
     const valorContratoCalculado = demoCalculateValorContrato(convenioValores, convenioLimitesVagas, inicio, fim);
+    const enderecoDados = (config.endereco && typeof config.endereco === 'object' ? config.endereco : null) || config.enderecoDados || {
+      logradouro: 'Rua Operacional',
+      numero: String(100 + index),
+      complemento: '',
+      bairro: 'Centro',
+      cidade: 'Rio de Janeiro',
+      uf: 'RJ',
+      cep: `20000-00${index}`
+    };
 
     convenios.push({
       id: convenioId,
       nome,
-      cnpj: `${String(12 + index).padStart(2, '0')}.${String(345 + index).padStart(3, '0')}.${String(670 + index).padStart(3, '0')}/0001-${String(10 + index).padStart(2, '0')}`,
-      tipoConveniado: index % 2 === 0 ? 'Órgão Público' : 'Concessionária',
-      endereco: `Rua Operacional, ${100 + index} - Rio de Janeiro/RJ - CEP 20000-00${index}`,
-      enderecoDados: {
-        logradouro: 'Rua Operacional',
-        numero: String(100 + index),
-        complemento: '',
-        bairro: 'Centro',
-        cidade: 'Rio de Janeiro',
-        uf: 'RJ',
-        cep: `20000-00${index}`
-      },
-      numero: `SEI-${String(123456 + index)}/789012/34${String(50 + index)}`,
-      diarioData: inicio,
-      diarioPagina: `Página ${12 + index}`,
-      valorContrato: valorContratoCalculado,
+      cnpj: demoField(config, 'identificacao', 'cnpj', `${String(12 + index).padStart(2, '0')}.${String(345 + index).padStart(3, '0')}.${String(670 + index).padStart(3, '0')}/0001-${String(10 + index).padStart(2, '0')}`),
+      tipoConveniado: demoField(config, 'identificacao', 'tipoConveniado', index % 2 === 0 ? 'Órgão Público' : 'Concessionária'),
+      endereco: demoFormatEndereco(enderecoDados),
+      enderecoDados,
+      numero: demoField(config, 'contrato', 'numero', `SEI-${String(123456 + index)}/789012/34${String(50 + index)}`),
+      diarioData: demoField(config, 'publicacao', 'data', inicio),
+      diarioPagina: demoField(config, 'publicacao', 'pagina', `Página ${12 + index}`),
+      valorContrato: Number(demoField(config, 'contrato', 'valorContrato', valorContratoCalculado)),
       inicio,
       fim,
       classeA: 0,
@@ -480,6 +646,7 @@ function demoBuildConvenios() {
       classeD: 0,
       valores: convenioValores,
       limitesVagasDiarias: convenioLimitesVagas,
+      limitesVagasSemana,
       responsaveis: [responsavel]
     });
 
@@ -650,7 +817,7 @@ function seedDemoContratos() {
   demoSaveList(DEMO_KEYS.valores, valores);
   demoSaveList(DEMO_KEYS.limitesVagas, limitesVagas);
   demoSaveList(DEMO_KEYS.contratosHistoricos, []);
-  demoFeedback('Contratos carregados: 10 convênios, 10 responsáveis e limites diários de vagas.');
+  demoFeedback(`Contratos carregados: ${convenios.length} convênios, ${responsaveis.length} responsáveis e limites diários de vagas.`);
 }
 
 /**

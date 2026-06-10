@@ -602,6 +602,12 @@ tbody tr:last-child td {
   transform: none;
 }
 
+.module-header .module-menu a.active {
+  background: #fff;
+  color: #1f2a8a;
+  border-color: #fff;
+}
+
 .module-header .module-menu .menu-back-link {
   background: #fff;
   color: #1f2a8a;
@@ -667,5 +673,36 @@ tbody tr:last-child td {
 @media (max-width: 760px) {
   .module-header .header-top {
     display: flex;
+  }
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Ajusta as telas internas do GSI para notebook e telas menores,
+ * mantendo o menu em linhas equilibradas.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; redefine larguras do menu.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; controla apenas apresentação CSS.
+ * TODO: Em produção, mover esta regra para CSS compartilhado do GSI.
+ */
+.module-header .module-menu a {
+  width: auto;
+  flex: 1 1 180px;
+  max-width: 260px;
+}
+
+@media (max-width: 1360px) {
+  .module-header {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+
+  .module-header .module-menu a {
+    flex-basis: 170px;
+  }
+}
+
+@media (max-width: 760px) {
+  .module-header .module-menu a {
+    flex-basis: min(100%, 320px);
+    max-width: min(100%, 320px);
   }
 }

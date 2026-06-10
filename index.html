@@ -8,31 +8,101 @@
 </head>
 <body id="topo">
   <header>
-    <h1>Sistema CPROEIS</h1>
-    <p>Selecione uma opção do sistema.</p>
+    <h1>CPROEIS</h1>
   </header>
 
   <main>
     <!--
-      DESCRIÇÃO DO BLOCO: Menu raiz unificado do sistema. Ele reúne os acessos gerais e as opções
-      administrativas que antes ficavam em página separada, reduzindo uma etapa de navegação.
-      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; cada link direciona para
-      uma página HTML própria já preparada para futura rota.
+      DESCRIÇÃO DO BLOCO: Visão inicial separada por sistemas futuros do CPROEIS, agrupando
+      módulos administrativos e acessos externos conforme os subdomínios planejados.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os cards e sublinks
+      direcionam para páginas HTML locais do protótipo.
       ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; funciona apenas como navegação estática.
-      TODO: Em produção, aplicar controle de perfil para ocultar opções administrativas sem permissão.
+      TODO: Em produção, trocar os links locais pelos domínios oficiais, aplicar autenticação por
+      sistema e ocultar opções conforme o perfil do usuário.
     -->
-    <nav aria-label="Módulos e opções do sistema">
-      <a href="cadastro-policial/cadastro.html">Base de Dados</a>
-      <a href="gsi/menu.html">GSI</a>
-      <a href="bloqueio-desbloqueio/bloqueio-desbloqueio.html">Bloqueio / Desbloqueio</a>
-      <a href="fopag/fopag.html">FOPAG</a>
-      <a href="contratos/cadastrar-convenio.html">Contratos</a>
-      <a href="acesso-comandante/acesso-comandante.html">Acesso Comandante</a>
-      <a href="convenios/acesso.html">Acesso do Convênio</a>
-      <a href="acesso-policial/acesso.html">Acesso do Policial</a>
-      <a href="p1-unidade/p1-unidade.html">P/1 Unidade</a>
-      <a href="ras/ras.html">RAS</a>
-    </nav>
+    <section class="system-overview" aria-labelledby="systems-title">
+      <div class="overview-heading">
+        <h2 id="systems-title">Portais do CPROEIS</h2>
+        <p>Cada card representa um sistema separado. Os itens internos mostram o que ficará dentro de cada portal.</p>
+      </div>
+
+      <div class="system-grid">
+        <article class="system-card main-system">
+          <div class="system-card-header">
+            <span class="system-tag">Administrativo</span>
+            <h3>Administração CPROEIS</h3>
+            <p>Portal interno para gestão, controle, pagamento, contratos e operação administrativa.</p>
+            <strong class="system-domain">administracao.cproeis.com.br</strong>
+          </div>
+
+          <div class="system-links" aria-label="Módulos administrativos">
+            <a href="cadastro-policial/index.html">Banco de Dados</a>
+            <a href="contratos/index.html">Contratos</a>
+            <a href="gsi/menu.html">GSI</a>
+            <a href="ras/index.html">RAS</a>
+            <a href="fopag/index.html">FOPAG</a>
+            <a href="bloqueio-desbloqueio/index.html">Bloqueio / Desbloqueio</a>
+            <a href="#" aria-disabled="true">Acesso Permanência</a>
+            <a href="#" aria-disabled="true">Coordenadores Regionais</a>
+            <a href="#" aria-disabled="true">Acesso Diretor</a>
+            <span class="system-link-placeholder" aria-hidden="true"></span>
+          </div>
+        </article>
+
+        <article class="system-card">
+          <div class="system-card-header">
+            <span class="system-tag">Conveniado</span>
+            <h3>Acesso do Convênio</h3>
+            <p>Portal do responsável pelo convênio para serviços, vagas, cursos e acompanhamento contratual.</p>
+            <strong class="system-domain">convenio.cproeis.com.br</strong>
+          </div>
+
+          <div class="system-links single-link" aria-label="Acesso do convênio">
+            <a href="convenios/acesso.html">Entrar no portal do convênio</a>
+          </div>
+        </article>
+
+        <article class="system-card">
+          <div class="system-card-header">
+            <span class="system-tag">Policial</span>
+            <h3>Acesso do Policial</h3>
+            <p>Portal individual para inscrição em vagas, cursos, histórico, pagamentos e dados funcionais.</p>
+            <strong class="system-domain">policial.cproeis.com.br</strong>
+          </div>
+
+          <div class="system-links single-link" aria-label="Acesso do policial">
+            <a href="acesso-policial/acesso.html">Entrar no portal do policial</a>
+          </div>
+        </article>
+
+        <article class="system-card">
+          <div class="system-card-header">
+            <span class="system-tag">Unidade</span>
+            <h3>Acesso da P/1</h3>
+            <p>Portal da P/1 para acompanhar efetivo, vagas, serviços e rotinas vinculadas à unidade.</p>
+            <strong class="system-domain">p1.cproeis.com.br</strong>
+          </div>
+
+          <div class="system-links single-link" aria-label="Acesso da P/1">
+            <a href="p1-unidade/p1-unidade.html">Entrar no portal da P/1</a>
+          </div>
+        </article>
+
+        <article class="system-card">
+          <div class="system-card-header">
+            <span class="system-tag">Corregedoria</span>
+            <h3>Acesso da Corregedoria</h3>
+            <p>Portal futuro para rotinas de corregedoria, consulta controlada, auditoria e acompanhamento disciplinar.</p>
+            <strong class="system-domain">corregedoria.cproeis.com.br</strong>
+          </div>
+
+          <div class="system-links single-link" aria-label="Acesso da corregedoria">
+            <a href="#" aria-disabled="true">Portal em planejamento</a>
+          </div>
+        </article>
+      </div>
+    </section>
 
     <!--
       DESCRIÇÃO DO BLOCO: Ferramentas locais de demonstração para facilitar testes do protótipo.

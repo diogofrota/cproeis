@@ -32,32 +32,171 @@ main {
   margin: 32px auto;
 }
 
-nav {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  margin-bottom: 28px;
+/*
+ * DESCRIÇÃO DO BLOCO: Organiza a página inicial por sistemas futuros do CPROEIS, destacando
+ * o portal administrativo e os portais externos por público.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica grid responsivo e
+ * estados visuais aos cards e links.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; atua somente na apresentação da home.
+ * TODO: Em produção, evoluir estes cards para refletir status real de disponibilidade de cada domínio.
+ */
+.system-overview {
+  margin-bottom: 22px;
+  padding: 24px;
+  border-left: 5px solid #1f2a8a;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
 }
 
-nav a {
-  min-height: 88px;
+.overview-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.overview-heading h2 {
+  margin: 0;
+  color: #1f2a8a;
+  font-size: 24px;
+}
+
+.overview-heading p {
+  max-width: 980px;
+  flex: 1;
+  margin: 0;
+  color: #52637c;
+  line-height: 1.5;
+}
+
+.system-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr 1fr;
+  align-items: stretch;
+  gap: 14px;
+}
+
+.system-card {
+  min-height: 292px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 18px;
+  padding: 20px;
+  border: 1px solid #d8e1f0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.system-card.main-system {
+  grid-row: span 2;
+}
+
+.system-card-header {
+  display: grid;
+  gap: 8px;
+}
+
+.system-tag {
+  width: fit-content;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: #eef2ff;
+  color: #1f2a8a;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.system-card h3 {
+  margin: 0;
+  color: #1f2a8a;
+  font-size: 23px;
+}
+
+.system-card p {
+  margin: 0;
+  color: #52637c;
+  line-height: 1.5;
+}
+
+.system-domain {
+  display: block;
+  width: fit-content;
+  margin-top: 4px;
+  padding: 7px 10px;
+  border: 1px solid #d8e1f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #1f2937;
+  font-size: 13px;
+}
+
+.system-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.system-links.single-link {
+  grid-template-columns: 1fr;
+}
+
+.system-links a {
+  min-height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
   background: #fff;
   color: #1f2a8a;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.25;
   text-align: center;
   text-decoration: none;
-  font-weight: 700;
-  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
-nav a:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+.system-links a:hover,
+.system-links a:focus-visible {
+  border-color: #1f2a8a;
+  background: #eef2ff;
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.system-links a[aria-disabled="true"] {
+  border-style: dashed;
+  background: #f8fafc;
+  color: #64748b;
+  cursor: default;
+}
+
+.system-links a[aria-disabled="true"]:hover,
+.system-links a[aria-disabled="true"]:focus-visible {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  transform: none;
+}
+
+.system-link-placeholder {
+  /*
+   * DESCRIÇÃO DO BLOCO: Completa visualmente grades administrativas com um quadro vazio,
+   * preservando o alinhamento quando a quantidade de itens for ímpar.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; estiliza um span sem ação.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; é apenas apresentação visual.
+   * TODO: Em produção, remover ou substituir por novo módulo quando a administração definir outro acesso.
+   */
+  min-height: 42px;
+  display: block;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
 }
 
 .demo-tools {
@@ -110,7 +249,7 @@ nav a:hover {
   background: #fee7e4;
 }
 
-section {
+section:not(.system-overview) {
   margin-bottom: 22px;
   padding: 24px;
   border-left: 5px solid #1f2a8a;
@@ -119,13 +258,13 @@ section {
   box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
 }
 
-section h2 {
+section:not(.system-overview) h2 {
   margin: 0 0 10px;
   color: #1f2a8a;
   font-size: 24px;
 }
 
-section p {
+section:not(.system-overview) p {
   margin: 0 0 16px;
   line-height: 1.5;
 }
@@ -149,8 +288,20 @@ ul {
 }
 
 @media (max-width: 800px) {
-  nav {
-    grid-template-columns: repeat(2, 1fr);
+  .overview-heading {
+    display: block;
+  }
+
+  .overview-heading p {
+    margin-top: 8px;
+  }
+
+  .system-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .system-card.main-system {
+    grid-row: auto;
   }
 
   .demo-tools {
@@ -167,7 +318,7 @@ ul {
     font-size: 28px;
   }
 
-  nav {
+  .system-links {
     grid-template-columns: 1fr;
   }
 
@@ -412,5 +563,46 @@ ul {
 @media (max-width: 760px) {
   .module-header .header-top {
     display: flex;
+  }
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Ajusta a visão geral do CPROEIS e menus compartilhados para notebooks
+ * de 13 polegadas, mantendo cards legíveis antes de chegar no layout mobile.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; altera colunas e larguras
+ * responsivas por CSS.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; impacta somente a apresentação.
+ * TODO: Em produção, transformar estes breakpoints em regra global do design system.
+ */
+.module-header .module-menu a {
+  width: auto;
+  flex: 1 1 180px;
+  max-width: 260px;
+}
+
+@media (min-width: 801px) and (max-width: 1360px) {
+  .system-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .system-card.main-system {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+
+  .module-header {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+
+  .module-header .module-menu a {
+    flex-basis: 170px;
+  }
+}
+
+@media (max-width: 760px) {
+  .module-header .module-menu a {
+    flex-basis: min(100%, 320px);
+    max-width: min(100%, 320px);
   }
 }

@@ -185,9 +185,9 @@ button {
 }
 
 .tab-button.active {
-  background: rgba(255, 255, 255, 0.24);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.64);
+  background: #fff;
+  color: #1f2a8a;
+  border-color: #fff;
 }
 
 .menu-back-link {
@@ -616,7 +616,7 @@ td {
   padding: 12px;
   border-bottom: 1px solid #e2e8f0;
   text-align: left;
-  vertical-align: top;
+  vertical-align: middle;
   font-size: 14px;
 }
 
@@ -639,6 +639,7 @@ tr:hover td {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  align-items: center;
 }
 
 .actions button {
@@ -676,16 +677,6 @@ tr:hover td {
 .actions .action-include:hover,
 .actions .action-include:focus-visible {
   background: #dff0e5;
-}
-
-.actions .action-delete {
-  background: #f8ecea;
-  color: #8a332b;
-}
-
-.actions .action-delete:hover,
-.actions .action-delete:focus-visible {
-  background: #f1ddda;
 }
 
 /*
@@ -1046,6 +1037,12 @@ tr:hover td {
   transform: none;
 }
 
+.module-header .module-menu a.active {
+  background: #fff;
+  color: #1f2a8a;
+  border-color: #fff;
+}
+
 .module-header .module-menu .menu-back-link {
   background: #fff;
   color: #1f2a8a;
@@ -1133,6 +1130,38 @@ tr:hover td {
 @media (max-width: 760px) {
   .module-header .header-top {
     display: flex;
+  }
+}
+
+/*
+ * DESCRIÇÃO DO BLOCO: Mantém a navegação e os painéis de Contrato proporcionais em notebooks
+ * menores, especialmente telas de 13 polegadas usadas em apresentação e teste.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; altera comportamento
+ * responsivo de links do menu e áreas tabulares.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; atua apenas no CSS.
+ * TODO: Em produção, mover estes limites para uma folha compartilhada entre módulos.
+ */
+.module-header .module-menu a {
+  width: auto;
+  flex: 1 1 180px;
+  max-width: 260px;
+}
+
+@media (max-width: 1360px) {
+  .module-header {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+
+  .module-header .module-menu a {
+    flex-basis: 170px;
+  }
+}
+
+@media (max-width: 760px) {
+  .module-header .module-menu a {
+    flex-basis: min(100%, 320px);
+    max-width: min(100%, 320px);
   }
 }
 

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - FOPAG</title>
+  <link rel="stylesheet" href="../css/style-fopag.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página inicial do módulo FOPAG, com cards de acesso às funções
+    disponíveis e espaço para crescimento do módulo.
+    PARÂMETROS E RETORNO: Não recebe parâmetros pela URL e não retorna valores; os cards
+    navegam para páginas HTML locais.
+    ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; funciona apenas como navegação.
+    TODO: Em produção, carregar atalhos conforme perfil financeiro autorizado.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>FOPAG</h1>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="fopag-menu" aria-label="Menu de FOPAG">
+      <a class="active" href="index.html" data-history-back="false">Página inicial</a>
+      <a href="fopag.html">Relatório FOPAG</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="module-home-panel">
+      <div class="module-home-header">
+        <h2>Funcionalidades da FOPAG</h2>
+        <p>Selecione a rotina desejada para conferência e emissão dos dados de folha.</p>
+      </div>
+
+      <div class="module-card-grid">
+        <a class="module-feature-card" href="fopag.html">
+          <strong>Relatório FOPAG</strong>
+          <span>Consultar presenças confirmadas e preparar exportações para processamento da folha.</span>
+        </a>
+        <a class="module-feature-card" href="../index.html">
+          <strong>Sistema CPROEIS</strong>
+          <span>Retorna ao menu geral para acessar os demais módulos do sistema.</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>
