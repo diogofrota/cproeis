@@ -28,6 +28,7 @@
       <a class="tab-button" href="index.html" data-history-back="false">Página inicial</a>
       <a class="tab-button active" href="cadastrar-convenio.html">Cadastrar convênio</a>
       <a class="tab-button" href="tabela-convenios.html">Tabela Convênios</a>
+      <a class="tab-button" href="tabela-responsaveis.html">Tabela Responsáveis</a>
       <a class="tab-button" href="incluir-responsavel.html">Adicionar responsável</a>
       <a class="tab-button" href="retirar-responsavel.html">Retirar responsável</a>
       <a class="tab-button" href="renovacoes.html">Renovações</a>
@@ -255,18 +256,11 @@
                     <td><input id="limite-b-12" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
                   </tr>
                   <tr>
-                    <td>Classe C</td>
-                    <td>Praças subtenentes e sargentos</td>
-                    <td><input id="limite-c-6" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
-                    <td><input id="limite-c-8" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
-                    <td><input id="limite-c-12" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
-                  </tr>
-                  <tr>
-                    <td>Classe D</td>
-                    <td>Cabos e soldados</td>
-                    <td><input id="limite-d-6" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
-                    <td><input id="limite-d-8" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
-                    <td><input id="limite-d-12" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
+                    <td>Classe C/D</td>
+                    <td>Subtenentes, sargentos, cabos e soldados</td>
+                    <td><input id="limite-cd-6" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
+                    <td><input id="limite-cd-8" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
+                    <td><input id="limite-cd-12" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></td>
                   </tr>
                 </tbody>
               </table>
@@ -274,31 +268,48 @@
 
             <div class="weekly-limits-config" aria-labelledby="weekly-limits-title">
               <!--
-                DESCRIÇÃO DO BLOCO: Permite marcar os dias da semana em que o contrato funciona,
-                usando a matriz de classe/turno acima como quantidade aplicável aos dias selecionados.
-                PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os checkboxes são
-                lidos pelo JavaScript no submit.
+                DESCRIÇÃO DO BLOCO: Define os dias em que o contrato permite criação de vagas,
+                priorizando o fluxo normal de operação diária e abrindo seleção individual apenas
+                quando houver exceções contratuais.
+                PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; o checkbox principal,
+                o botão de personalização e os chips de dias são lidos pelo JavaScript no submit.
                 ARMAZENAMENTO E PERSISTÊNCIA: Os dias selecionados são gravados em `limitesVagasSemana`
                 dentro de `cproeis_contratos_convenios`, preservando a tabela diária oficial em
                 `cproeis_contratos_limites_vagas`.
                 TODO: Em produção, transformar os dias operacionais em agenda contratual versionada
-                por período, feriado e aditivo.
+                por período, feriado, ordem administrativa e aditivo.
               -->
               <div class="weekly-limits-header">
                 <div>
                   <h4 id="weekly-limits-title">Dias de funcionamento do contrato</h4>
-                  <p class="hint">Marque os dias em que a quantidade diária da tabela acima pode ser usada para criar vagas.</p>
+                  <p class="hint">Por padrão, as vagas serão ofertadas todos os dias. Personalize apenas quando houver dias sem funcionamento.</p>
                 </div>
               </div>
 
-              <div class="weekday-picker" aria-label="Dias de funcionamento do contrato">
-                <label><input type="checkbox" name="weekday-operacao" value="segunda"> Segunda</label>
-                <label><input type="checkbox" name="weekday-operacao" value="terca"> Terça</label>
-                <label><input type="checkbox" name="weekday-operacao" value="quarta"> Quarta</label>
-                <label><input type="checkbox" name="weekday-operacao" value="quinta"> Quinta</label>
-                <label><input type="checkbox" name="weekday-operacao" value="sexta"> Sexta</label>
-                <label><input type="checkbox" name="weekday-operacao" value="sabado"> Sábado</label>
-                <label><input type="checkbox" name="weekday-operacao" value="domingo"> Domingo</label>
+              <div class="weekday-mode-row">
+                <label class="weekday-all-days">
+                  <input id="weekday-all-days" type="checkbox" checked>
+                  <span>
+                    <strong>Funciona todos os dias da semana</strong>
+                    <small>Segunda a domingo ficam liberados para criação de vagas.</small>
+                  </span>
+                </label>
+                <button id="weekday-custom-toggle" class="weekday-custom-toggle" type="button" aria-expanded="false" aria-controls="weekday-custom-panel">
+                  Personalizar dias
+                </button>
+              </div>
+
+              <div id="weekday-custom-panel" class="weekday-custom-panel" hidden>
+                <p class="hint">Desmarque somente os dias em que o contrato não ofertar vagas.</p>
+                <div class="weekday-picker" aria-label="Dias personalizados de funcionamento do contrato">
+                  <label><input type="checkbox" name="weekday-operacao" value="segunda"> <span>Seg</span></label>
+                  <label><input type="checkbox" name="weekday-operacao" value="terca"> <span>Ter</span></label>
+                  <label><input type="checkbox" name="weekday-operacao" value="quarta"> <span>Qua</span></label>
+                  <label><input type="checkbox" name="weekday-operacao" value="quinta"> <span>Qui</span></label>
+                  <label><input type="checkbox" name="weekday-operacao" value="sexta"> <span>Sex</span></label>
+                  <label><input type="checkbox" name="weekday-operacao" value="sabado"> <span>Sáb</span></label>
+                  <label><input type="checkbox" name="weekday-operacao" value="domingo"> <span>Dom</span></label>
+                </div>
               </div>
             </div>
           </section>

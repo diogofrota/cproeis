@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Remover usuário do contrato</title>
+  <link rel="stylesheet" href="../css/style-gsi-controle-acesso.css">
+</head>
+<body data-gsi-operator-page="remover" data-gsi-access-scope="convenio">
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>GSI</h1>
+      </div>
+    </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu do GSI para navegação entre controle de acesso e usuários vinculados a contrato.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os links apontam para
+      páginas locais.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; esta página remove registros de
+      `cproeis_gsi_usuarios_contrato` e grava histórico em `cproeis_gsi_usuarios_contrato_removidos`.
+      TODO: Em produção, exigir permissão de administrador GSI antes de mostrar a rotina de remoção.
+    -->
+    <nav class="module-menu" id="gsi-menu" aria-label="Opções do GSI">
+      <a href="menu.html" data-history-back="false">Página inicial</a>
+      <a href="planejamento-operacional.html">Planejamento Operacional</a>
+      <a href="controle-acesso.html">Controle de Acesso</a>
+      <a href="cadastrar-operador.html">Cadastrar usuário administrativo</a>
+      <a href="tabela-operadores.html">Tabela de usuários administrativos</a>
+      <a href="remover-operador.html">Remover usuário administrativo</a>
+      <a href="cadastrar-acesso-convenio.html">Cadastrar usuário do contrato</a>
+      <a href="tabela-acessos-convenio.html">Tabela de usuários do contrato</a>
+      <a class="active" href="remover-acesso-convenio.html">Remover usuário do contrato</a>
+      <a href="credenciamento.html">Credenciamento</a>
+      <a href="relatorios.html">Relatórios GSI</a>
+      <a href="monitoramento.html">Monitoramento</a>
+      <a href="auditoria.html">Auditoria</a>
+      <a href="tipos-curso.html">Tipos de curso</a>
+      <a href="../convenios/cursos.html">Cursos</a>
+      <a href="vagas-fora-prazo.html">Vagas fora do prazo</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Remover usuário do contrato</h2>
+          <p class="hint">Retire da lista ativa usuários vinculados a contrato que não devem mais acessar o sistema.</p>
+        </div>
+      </div>
+
+      <!--
+        DESCRIÇÃO DO BLOCO: Formulário de remoção de usuário vinculado a contrato administrado pelo GSI.
+        PARÂMETROS E RETORNO: Não recebe parâmetros HTML; o JavaScript lê o usuário vinculado a contrato selecionado
+        e o motivo antes de remover.
+        ARMAZENAMENTO E PERSISTÊNCIA: Remove o usuário vinculado a contrato de `cproeis_gsi_usuarios_contrato` e grava
+        auditoria local em `cproeis_gsi_usuarios_contrato_removidos`.
+        TODO: Em produção, transformar remoção em inativação auditável no banco, com usuário administrativo executor,
+        protocolo e controle de sessão.
+      -->
+      <form id="gsi-operator-remove-form" class="gsi-operator-form compact">
+        <label class="wide">
+          Usuário vinculado a contrato
+          <select id="gsi-operator-remove-id" required></select>
+        </label>
+        <label class="wide">
+          Motivo da remoção
+          <input id="gsi-operator-remove-reason" type="text" required placeholder="Informe o motivo administrativo">
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="danger-button">Remover usuário do contrato</button>
+        </div>
+      </form>
+      <p class="hint" id="gsi-operator-remove-feedback" aria-live="polite"></p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Histórico de remoções</h2>
+          <p class="hint" id="gsi-operator-removed-count">Carregando histórico.</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="gsi-operators-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>CPF</th>
+              <th>Email</th>
+              <th>Contrato</th>
+              <th>Removido em</th>
+              <th>Motivo</th>
+            </tr>
+          </thead>
+          <tbody id="gsi-operator-removed-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-gsi-operadores.js"></script>
+  <script src="../js/script-gsi-controle-acesso.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

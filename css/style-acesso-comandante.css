@@ -355,3 +355,385 @@ nav a:hover {
     display: flex;
   }
 }
+
+/*
+ * DESCRIÇÃO DO BLOCO: Componentes de conteúdo do Acesso Diretor para cadastro de CPAs
+ * e classificação de contratos.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; define grids, formulários,
+ * tabelas, filtros e feedbacks visuais.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; a persistência é feita pelo JavaScript
+ * em LocalStorage nas chaves do diretor.
+ * TODO: Em produção, mover estes componentes para CSS compartilhado do painel administrativo.
+ */
+.module-header .module-menu a.active {
+  background: #fff;
+  color: #1f2a8a;
+  border-color: #fff;
+}
+
+.director-panel {
+  margin-bottom: 22px;
+  padding: 24px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+
+.director-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.director-panel h2 {
+  margin: 0 0 8px;
+  color: #1f2a8a;
+  font-size: 26px;
+}
+
+.hint {
+  margin: 0;
+  color: #5b6b84;
+  font-size: 16px;
+}
+
+.director-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.director-feature-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 122px;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid #d4deee;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2937;
+  text-decoration: none;
+  box-shadow: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.director-feature-card:hover,
+.director-feature-card:focus-visible {
+  border-color: #1f2a8a;
+  box-shadow: 0 8px 22px rgba(31, 42, 138, 0.12);
+  transform: none;
+}
+
+.director-feature-card strong {
+  color: #1f2a8a;
+  font-size: 18px;
+}
+
+.director-feature-card span {
+  color: #465773;
+  line-height: 1.45;
+}
+
+.director-form,
+.director-filter-bar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+
+.director-filter-bar {
+  grid-template-columns: minmax(220px, 1.1fr) minmax(170px, 0.8fr) minmax(190px, 0.9fr) auto;
+}
+
+.director-contract-filter-bar {
+  /*
+   * DESCRIÇÃO DO BLOCO: Replica o padrão de filtros da tabela de contratos na tela de
+   * distribuição do diretor, mantendo busca, seleção e ordenação na mesma linha.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica apenas layout CSS.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os filtros são lidos pelo JavaScript.
+   * TODO: Em produção, extrair este grid para componente compartilhado de tabelas administrativas.
+   */
+  grid-template-columns: minmax(210px, 1fr) minmax(165px, 0.78fr) minmax(125px, 0.56fr) minmax(140px, 0.62fr) minmax(180px, 0.82fr) minmax(160px, 0.72fr) auto;
+  gap: 12px;
+  margin: 14px 0 16px;
+}
+
+.director-form label,
+.director-filter-bar label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.director-filter-actions {
+  align-self: end;
+}
+
+.director-filter-actions button {
+  height: 42px;
+  min-height: 42px;
+  border: 1px solid #1f2a8a;
+  border-radius: 8px;
+  padding: 10px 16px;
+  background: #1f2a8a;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.director-inline-select {
+  min-width: 180px;
+  min-height: 38px;
+  border: 1px solid #cbd6e6;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  font-weight: 700;
+  background: #fff;
+}
+
+.director-row-save {
+  min-height: 38px;
+  border: 1px solid #1f2a8a;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #1f2a8a;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.director-form label.wide,
+.director-filter-bar label.wide {
+  grid-column: span 2;
+}
+
+.director-form input,
+.director-form select,
+.director-filter-bar input,
+.director-filter-bar select {
+  min-height: 42px;
+  width: 100%;
+  border: 1px solid #cbd6e6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #1f2937;
+  font: inherit;
+  font-weight: 600;
+  background: #fff;
+}
+
+.director-form input:focus,
+.director-form select:focus,
+.director-filter-bar input:focus,
+.director-filter-bar select:focus {
+  border-color: #1f2a8a;
+  outline: 2px solid rgba(31, 42, 138, 0.16);
+  outline-offset: 1px;
+}
+
+.director-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.director-actions button,
+.secondary-link-button {
+  min-height: 42px;
+  border: 1px solid #1f2a8a;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.director-actions button {
+  background: #1f2a8a;
+  color: #fff;
+}
+
+.director-actions button.secondary,
+.secondary-link-button {
+  background: #fff;
+  color: #1f2a8a;
+}
+
+.form-feedback {
+  grid-column: 1 / -1;
+  min-height: 22px;
+  margin: 0;
+  color: #1f2a8a;
+  font-weight: 700;
+}
+
+.director-table-wrap {
+  width: 100%;
+  margin-top: 18px;
+  overflow-x: auto;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+}
+
+.director-table-wrap table {
+  width: 100%;
+  min-width: 1120px;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.director-table-wrap table.director-contract-table {
+  /*
+   * DESCRIÇÃO DO BLOCO: Dá largura estável à tabela do diretor, que combina dados do contrato,
+   * distribuição vigente e ação de alteração de CPA na própria linha.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; controla somente layout.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa dados; a renderização vem do JavaScript.
+   * TODO: Em produção, mover colunas e larguras para configuração de componente reutilizável.
+   */
+  min-width: 1680px;
+}
+
+.director-table-wrap th,
+.director-table-wrap td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #e3e9f3;
+  text-align: left;
+  vertical-align: top;
+}
+
+.director-table-wrap th {
+  background: #eef2ff;
+  color: #1f2a8a;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.director-table-wrap tr:hover td {
+  background: #f8fafc;
+}
+
+.director-table-wrap tr:last-child td {
+  border-bottom: 0;
+}
+
+.director-table-wrap small {
+  color: #5b6b84;
+}
+
+.director-access-details summary {
+  color: #1f2a8a;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.director-access-details ul {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.director-access-details li {
+  display: grid;
+  gap: 2px;
+  padding: 6px 0;
+  border-top: 1px solid #e3e9f3;
+}
+
+.director-access-details li span,
+.director-access-empty {
+  color: #5b6b84;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.director-table-wrap .empty,
+.empty {
+  color: #5b6b84;
+  text-align: center;
+  font-weight: 700;
+}
+
+.director-status-text {
+  /*
+   * DESCRIÇÃO DO BLOCO: Exibe a situação do contrato na tabela do diretor como texto simples,
+   * seguindo o padrão da tabela principal de contratos.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; varia cor por classe.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; usa classe renderizada pelo JavaScript.
+   * TODO: Em produção, consolidar estados visuais em tokens do design system.
+   */
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+}
+
+.director-status-text.inactive {
+  color: #b42318;
+}
+
+.director-table-pagination {
+  /*
+   * DESCRIÇÃO DO BLOCO: Controla a paginação local da tabela do diretor, repetindo o padrão
+   * usado na tabela de contratos cadastrados.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica somente apresentação.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; botões são operados pelo JavaScript.
+   * TODO: Em produção, conectar paginação visual aos metadados retornados pela API.
+   */
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.director-table-pagination button {
+  min-width: 96px;
+  min-height: 38px;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #475569;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.director-table-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+@media (max-width: 900px) {
+  .director-card-grid,
+  .director-form,
+  .director-filter-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .director-form label.wide,
+  .director-filter-bar label.wide {
+    grid-column: auto;
+  }
+
+  .director-panel-header {
+    flex-direction: column;
+  }
+}

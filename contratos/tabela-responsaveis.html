@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Responsáveis por contrato</title>
+  <link rel="stylesheet" href="../css/style-contratos-tabela-convenios.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página de consulta de responsáveis vinculados aos contratos, com filtros
+    operacionais para busca textual, tipo de convênio, distribuição do diretor e situação cadastral.
+    PARÂMETROS E RETORNO: Não recebe parâmetros obrigatórios pela URL e não retorna valores; os
+    filtros controlam somente a tabela renderizada no navegador.
+    ARMAZENAMENTO E PERSISTÊNCIA: Lê `cproeis_contratos_convenios`,
+    `cproeis_contratos_responsaveis`, `cproeis_diretor_regioes` e
+    `cproeis_diretor_contratos_regioes` via JavaScript; não grava dados.
+    TODO: Em produção, trocar esta consulta local por endpoint paginado com filtros no banco.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>Contrato</h1>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="contratos-menu" aria-label="Funcionalidades de contratos">
+      <a class="tab-button" href="index.html" data-history-back="false">Página inicial</a>
+      <a class="tab-button" href="cadastrar-convenio.html">Cadastrar convênio</a>
+      <a class="tab-button" href="tabela-convenios.html">Tabela Convênios</a>
+      <a class="tab-button active" href="tabela-responsaveis.html">Tabela Responsáveis</a>
+      <a class="tab-button" href="incluir-responsavel.html">Adicionar responsável</a>
+      <a class="tab-button" href="retirar-responsavel.html">Retirar responsável</a>
+      <a class="tab-button" href="renovacoes.html">Renovações</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="view active" id="responsaveis-view">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Responsáveis por contrato</h2>
+            <p class="hint" id="responsaveis-count">Nenhum responsável cadastrado.</p>
+          </div>
+        </div>
+
+        <div class="filter-bar" aria-label="Filtros de responsáveis">
+          <label>
+            Buscar
+            <input id="responsavel-filter-text" type="search" placeholder="Nome, CPF, email, telefone ou contrato">
+          </label>
+
+          <label>
+            Tipo de convênio
+            <select id="responsavel-filter-type">
+              <option value="">Todos</option>
+              <option value="Município">Município</option>
+              <option value="Concessionária">Concessionária</option>
+              <option value="Órgão Público">Órgão Público</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </label>
+
+          <label>
+          Situação
+          <select id="responsavel-filter-status">
+            <option value="">Todos</option>
+            <option value="active" selected>Ativos</option>
+            <option value="ended">Inativos</option>
+          </select>
+        </label>
+
+          <label>
+            Distribuição do diretor
+            <select id="responsavel-filter-director-region">
+              <option value="">Todos</option>
+            </select>
+          </label>
+
+          <div class="form-actions filter-actions">
+            <button type="button" class="secondary" id="clear-responsavel-filters">Limpar filtros</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Responsável</th>
+                <th>CPF</th>
+                <th>Email</th>
+                <th>Telefone</th>
+                <th>Contrato</th>
+                <th>Tipo</th>
+                <th>Distribuição</th>
+                <th>Início</th>
+                <th>Fim</th>
+              </tr>
+            </thead>
+            <tbody id="responsaveis-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-contratos-json-api.js"></script>
+  <script src="../js/script-contratos-tabela-responsaveis.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

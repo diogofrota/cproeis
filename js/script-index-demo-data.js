@@ -20,6 +20,8 @@ const DEMO_KEYS = {
   cursoInscricoes: 'cproeis_policiais_cursos_inscricoes',
   cursoBoletins: 'cproeis_policiais_cursos_boletins',
   habilitacoes: 'cproeis_policiais_habilitacoes',
+  diretorRegioes: 'cproeis_diretor_regioes',
+  diretorClassificacoes: 'cproeis_diretor_contratos_regioes',
   convenioAtual: 'cproeis_convenio_atual',
   convenioResponsavelAtual: 'cproeis_convenio_responsavel_atual',
   policialAtual: 'cproeis_acesso_policial_atual'
@@ -303,7 +305,7 @@ function demoId(prefix, index) {
  *
  * PARÂMETROS E RETORNO:
  * @param {object} endereco - Objeto com logradouro, número, complemento, bairro, cidade, UF e CEP.
- * @returns {string} Endereço consolidado para compatibilidade com telas antigas.
+ * @returns {string} Endereço consolidado para exibição nas telas que mostram o resumo textual.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
  * Não grava dados; apenas transforma o objeto em memória antes de persistir o convênio demo.
@@ -322,24 +324,23 @@ function demoFormatEndereco(endereco = {}) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
- * Resolve um campo que pode estar no formato novo organizado por seção ou no formato antigo plano.
+ * Resolve um campo da fixture demo organizada por seção, no mesmo padrão esperado pelo seed atual.
  *
  * PARÂMETROS E RETORNO:
  * @param {object} config - Convênio de demonstração carregado da fixture.
  * @param {string} section - Nome da seção organizada, como `identificacao` ou `contrato`.
  * @param {string} field - Nome do campo dentro da seção.
  * @param {*} fallback - Valor usado quando o campo não existe.
- * @returns {*} Valor encontrado na seção, no objeto raiz ou o fallback.
+ * @returns {*} Valor encontrado na seção informada ou o fallback.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
- * Não acessa armazenamento; apenas lê o objeto em memória antes da persistência em LocalStorage.
+ * Não acessa armazenamento; apenas lê o objeto demo em memória antes da persistência em LocalStorage.
  *
  * NOTAS DE EXPANSÃO:
- * TODO: Quando houver backend, validar schema da fixture antes de carregar o seed administrativo.
+ * TODO: Quando houver backend, validar a fixture contra o contrato oficial da API antes de carregar o seed administrativo.
  */
 function demoField(config = {}, section, field, fallback = '') {
   if (config[section] && config[section][field] !== undefined) return config[section][field];
-  if (config[field] !== undefined) return config[field];
   return fallback;
 }
 
@@ -436,8 +437,17 @@ function demoBuildValores(convenioId, offset, config = {}) {
 function demoCalculateValorContrato(valores, limites, inicio, fim) {
   const valorBase = valores[0] || {};
   const passagemAlimentacao = Number(valorBase.passagem || 0) + Number(valorBase.alimentacao || 0);
-  const totalDiario = ['A', 'B', 'C', 'D'].reduce((total, classe) => {
-    const valor = valores.find((item) => item.classe === classe) || {};
+  const totalDiario = ['A', 'B', 'C/D'].reduce((total, classe) => {
+    /*
+     * DESCRIÇÃO DO BLOCO: Calcula a prova real usando o padrão novo de limites operacionais
+     * A, B e C/D. A classe C/D usa o valor C como referência provisória até a FOPAG separar
+     * pagamento por graduação.
+     * PARÂMETROS E RETORNO: Usa classe como string da iteração e acumula o total diário numérico.
+     * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; lê arrays em memória vindos do fixture demo.
+     * TODO: Em produção, mover o cálculo para serviço financeiro com regra oficial por policial.
+     */
+    const lookupClass = classe === 'C/D' ? 'C' : classe;
+    const valor = valores.find((item) => item.classe === lookupClass) || {};
     const limite = limites.find((item) => item.classe === classe) || {};
     const turnos = (Number(valor.servico12 || 0) * Number(limite.servico12 || 0))
       + (Number(valor.servico8 || 0) * Number(limite.servico8 || 0))
@@ -470,15 +480,17 @@ function demoCalculateValorContrato(valores, limites, inicio, fim) {
  */
 function demoBuildLimitesVagasDiarias(convenioId, offset, config = {}) {
   if (Array.isArray(config.limitesVagasDiarias) && config.limitesVagasDiarias.length) {
-    return config.limitesVagasDiarias.map((item) => ({
-      id: `${convenioId}-limite-classe-${item.classe}`,
-      convenioId,
-      classe: item.classe,
-      grupo: item.grupo || '',
-      servico12: Number(item.servico12 || 0),
-      servico8: Number(item.servico8 || 0),
-      servico6: Number(item.servico6 || 0)
-    }));
+    return config.limitesVagasDiarias
+      .filter((item) => ['A', 'B', 'C/D'].includes(item.classe))
+      .map((item) => ({
+        id: `${convenioId}-limite-classe-${String(item.classe).toLowerCase().replace('/', '')}`,
+        convenioId,
+        classe: item.classe,
+        grupo: item.grupo || '',
+        servico12: Number(item.servico12 || 0),
+        servico8: Number(item.servico8 || 0),
+        servico6: Number(item.servico6 || 0)
+      }));
   }
 
   const variation = offset % 4;
@@ -486,8 +498,7 @@ function demoBuildLimitesVagasDiarias(convenioId, offset, config = {}) {
   return [
     { id: `${convenioId}-limite-classe-A`, convenioId, classe: 'A', grupo: 'Oficiais superiores', servico12: 2 + variation, servico8: 2 + variation, servico6: 1 + variation },
     { id: `${convenioId}-limite-classe-B`, convenioId, classe: 'B', grupo: 'Oficiais intermediários e subalternos', servico12: 4 + variation, servico8: 3 + variation, servico6: 2 + variation },
-    { id: `${convenioId}-limite-classe-C`, convenioId, classe: 'C', grupo: 'Praças subtenentes e sargentos', servico12: 8 + variation, servico8: 6 + variation, servico6: 4 + variation },
-    { id: `${convenioId}-limite-classe-D`, convenioId, classe: 'D', grupo: 'Cabos e soldados', servico12: 12 + variation, servico8: 10 + variation, servico6: 8 + variation }
+    { id: `${convenioId}-limite-classe-CD`, convenioId, classe: 'C/D', grupo: 'Subtenentes, sargentos, cabos e soldados', servico12: 20 + variation, servico8: 16 + variation, servico6: 12 + variation }
   ];
 }
 
@@ -517,7 +528,7 @@ function demoBuildLimitesVagasSemana(limites, selectedKeys = []) {
     { key: 'domingo', label: 'Domingo' }
   ];
   const selectedSet = new Set(selectedKeys);
-  const totalPorClasse = ['A', 'B', 'C', 'D'].reduce((acc, classe) => {
+  const totalPorClasse = ['A', 'B', 'C/D'].reduce((acc, classe) => {
     const row = limites.find((item) => item.classe === classe) || {};
     acc[classe] = Number(row.servico6 || 0) + Number(row.servico8 || 0) + Number(row.servico12 || 0);
     return acc;
@@ -534,8 +545,8 @@ function demoBuildLimitesVagasSemana(limites, selectedKeys = []) {
         ativo,
         classeA: ativo ? totalPorClasse.A : 0,
         classeB: ativo ? totalPorClasse.B : 0,
-        classeC: ativo ? totalPorClasse.C : 0,
-        classeD: ativo ? totalPorClasse.D : 0
+        classeC: ativo ? totalPorClasse['C/D'] : 0,
+        classeD: 0
       };
     })
   };
@@ -543,7 +554,7 @@ function demoBuildLimitesVagasSemana(limites, selectedKeys = []) {
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
- * Cria exatamente um responsável operacional para o convênio de demonstração.
+ * Cria exatamente um responsável informativo para o convênio de demonstração.
  *
  * PARÂMETROS E RETORNO:
  * @param {string} convenioId - ID do convênio.
@@ -551,14 +562,13 @@ function demoBuildLimitesVagasSemana(limites, selectedKeys = []) {
  * @param {number} index - Índice numérico para CPF, telefone e e-mail.
  * @param {string} inicioContrato - Data inicial do contrato usada como início do primeiro responsável.
  * @param {object} config - Convênio de demonstração com `responsaveis` explícitos, quando houver.
- * @returns {object} Responsável apto a acessar o módulo de convênio.
+ * @returns {object} Responsável de referência cadastral do contrato.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
  * Não grava diretamente; o retorno é salvo dentro do convênio e em `cproeis_contratos_responsaveis`.
  *
  * NOTAS DE EXPANSÃO:
- * TODO: Relacionar responsáveis a usuários autenticados e perfis oficiais, sem reintroduzir níveis
- * de acesso no cadastro do convênio.
+ * TODO: Manter acesso real do sistema em cadastro próprio do GSI, sem reintroduzir permissão no contrato.
  */
 function demoBuildResponsavel(convenioId, convenioNome, index, inicioContrato, config = {}) {
   const responsavelConfigurado = Array.isArray(config.responsaveis) ? config.responsaveis[0] : null;
@@ -581,10 +591,128 @@ function demoBuildResponsavel(convenioId, convenioNome, index, inicioContrato, c
   };
 }
 
+function demoBuildContratoRows(targetTotal = 60) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Expande a massa de contratos simulados para representar uma base maior
+   * de convênios possíveis do CPROEIS, preservando os oito exemplos manuais já existentes.
+   * PARÂMETROS E RETORNO: Recebe targetTotal como número desejado de contratos e retorna array
+   * com configurações no mesmo formato consumido por `demoBuildConvenios`.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; apenas monta objetos em memória que serão
+   * persistidos depois por `seedDemoContratos`.
+   * TODO: Em produção, substituir esta massa sintética por fixtures oficiais de homologação.
+   */
+  const baseRows = Array.isArray(DEMO_CONTRATOS_DATA.convenios) ? [...DEMO_CONTRATOS_DATA.convenios] : [];
+  const orgaos = [
+    ['Prefeitura Municipal de Volta Redonda', 'Município', 'volta.redonda.rj.gov.br'],
+    ['Prefeitura Municipal de Nova Iguaçu', 'Município', 'novaiguacu.rj.gov.br'],
+    ['Prefeitura Municipal de Duque de Caxias', 'Município', 'duquedecaxias.rj.gov.br'],
+    ['Prefeitura Municipal de São Gonçalo', 'Município', 'saogoncalo.rj.gov.br'],
+    ['Prefeitura Municipal de Cabo Frio', 'Município', 'cabofrio.rj.gov.br'],
+    ['Companhia Estadual de Águas e Esgotos', 'Concessionária', 'cedae.com.br'],
+    ['SuperVia Concessionária de Transporte', 'Concessionária', 'supervia.com.br'],
+    ['Light Serviços de Eletricidade', 'Concessionária', 'light.com.br'],
+    ['Águas do Rio', 'Concessionária', 'aguasdorio.com.br'],
+    ['Rio+Saneamento', 'Concessionária', 'riomais.com.br'],
+    ['Secretaria de Estado de Educação', 'Órgão Público', 'educacao.rj.gov.br'],
+    ['Secretaria de Estado de Administração Penitenciária', 'Órgão Público', 'seap.rj.gov.br'],
+    ['Defensoria Pública do Estado do Rio de Janeiro', 'Órgão Público', 'defensoria.rj.def.br'],
+    ['Tribunal de Justiça do Estado do Rio de Janeiro', 'Órgão Público', 'tjrj.jus.br'],
+    ['Universidade do Estado do Rio de Janeiro', 'Órgão Público', 'uerj.br'],
+    ['Associação Comercial de Niterói', 'Outros', 'acniteroi.org.br'],
+    ['Federação das Indústrias do Estado do Rio de Janeiro', 'Outros', 'firjan.com.br'],
+    ['Sindicato de Hotéis do Rio de Janeiro', 'Outros', 'hoteisrio.org.br'],
+    ['Liga Independente das Escolas de Samba', 'Outros', 'liesa.com.br'],
+    ['Consórcio de Eventos Culturais do Rio', 'Outros', 'eventosrio.org.br']
+  ];
+  const cidades = ['Rio de Janeiro', 'Niterói', 'Angra dos Reis', 'Petrópolis', 'Campos dos Goytacazes', 'Macaé', 'Resende', 'Cabo Frio'];
+
+  while (baseRows.length < targetTotal) {
+    const index = baseRows.length;
+    const [nomeBase, tipoConveniado, dominio] = orgaos[index % orgaos.length];
+    const cidade = cidades[index % cidades.length];
+    const suffix = Math.floor(index / orgaos.length) + 1;
+    const nome = suffix > 1 ? `${nomeBase} - Unidade ${suffix}` : nomeBase;
+
+    baseRows.push({
+      identificacao: {
+        nome,
+        tipoConveniado
+      },
+      endereco: {
+        cep: `20${String(100 + index).padStart(3, '0')}-000`,
+        logradouro: ['Avenida Central', 'Rua Operacional', 'Praça Administrativa', 'Alameda de Serviços'][index % 4],
+        numero: String(100 + index),
+        complemento: suffix > 1 ? `Núcleo ${suffix}` : '',
+        bairro: ['Centro', 'Porto', 'Jardim América', 'São Cristóvão'][index % 4],
+        cidade,
+        uf: 'RJ'
+      },
+      vigencia: {
+        inicio: demoAddDays(DEMO_TODAY, -30 - index),
+        fim: demoAddDays(DEMO_TODAY, 240 + index)
+      },
+      responsaveis: [
+        {
+          nome: ['Ana Paula Ribeiro', 'Bruno Carvalho', 'Camila Martins', 'Daniel Souza', 'Elisa Nogueira'][index % 5],
+          cpf: `${String(30000000000 + index).replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}`,
+          email: `responsavel${index + 1}@${dominio}`,
+          telefone: `(21) 9${String(30000000 + index).slice(-8)}`
+        }
+      ]
+    });
+  }
+
+  return baseRows.slice(0, targetTotal);
+}
+
+function demoBuildDiretorDistribuicao(convenios) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Cria somente CPA de 1 a 7 e classifica parte dos contratos de demonstração,
+   * deixando alguns sem distribuição para simular contratos ainda pendentes de decisão do diretor.
+   * PARÂMETROS E RETORNO: Recebe convenios como array de contratos e retorna objeto com regioes
+   * e classificacoes prontas para LocalStorage.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava diretamente; o retorno é salvo em
+   * `cproeis_diretor_regioes` e `cproeis_diretor_contratos_regioes` por `seedDemoContratos`.
+   * TODO: Em produção, carregar a lista oficial de CPA pelo backend e gerar classificações por
+   * fluxo administrativo real com histórico de mudanças.
+   */
+  const regioes = [
+    { id: 'diretor-cpa-1', tipo: 'CPA', nome: '1º CPA', descricao: 'Capital e áreas centrais', criadoEm: DEMO_TODAY },
+    { id: 'diretor-cpa-2', tipo: 'CPA', nome: '2º CPA', descricao: 'Grande Niterói e entorno metropolitano', criadoEm: DEMO_TODAY },
+    { id: 'diretor-cpa-3', tipo: 'CPA', nome: '3º CPA', descricao: 'Baixada e eixo metropolitano', criadoEm: DEMO_TODAY },
+    { id: 'diretor-cpa-4', tipo: 'CPA', nome: '4º CPA', descricao: 'Interior e áreas integradas', criadoEm: DEMO_TODAY },
+    { id: 'diretor-cpa-5', tipo: 'CPA', nome: '5º CPA', descricao: 'Costa Verde e Sul Fluminense', criadoEm: DEMO_TODAY },
+    { id: 'diretor-cpa-6', tipo: 'CPA', nome: '6º CPA', descricao: 'Lagos e entorno operacional', criadoEm: DEMO_TODAY },
+    { id: 'diretor-cpa-7', tipo: 'CPA', nome: '7º CPA', descricao: 'Norte e Noroeste', criadoEm: DEMO_TODAY }
+  ];
+
+  const classificacoes = convenios
+    .filter((convenio, index) => {
+      /*
+       * DESCRIÇÃO DO BLOCO: Mantém alguns contratos sem classificação para demonstrar a situação
+       * operacional "Não classificado" nas telas de consulta.
+       * PARÂMETROS E RETORNO: Usa convenio e index da iteração; retorna boolean para incluir ou
+       * não a classificação demo.
+       * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados diretamente; apenas reduz o array que será
+       * persistido em `cproeis_diretor_contratos_regioes`.
+       * TODO: Em produção, a ausência de classificação deve vir do backend conforme workflow do diretor.
+       */
+      return index % 8 !== 0;
+    })
+    .map((convenio, index) => ({
+      id: `diretor-classificacao-${String(index + 1).padStart(2, '0')}`,
+      contratoId: convenio.id,
+      regiaoId: regioes[index % regioes.length].id,
+      dataClassificacao: DEMO_TODAY,
+      atualizadoEm: `${DEMO_TODAY}T12:00:00.000Z`
+    }));
+
+  return { regioes, classificacoes };
+}
+
 /**
  * DESCRIÇÃO DA FUNÇÃO:
- * Monta convênios vigentes de demonstração, usando a massa completa atual quando disponível e
- * mantendo compatibilidade com a lista antiga de nomes.
+ * Monta convênios vigentes de demonstração já no payload atual consumido pelas telas de contratos.
  *
  * PARÂMETROS E RETORNO:
  * @returns {{convenios: Array<object>, responsaveis: Array<object>, valores: Array<object>, limitesVagas: Array<object>}} Base sintética.
@@ -596,7 +724,7 @@ function demoBuildResponsavel(convenioId, convenioNome, index, inicioContrato, c
  * TODO: Substituir dados fictícios por fixtures oficiais de homologação quando disponíveis.
  */
 function demoBuildConvenios() {
-  const rows = DEMO_CONTRATOS_DATA.convenios;
+  const rows = demoBuildContratoRows(60);
 
   const convenios = [];
   const responsaveis = [];
@@ -604,14 +732,14 @@ function demoBuildConvenios() {
   const limitesVagas = [];
 
   rows.forEach((row, index) => {
-    const config = typeof row === 'string' ? { nome: row } : row;
+    const config = row && typeof row === 'object' ? row : {};
     const convenioId = demoId('conv-demo', index + 1);
     const nome = demoField(config, 'identificacao', 'nome', `Convênio Demo ${index + 1}`);
     const convenioValores = demoBuildValores(convenioId, index * 10, config);
     const convenioLimitesVagas = demoBuildLimitesVagasDiarias(convenioId, index, config);
     const selectedDays = Array.isArray(config.diasSelecionados) && config.diasSelecionados.length
       ? config.diasSelecionados
-      : ['segunda', 'terca', 'quarta', 'quinta', 'sexta'];
+      : ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'];
     const limitesVagasSemana = demoBuildLimitesVagasSemana(convenioLimitesVagas, selectedDays);
     const inicio = demoField(config, 'vigencia', 'inicio', demoAddDays(DEMO_TODAY, -90 - index));
     const fim = demoField(config, 'vigencia', 'fim', demoAddDays(DEMO_TODAY, 150 + (index * 20)));
@@ -683,6 +811,8 @@ function demoClearContratosWorkspace() {
     DEMO_KEYS.contratosHistoricos,
     DEMO_KEYS.convenioAtual,
     DEMO_KEYS.convenioResponsavelAtual,
+    DEMO_KEYS.diretorRegioes,
+    DEMO_KEYS.diretorClassificacoes,
     DEMO_KEYS.servicos,
     DEMO_KEYS.vagas
   ].forEach((key) => localStorage.removeItem(key));
@@ -799,9 +929,8 @@ function demoBuildHistoricos(policiais) {
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
  * Grava `cproeis_contratos_schema_version`, `cproeis_contratos_convenios`,
- * `cproeis_contratos_responsaveis`, `cproeis_contratos_valores` e
- * `cproeis_contratos_limites_vagas`, além de `cproeis_contratos_historicos`
- * no LocalStorage.
+ * `cproeis_contratos_responsaveis`, `cproeis_contratos_valores`,
+ * `cproeis_contratos_limites_vagas` e `cproeis_contratos_historicos` no LocalStorage.
  *
  * NOTAS DE EXPANSÃO:
  * TODO: Em produção, carregar contratos por API administrativa com autenticação, auditoria e
@@ -818,6 +947,56 @@ function seedDemoContratos() {
   demoSaveList(DEMO_KEYS.limitesVagas, limitesVagas);
   demoSaveList(DEMO_KEYS.contratosHistoricos, []);
   demoFeedback(`Contratos carregados: ${convenios.length} convênios, ${responsaveis.length} responsáveis e limites diários de vagas.`);
+}
+
+function seedDemoContratosAndOpenTable() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Carrega a base demo de contratos e direciona o usuário para a tabela
+   * onde os convênios cadastrados ficam visíveis, evitando a impressão de que a carga não ocorreu.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valores.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Reutiliza `seedDemoContratos`, que grava as chaves locais de
+   * contratos no LocalStorage, e navega com `?demo=contratos` para permitir que a tabela refaça
+   * a hidratação caso o navegador não exponha imediatamente os dados após a troca de página.
+   * TODO: Em produção, substituir este atalho por retorno visual após seed de homologação ou por
+   * uma tela administrativa com estado de carregamento e tratamento de falhas.
+   */
+  seedDemoContratos();
+  window.location.href = 'contratos/tabela-convenios.html?demo=contratos';
+}
+
+function seedDemoDistribuicaoDiretorAndOpenTable() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Carrega a distribuição demo do diretor e abre a tabela de contratos,
+   * onde a coluna Distribuição permite conferir a classificação aplicada.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valores.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Reutiliza `seedDemoDistribuicaoDiretor`, que lê/grava
+   * LocalStorage nas chaves de contratos e distribuição, e navega para a página de listagem.
+   * TODO: Em produção, trocar o redirecionamento local por fluxo administrativo com confirmação
+   * persistida no backend e rastreio de auditoria.
+   */
+  seedDemoDistribuicaoDiretor();
+  window.location.href = 'contratos/tabela-convenios.html?demo=distribuicao';
+}
+
+function seedDemoDistribuicaoDiretor() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Carrega separadamente a distribuição do diretor para os contratos
+   * cadastrados, simulando CPAs e classificações operacionais.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê `cproeis_contratos_convenios`; se estiver vazio, chama
+   * `seedDemoContratos`. Grava `cproeis_diretor_regioes` e `cproeis_diretor_contratos_regioes`.
+   * TODO: Em produção, substituir por carga controlada de homologação com permissões do diretor.
+   */
+  let convenios = demoLoadList(DEMO_KEYS.convenios);
+  if (!convenios.length) {
+    seedDemoContratos();
+    convenios = demoLoadList(DEMO_KEYS.convenios);
+  }
+
+  const distribuicaoDiretor = demoBuildDiretorDistribuicao(convenios);
+  demoSaveList(DEMO_KEYS.diretorRegioes, distribuicaoDiretor.regioes);
+  demoSaveList(DEMO_KEYS.diretorClassificacoes, distribuicaoDiretor.classificacoes);
+  demoFeedback(`Distribuição carregada: ${distribuicaoDiretor.regioes.length} CPAs e ${distribuicaoDiretor.classificacoes.length} contratos classificados.`);
 }
 
 /**
@@ -869,7 +1048,7 @@ function seedDemoPoliciais() {
 function seedDemoRegisters() {
   seedDemoContratos();
   seedDemoPoliciais();
-  demoFeedback('Cadastros carregados: 10 convênios, 10 responsáveis e 20 policiais.');
+  demoFeedback('Cadastros carregados: 60 convênios, 60 responsáveis e 20 policiais.');
 }
 
 /**
@@ -1565,7 +1744,8 @@ function clearDemoCache() {
  * TODO: Remover bind de ferramentas de teste em builds de produção.
  */
 function bindDemoTools() {
-  document.getElementById('seed-demo-contratos')?.addEventListener('click', seedDemoContratos);
+  document.getElementById('seed-demo-contratos')?.addEventListener('click', seedDemoContratosAndOpenTable);
+  document.getElementById('seed-demo-distribuicao-diretor')?.addEventListener('click', seedDemoDistribuicaoDiretorAndOpenTable);
   document.getElementById('seed-demo-policiais')?.addEventListener('click', seedDemoPoliciais);
   document.getElementById('seed-demo-servicos')?.addEventListener('click', seedDemoServicos);
   document.getElementById('seed-demo-cursos')?.addEventListener('click', seedDemoCursos);
@@ -1574,5 +1754,18 @@ function bindDemoTools() {
   document.getElementById('seed-demo-vagas-com-curso')?.addEventListener('click', seedDemoVagasComCurso);
   document.getElementById('clear-demo-cache')?.addEventListener('click', clearDemoCache);
 }
+
+/*
+ * DESCRIÇÃO DO BLOCO: Expõe as rotinas de carga demo para páginas-esqueleto que precisam
+ * hidratar dados ao abrir por parâmetro de URL, como a tabela de contratos.
+ * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valores; apenas registra funções
+ * no objeto global `window`.
+ * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados diretamente; as funções expostas fazem a
+ * persistência quando chamadas.
+ * TODO: Em produção, remover estas exposições globais e consumir fixtures controladas via
+ * `CPROEISContratosJsonApi` ou endpoint administrativo autenticado.
+ */
+window.seedDemoContratos = seedDemoContratos;
+window.seedDemoDistribuicaoDiretor = seedDemoDistribuicaoDiretor;
 
 bindDemoTools();

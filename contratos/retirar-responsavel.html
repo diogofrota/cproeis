@@ -8,12 +8,12 @@
 </head>
 <body>
   <!--
-    DESCRIÇÃO DO BLOCO: Página exclusiva para retirar acesso de responsável vinculado a convênio.
+    DESCRIÇÃO DO BLOCO: Página exclusiva para registrar data final de responsável vinculado a convênio.
     PARÂMETROS E RETORNO: Não recebe parâmetros HTML obrigatórios; o usuário seleciona convênio e
     responsável no formulário e o JavaScript grava a data final.
     ARMAZENAMENTO E PERSISTÊNCIA: O script lê contratos pela camada JSON local e salva
     a retirada em sessionStorage até a confirmação da revisão.
-    TODO: Em produção, transformar esta retirada em endpoint auditado com autenticação do operador.
+    TODO: Em produção, transformar esta alteração cadastral em endpoint auditado com autenticação do operador.
   -->
   <header class="module-header">
     <div class="header-top">
@@ -26,6 +26,7 @@
       <a class="tab-button" href="index.html" data-history-back="false">Página inicial</a>
       <a class="tab-button" href="cadastrar-convenio.html">Cadastrar convênio</a>
       <a class="tab-button" href="tabela-convenios.html">Tabela Convênios</a>
+      <a class="tab-button" href="tabela-responsaveis.html">Tabela Responsáveis</a>
       <a class="tab-button" href="incluir-responsavel.html">Adicionar responsável</a>
       <a class="tab-button active" href="retirar-responsavel.html">Retirar responsável</a>
       <a class="tab-button" href="renovacoes.html">Renovações</a>
@@ -38,7 +39,7 @@
         <div class="panel-header">
           <div>
             <h2 id="retirar-page-title">Retirada de responsável</h2>
-            <p class="hint" id="retirar-page-subtitle">Selecione o convênio e o responsável que terá o acesso encerrado.</p>
+            <p class="hint" id="retirar-page-subtitle">Selecione o convênio e o responsável que terá uma data final registrada.</p>
           </div>
         </div>
 
@@ -52,7 +53,7 @@
           <label class="wide">
             Responsável
             <select id="retirar-responsavel"></select>
-            <small class="field-hint hidden" id="retirar-responsavel-hint">Selecione um responsável ativo.</small>
+            <small class="field-hint hidden" id="retirar-responsavel-hint">Selecione um responsável sem data final.</small>
           </label>
 
           <label>

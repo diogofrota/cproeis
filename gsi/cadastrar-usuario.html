@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Cadastrar usuário administrativo</title>
+  <link rel="stylesheet" href="../css/style-gsi-controle-acesso.css">
+</head>
+<body data-gsi-operator-page="cadastro" data-gsi-access-scope="sistema">
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>GSI</h1>
+      </div>
+    </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu do GSI com acesso direto às rotas de gestão de usuários administrativos.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os links direcionam para
+      páginas HTML locais.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; o formulário da página grava usuários administrativos em
+      `cproeis_gsi_operadores_sistema`.
+      TODO: Em produção, destacar rota ativa pelo roteador autenticado e validar permissão do usuário administrativo GSI.
+    -->
+    <nav class="module-menu" id="gsi-menu" aria-label="Opções do GSI">
+      <a href="menu.html" data-history-back="false">Página inicial</a>
+      <a href="planejamento-operacional.html">Planejamento Operacional</a>
+      <a href="controle-acesso.html">Controle de Acesso</a>
+      <a class="active" href="cadastrar-operador.html">Cadastrar usuário administrativo</a>
+      <a href="tabela-operadores.html">Tabela de usuários administrativos</a>
+      <a href="remover-operador.html">Remover usuário administrativo</a>
+      <a href="cadastrar-acesso-convenio.html">Cadastrar usuário do contrato</a>
+      <a href="tabela-acessos-convenio.html">Tabela de usuários do contrato</a>
+      <a href="remover-acesso-convenio.html">Remover usuário do contrato</a>
+      <a href="credenciamento.html">Credenciamento</a>
+      <a href="relatorios.html">Relatórios GSI</a>
+      <a href="monitoramento.html">Monitoramento</a>
+      <a href="auditoria.html">Auditoria</a>
+      <a href="tipos-curso.html">Tipos de curso</a>
+      <a href="../convenios/cursos.html">Cursos</a>
+      <a href="vagas-fora-prazo.html">Vagas fora do prazo</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Cadastrar usuário administrativo</h2>
+          <p class="hint">Selecione um policial cadastrado e ative o acesso administrativo autorizado pelo GSI.</p>
+        </div>
+      </div>
+
+      <!--
+        DESCRIÇÃO DO BLOCO: Formulário administrativo para ativar acesso de sistema a partir de
+        um policial já existente no cadastro principal.
+        PARÂMETROS E RETORNO: Não recebe parâmetros HTML; o JavaScript lê os campos no submit e
+        grava o usuário administrativo quando o policial e os dados obrigatórios são válidos.
+        ARMAZENAMENTO E PERSISTÊNCIA: Lê policiais de `cproeis_cadastro_policiais` e grava o acesso
+        em `cproeis_gsi_operadores_sistema` no LocalStorage.
+        TODO: Em produção, trocar por criação em API com senha temporária, MFA, auditoria e validação
+        de unicidade em banco de dados.
+      -->
+      <form id="gsi-operator-form" class="gsi-operator-form">
+        <label class="wide">
+          Policial
+          <select id="gsi-operator-police" required>
+            <option value="">Carregando policiais</option>
+          </select>
+        </label>
+        <div class="gsi-access-summary wide" id="gsi-operator-selected-summary" aria-live="polite">
+          Selecione um policial para conferir os dados antes de ativar o acesso.
+        </div>
+        <!--
+          DESCRIÇÃO DO BLOCO: Campos ocultos que recebem os dados do policial selecionado para
+          manter a gravação estruturada sem repetir os dados em inputs visíveis.
+          PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; o JavaScript preenche
+          estes inputs antes do submit.
+          ARMAZENAMENTO E PERSISTÊNCIA: Os valores são lidos por `script-gsi-operadores.js` e
+          gravados em `cproeis_gsi_operadores_sistema`.
+          TODO: Em produção, enviar somente o ID do policial para a API e resolver os dados no backend.
+        -->
+        <input id="gsi-operator-name" type="hidden" required>
+        <input id="gsi-operator-cpf" type="hidden" required>
+        <input id="gsi-operator-email" type="hidden" required>
+        <input id="gsi-operator-phone" type="hidden">
+        <input id="gsi-operator-profile" type="hidden" value="Administrador do sistema">
+        <input id="gsi-operator-unit" type="hidden">
+        <input id="gsi-operator-notes" type="hidden">
+        <div class="form-actions">
+          <button type="submit">Incluir</button>
+          <button type="reset" class="secondary-button">Limpar</button>
+        </div>
+      </form>
+      <p class="hint" id="gsi-operator-feedback" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <script src="../js/script-gsi-operadores.js"></script>
+  <script src="../js/script-gsi-controle-acesso.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

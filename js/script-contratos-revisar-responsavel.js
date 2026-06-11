@@ -124,7 +124,7 @@ function responsavelReviewRender(draft) {
         ${responsavelReviewField('Telefone', responsavel.telefone)}
       </div>
     `),
-    responsavelReviewSection('Período de acesso', `
+    responsavelReviewSection('Período do responsável', `
       <div class="review-grid">
         ${responsavelReviewField('Início de atuação', responsavel.inicio)}
         ${responsavelReviewField('Data final', responsavel.fim)}

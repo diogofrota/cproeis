@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Usuários vinculados a contrato</title>
+  <link rel="stylesheet" href="../css/style-gsi-controle-acesso.css">
+</head>
+<body data-gsi-operator-page="tabela" data-gsi-access-scope="convenio">
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>GSI</h1>
+      </div>
+    </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu do GSI com rota ativa na gestão de usuários vinculados a contrato.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os links navegam entre
+      páginas locais do módulo.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; a tabela lê `cproeis_gsi_usuarios_contrato`.
+      TODO: Em produção, filtrar itens do menu conforme perfil autenticado.
+    -->
+    <nav class="module-menu" id="gsi-menu" aria-label="Opções do GSI">
+      <a href="menu.html" data-history-back="false">Página inicial</a>
+      <a href="planejamento-operacional.html">Planejamento Operacional</a>
+      <a href="controle-acesso.html">Controle de Acesso</a>
+      <a href="cadastrar-operador.html">Cadastrar usuário administrativo</a>
+      <a href="tabela-operadores.html">Tabela de usuários administrativos</a>
+      <a href="remover-operador.html">Remover usuário administrativo</a>
+      <a href="cadastrar-acesso-convenio.html">Cadastrar usuário do contrato</a>
+      <a class="active" href="tabela-acessos-convenio.html">Tabela de usuários do contrato</a>
+      <a href="remover-acesso-convenio.html">Remover usuário do contrato</a>
+      <a href="credenciamento.html">Credenciamento</a>
+      <a href="relatorios.html">Relatórios GSI</a>
+      <a href="monitoramento.html">Monitoramento</a>
+      <a href="auditoria.html">Auditoria</a>
+      <a href="tipos-curso.html">Tipos de curso</a>
+      <a href="../convenios/cursos.html">Cursos</a>
+      <a href="vagas-fora-prazo.html">Vagas fora do prazo</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Usuários vinculados a contrato</h2>
+          <p class="hint" id="gsi-operator-count">Carregando usuários vinculados a contrato.</p>
+        </div>
+      </div>
+
+      <!--
+        DESCRIÇÃO DO BLOCO: Filtros locais para localizar usuários vinculados a contrato cadastrados pelo GSI.
+        PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; o script lê os inputs
+        para filtrar a tabela em memória.
+        ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; consulta apenas `cproeis_gsi_usuarios_contrato`.
+        TODO: Em produção, substituir por consulta paginada na API com filtros auditáveis.
+      -->
+      <div class="filter-bar gsi-operator-filters">
+        <label>
+          Buscar
+          <input id="gsi-operator-search" type="search" placeholder="Nome, CPF, login, email ou setor">
+        </label>
+      </div>
+
+      <div class="table-wrap">
+        <table class="gsi-operators-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>CPF</th>
+              <th>Email</th>
+              <th>Contrato autorizado</th>
+              <th>Início do acesso</th>
+            </tr>
+          </thead>
+          <tbody id="gsi-operator-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-gsi-operadores.js"></script>
+  <script src="../js/script-gsi-controle-acesso.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

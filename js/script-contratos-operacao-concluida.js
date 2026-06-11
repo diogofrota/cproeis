@@ -42,7 +42,7 @@ function operacaoConcluidaGetFallback(tipo, id) {
     },
     responsavel_retirado: {
       title: 'Responsável retirado',
-      message: 'A data final do responsável foi registrada e o acesso foi encerrado.',
+      message: 'A data final do responsável foi registrada no contrato.',
       primaryHref: id ? `detalhes-convenio.html?id=${encodeURIComponent(id)}` : 'tabela-convenios.html',
       primaryText: 'Ver detalhes do convênio'
     }

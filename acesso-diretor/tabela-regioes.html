@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Tabela CPAs</title>
+  <link rel="stylesheet" href="../css/style-acesso-comandante.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Tabela gerencial de CPAs cadastradas no banco, exibindo também
+    quantos contratos já foram classificados em cada área.
+    PARÂMETROS E RETORNO: Não recebe parâmetros pela URL e não retorna valores.
+    ARMAZENAMENTO E PERSISTÊNCIA: Lê `cproeis_diretor_regioes` e
+    `cproeis_diretor_contratos_regioes`; não grava dados nesta página.
+    TODO: Em produção, buscar dados consolidados por API paginada e auditável.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>Acesso Diretor</h1>
+        <p>Tabela de CPAs operacionais.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="acesso-diretor-menu" aria-label="Menu de acesso diretor">
+      <a href="index.html">Página inicial</a>
+      <a class="active" href="tabela-regioes.html">Tabela CPAs</a>
+      <a href="classificar-contratos.html">Distribuição dos contratos</a>
+      <a class="menu-back-link" href="../index.html" data-history-back="false">Sistema CPROEIS</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="director-panel">
+      <div class="director-panel-header">
+        <div>
+          <h2>CPAs cadastradas</h2>
+          <p class="hint" id="director-regions-count">Nenhuma CPA cadastrada.</p>
+        </div>
+      </div>
+
+      <div class="director-filter-bar">
+        <label>
+          Buscar
+          <input id="director-region-filter-text" type="search" placeholder="Nome ou descrição">
+        </label>
+      </div>
+
+      <div class="director-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Descrição</th>
+              <th>Contratos classificados</th>
+            </tr>
+          </thead>
+          <tbody id="director-regions-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-acesso-diretor-regioes.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

@@ -17,12 +17,12 @@
  */
 window.CPROEIS_POLICIAIS_SIMULADOS = {
   policiais: [
-    ['118.452', '123450-1', 'Diogo Silva', 'Silva', 'Major', 'Oficial Superior', 'Oficial', '', '1º BPM'],
+    ['118.452', '123450-1', 'Diogo Silva', 'Silva', 'Major', 'Oficial Superior', 'Oficial', '', 'CPROEIS'],
     ['119.083', '123451-9', 'Mariana Costa', 'Costa', 'Capitão', 'Oficial Intermediário', 'Oficial', '', '2º BPM'],
     ['120.114', '123452-7', 'Rafael Almeida', 'Almeida', '1º Tenente', 'Oficial Subalterno', 'Oficial', '', '3º BPM'],
     ['120.982', '123453-5', 'Fernanda Rocha', 'Rocha', '2º Tenente', 'Oficial Subalterno', 'Oficial', '', '4º BPM'],
     ['121.204', '123454-3', 'Carlos Mendes', 'Mendes', 'Subtenente', 'Praça Especial', '', 'Ótimo', 'DGP'],
-    ['121.788', '123455-1', 'Patricia Nogueira', 'Nogueira', '1º Sargento', 'Praça', '', 'Bom', 'CFAP'],
+    ['121.788', '123455-1', 'Patricia Nogueira', 'Nogueira', '1º Sargento', 'Praça', '', 'Bom', 'CPROEIS'],
     ['122.341', '123456-0', 'Bruno Ferreira', 'Ferreira', '2º Sargento', 'Praça', '', 'Bom', '1º BPM'],
     ['122.914', '123457-8', 'Juliana Martins', 'Martins', '3º Sargento', 'Praça', '', 'Ótimo', '2º BPM'],
     ['123.105', '123458-6', 'Andre Oliveira', 'Oliveira', 'Cabo', 'Praça', '', 'Bom', '3º BPM'],
@@ -34,7 +34,7 @@ window.CPROEIS_POLICIAIS_SIMULADOS = {
     ['126.013', '123464-0', 'Eduardo Lima', 'Lima', '1º Sargento', 'Praça', '', 'Ótimo', '3º BPM'],
     ['126.548', '123465-9', 'Bianca Teixeira', 'Teixeira', 'Subtenente', 'Praça Especial', '', 'Bom', '4º BPM'],
     ['127.091', '123466-7', 'Thiago Araujo', 'Araujo', 'Capitão', 'Oficial Intermediário', 'Oficial', '', 'DGP'],
-    ['127.636', '123467-5', 'Larissa Freitas', 'Freitas', 'Major', 'Oficial Superior', 'Oficial', '', 'CFAP'],
+    ['127.636', '123467-5', 'Larissa Freitas', 'Freitas', 'Major', 'Oficial Superior', 'Oficial', '', 'CPROEIS'],
     ['128.074', '123468-3', 'Marcelo Pinto', 'Pinto', 'Cabo', 'Praça', '', 'Bom', '1º BPM'],
     ['128.519', '123469-1', 'Vanessa Duarte', 'Duarte', 'Soldado', 'Praça', '', 'Bom', '2º BPM']
   ]

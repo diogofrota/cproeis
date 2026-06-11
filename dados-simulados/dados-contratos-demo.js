@@ -2,7 +2,7 @@
  * DESCRIÇÃO DO BLOCO:
  * Base sintética exclusiva do módulo de contratos usada pelo botão "Carregar contratos" da
  * página inicial. Cada convênio está organizado na mesma ordem visual do cadastro de contrato
- * para facilitar ajustes manuais durante demonstrações.
+ * e no mesmo desenho lógico que será enviado para a API de contratos.
  *
  * PARÂMETROS E RETORNO:
  * Não recebe parâmetros e não retorna valores. Ele expõe `window.CPROEIS_CONTRATOS_SIMULADOS`
@@ -11,10 +11,13 @@
  * ARMAZENAMENTO E PERSISTÊNCIA:
  * Não grava dados diretamente. Os objetos ficam em memória no navegador até o usuário clicar
  * em "Carregar contratos", quando o script principal persiste as informações em LocalStorage.
+ * A massa demo deve se ajustar ao contrato esperado pela camada `CPROEISContratosJsonApi`,
+ * mantendo a tela livre de adaptações para formatos divergentes.
  *
  * NOTAS DE EXPANSÃO:
  * TODO: Em homologação online, substituir este arquivo por fixture versionada do backend de
- * contratos e bloquear qualquer exposição de dados simulados em produção.
+ * contratos, validada pelo mesmo schema da API, e bloquear qualquer exposição de dados
+ * simulados em produção.
  */
 window.CPROEIS_CONTRATOS_SIMULADOS = {
   convenios: [
@@ -58,10 +61,9 @@ window.CPROEIS_CONTRATOS_SIMULADOS = {
       limitesVagasDiarias: [
         { classe: 'A', grupo: 'Oficiais superiores', servico6: 1, servico8: 2, servico12: 2 },
         { classe: 'B', grupo: 'Oficiais intermediários e subalternos', servico6: 2, servico8: 3, servico12: 4 },
-        { classe: 'C', grupo: 'Praças subtenentes e sargentos', servico6: 4, servico8: 6, servico12: 8 },
-        { classe: 'D', grupo: 'Cabos e soldados', servico6: 8, servico8: 10, servico12: 12 }
+        { classe: 'C/D', grupo: 'Subtenentes, sargentos, cabos e soldados', servico6: 12, servico8: 16, servico12: 20 }
       ],
-      diasSelecionados: ['segunda', 'terca', 'quarta', 'quinta', 'sexta'],
+      diasSelecionados: ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'],
       responsaveis: [
         {
           nome: 'Mariana Costa Almeida',
@@ -111,10 +113,9 @@ window.CPROEIS_CONTRATOS_SIMULADOS = {
       limitesVagasDiarias: [
         { classe: 'A', grupo: 'Oficiais superiores', servico6: 2, servico8: 2, servico12: 2 },
         { classe: 'B', grupo: 'Oficiais intermediários e subalternos', servico6: 2, servico8: 4, servico12: 4 },
-        { classe: 'C', grupo: 'Praças subtenentes e sargentos', servico6: 5, servico8: 6, servico12: 8 },
-        { classe: 'D', grupo: 'Cabos e soldados', servico6: 8, servico8: 11, servico12: 12 }
+        { classe: 'C/D', grupo: 'Subtenentes, sargentos, cabos e soldados', servico6: 13, servico8: 17, servico12: 20 }
       ],
-      diasSelecionados: ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'],
+      diasSelecionados: ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'],
       responsaveis: [
         {
           nome: 'Roberto Almeida Nogueira',
@@ -164,8 +165,7 @@ window.CPROEIS_CONTRATOS_SIMULADOS = {
       limitesVagasDiarias: [
         { classe: 'A', grupo: 'Oficiais superiores', servico6: 2, servico8: 3, servico12: 3 },
         { classe: 'B', grupo: 'Oficiais intermediários e subalternos', servico6: 3, servico8: 4, servico12: 5 },
-        { classe: 'C', grupo: 'Praças subtenentes e sargentos', servico6: 5, servico8: 7, servico12: 9 },
-        { classe: 'D', grupo: 'Cabos e soldados', servico6: 9, servico8: 12, servico12: 14 }
+        { classe: 'C/D', grupo: 'Subtenentes, sargentos, cabos e soldados', servico6: 14, servico8: 19, servico12: 23 }
       ],
       diasSelecionados: ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'],
       responsaveis: [
@@ -217,8 +217,7 @@ window.CPROEIS_CONTRATOS_SIMULADOS = {
       limitesVagasDiarias: [
         { classe: 'A', grupo: 'Oficiais superiores', servico6: 2, servico8: 3, servico12: 2 },
         { classe: 'B', grupo: 'Oficiais intermediários e subalternos', servico6: 3, servico8: 4, servico12: 4 },
-        { classe: 'C', grupo: 'Praças subtenentes e sargentos', servico6: 6, servico8: 7, servico12: 8 },
-        { classe: 'D', grupo: 'Cabos e soldados', servico6: 10, servico8: 12, servico12: 12 }
+        { classe: 'C/D', grupo: 'Subtenentes, sargentos, cabos e soldados', servico6: 16, servico8: 19, servico12: 20 }
       ],
       diasSelecionados: ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'],
       responsaveis: [
@@ -270,10 +269,9 @@ window.CPROEIS_CONTRATOS_SIMULADOS = {
       limitesVagasDiarias: [
         { classe: 'A', grupo: 'Oficiais superiores', servico6: 1, servico8: 2, servico12: 2 },
         { classe: 'B', grupo: 'Oficiais intermediários e subalternos', servico6: 2, servico8: 3, servico12: 3 },
-        { classe: 'C', grupo: 'Praças subtenentes e sargentos', servico6: 5, servico8: 6, servico12: 7 },
-        { classe: 'D', grupo: 'Cabos e soldados', servico6: 8, servico8: 9, servico12: 10 }
+        { classe: 'C/D', grupo: 'Subtenentes, sargentos, cabos e soldados', servico6: 13, servico8: 15, servico12: 17 }
       ],
-      diasSelecionados: ['segunda', 'terca', 'quarta', 'quinta', 'sexta'],
+      diasSelecionados: ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'],
       responsaveis: [
         {
           nome: 'Patrícia Gomes de Oliveira',
@@ -323,10 +321,9 @@ window.CPROEIS_CONTRATOS_SIMULADOS = {
       limitesVagasDiarias: [
         { classe: 'A', grupo: 'Oficiais superiores', servico6: 2, servico8: 3, servico12: 3 },
         { classe: 'B', grupo: 'Oficiais intermediários e subalternos', servico6: 3, servico8: 4, servico12: 5 },
-        { classe: 'C', grupo: 'Praças subtenentes e sargentos', servico6: 6, servico8: 8, servico12: 10 },
-        { classe: 'D', grupo: 'Cabos e soldados', servico6: 10, servico8: 13, servico12: 15 }
+        { classe: 'C/D', grupo: 'Subtenentes, sargentos, cabos e soldados', servico6: 16, servico8: 21, servico12: 25 }
       ],
-      diasSelecionados: ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'],
+      diasSelecionados: ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'],
       responsaveis: [
         {
           nome: 'Eduardo Martins Ribeiro',
@@ -376,10 +373,9 @@ window.CPROEIS_CONTRATOS_SIMULADOS = {
       limitesVagasDiarias: [
         { classe: 'A', grupo: 'Oficiais superiores', servico6: 1, servico8: 1, servico12: 1 },
         { classe: 'B', grupo: 'Oficiais intermediários e subalternos', servico6: 1, servico8: 2, servico12: 2 },
-        { classe: 'C', grupo: 'Praças subtenentes e sargentos', servico6: 3, servico8: 4, servico12: 5 },
-        { classe: 'D', grupo: 'Cabos e soldados', servico6: 6, servico8: 7, servico12: 8 }
+        { classe: 'C/D', grupo: 'Subtenentes, sargentos, cabos e soldados', servico6: 9, servico8: 11, servico12: 13 }
       ],
-      diasSelecionados: ['segunda', 'terca', 'quarta', 'quinta', 'sexta'],
+      diasSelecionados: ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'],
       responsaveis: [
         {
           nome: 'Carolina Azevedo Lima',
@@ -429,10 +425,9 @@ window.CPROEIS_CONTRATOS_SIMULADOS = {
       limitesVagasDiarias: [
         { classe: 'A', grupo: 'Oficiais superiores', servico6: 2, servico8: 2, servico12: 2 },
         { classe: 'B', grupo: 'Oficiais intermediários e subalternos', servico6: 2, servico8: 3, servico12: 4 },
-        { classe: 'C', grupo: 'Praças subtenentes e sargentos', servico6: 4, servico8: 6, servico12: 8 },
-        { classe: 'D', grupo: 'Cabos e soldados', servico6: 8, servico8: 10, servico12: 12 }
+        { classe: 'C/D', grupo: 'Subtenentes, sargentos, cabos e soldados', servico6: 12, servico8: 16, servico12: 20 }
       ],
-      diasSelecionados: ['sexta', 'sabado', 'domingo'],
+      diasSelecionados: ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'],
       responsaveis: [
         {
           nome: 'Ricardo Souza Monteiro',

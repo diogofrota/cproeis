@@ -16,7 +16,7 @@
     ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os links continuam apontando para
     âncoras internas temporárias e páginas locais já existentes.
     TODO: Em produção, substituir as âncoras por rotas reais, registrar o item ativo pela rota
-    atual e validar permissões conforme perfil de acesso do usuário.
+    atual e validar permissões conforme perfil de acesso do usuário administrativo.
   -->
   <header class="module-header">
     <div class="header-top">
@@ -30,6 +30,12 @@
       <a href="menu.html" data-history-back="false">Página inicial</a>
       <a href="planejamento-operacional.html">Planejamento Operacional</a>
       <a class="active" href="controle-acesso.html">Controle de Acesso</a>
+      <a href="cadastrar-operador.html">Cadastrar usuário administrativo</a>
+      <a href="tabela-operadores.html">Tabela de usuários administrativos</a>
+      <a href="remover-operador.html">Remover usuário administrativo</a>
+      <a href="cadastrar-acesso-convenio.html">Cadastrar usuário do contrato</a>
+      <a href="tabela-acessos-convenio.html">Tabela de usuários do contrato</a>
+      <a href="remover-acesso-convenio.html">Remover usuário do contrato</a>
       <a href="credenciamento.html">Credenciamento</a>
       <a href="relatorios.html">Relatórios GSI</a>
       <a href="monitoramento.html">Monitoramento</a>
@@ -42,7 +48,54 @@
 
   <main>
     <section class="panel">
-      <div class="panel-header"><div><h2>Controle de Acesso</h2><p class="hint">Página reservada para estruturar as rotas e funcionalidades de controle de acesso do GSI.</p></div></div>
+      <div class="panel-header">
+        <div>
+          <h2>Controle de Acesso</h2>
+          <p class="hint">Gerencie separadamente os usuários administrativos e os usuários vinculados a contrato. Responsáveis cadastrados em contratos ficam apenas como referência de assinatura.</p>
+        </div>
+      </div>
+
+      <!--
+        DESCRIÇÃO DO BLOCO: Apresenta os atalhos do GSI para cadastro, consulta e remoção de
+        usuários administrativos e usuários vinculados a contrato, separando controle de acesso da lista
+        informativa de responsáveis.
+        PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; cada card direciona para
+        uma página administrativa específica.
+        ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; as páginas vinculadas persistem dados em
+        `cproeis_gsi_operadores_sistema` e `cproeis_gsi_usuarios_contrato`, além dos históricos de remoção.
+        TODO: Em produção, substituir estes atalhos por rotas autenticadas com controle de perfil do GSI.
+      -->
+      <h3 class="access-section-title">Usuários administrativos</h3>
+      <div class="access-card-grid">
+        <a class="access-card" href="cadastrar-operador.html">
+          <strong>Cadastrar usuário administrativo</strong>
+          <span>Inclui usuário administrativo com perfil de acesso, login, senha temporária e contato.</span>
+        </a>
+        <a class="access-card" href="tabela-operadores.html">
+          <strong>Tabela de usuários administrativos</strong>
+          <span>Consulta os usuários administrativos cadastrados para acesso ao sistema administrativo.</span>
+        </a>
+        <a class="access-card" href="remover-operador.html">
+          <strong>Remover usuário administrativo</strong>
+          <span>Retira o usuário administrativo da lista ativa e registra o motivo da remoção.</span>
+        </a>
+      </div>
+
+      <h3 class="access-section-title">Usuários vinculados a contrato</h3>
+      <div class="access-card-grid">
+        <a class="access-card" href="cadastrar-acesso-convenio.html">
+          <strong>Cadastrar usuário do contrato</strong>
+          <span>Inclui usuário autorizado a gerar vagas para um contrato específico.</span>
+        </a>
+        <a class="access-card" href="tabela-acessos-convenio.html">
+          <strong>Tabela de usuários do contrato</strong>
+          <span>Consulta os usuários vinculados a contrato cadastrados pelo GSI.</span>
+        </a>
+        <a class="access-card" href="remover-acesso-convenio.html">
+          <strong>Remover usuário do contrato</strong>
+          <span>Retira o usuário vinculado a contrato da lista ativa e registra o motivo.</span>
+        </a>
+      </div>
     </section>
   </main>
   <script src="../js/script-gsi-controle-acesso.js"></script>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Acesso Diretor</title>
+  <link rel="stylesheet" href="../css/style-acesso-comandante.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página inicial do Acesso Diretor com rotas para consulta de CPAs
+    cadastradas no banco e distribuição dos contratos por área de responsabilidade.
+    PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valores; os cards são links para
+    páginas estáticas do módulo.
+    ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; funciona como hub visual do diretor.
+    TODO: Em produção, exibir cards conforme permissões reais do usuário autenticado.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>Acesso Diretor</h1>
+        <p>Distribuição dos contratos por CPA.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="acesso-diretor-menu" aria-label="Menu de acesso diretor">
+      <a class="active" href="index.html">Página inicial</a>
+      <a href="tabela-regioes.html">Tabela CPAs</a>
+      <a href="classificar-contratos.html">Distribuição dos contratos</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="director-panel">
+      <div class="director-panel-header">
+        <div>
+          <h2>Funcionalidades do diretor</h2>
+          <p class="hint">Consulte as CPAs cadastradas e altere a CPA responsável pelos contratos sem modificar o cadastro original.</p>
+        </div>
+      </div>
+
+      <div class="director-card-grid">
+        <a class="director-feature-card" href="tabela-regioes.html">
+          <strong>Tabela CPAs</strong>
+          <span>Consulta as CPAs disponíveis e a quantidade de contratos vinculados.</span>
+        </a>
+
+        <a class="director-feature-card" href="classificar-contratos.html">
+          <strong>Distribuir contratos</strong>
+          <span>Consulta os contratos cadastrados e altera a CPA responsável.</span>
+        </a>
+
+        <a class="director-feature-card" href="../index.html" data-history-back="false">
+          <strong>Sistema CPROEIS</strong>
+          <span>Retorna ao menu geral para acessar os demais módulos administrativos.</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

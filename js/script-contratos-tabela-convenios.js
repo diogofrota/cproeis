@@ -4,8 +4,38 @@ const STORAGE_RESPONSAVEIS = 'cproeis_contratos_responsaveis';
 const STORAGE_LIMITES_VAGAS = 'cproeis_contratos_limites_vagas';
 const STORAGE_HISTORICOS = 'cproeis_contratos_historicos';
 const STORAGE_SCHEMA_VERSION = 'cproeis_contratos_schema_version';
+const STORAGE_DIRETOR_REGIOES = 'cproeis_diretor_regioes';
+const STORAGE_DIRETOR_CLASSIFICACOES = 'cproeis_diretor_contratos_regioes';
+const STORAGE_GSI_USUARIOS_CONTRATO = 'cproeis_gsi_usuarios_contrato';
+const STORAGE_GSI_USUARIOS_CONTRATO_REMOVIDOS = 'cproeis_gsi_usuarios_contrato_removidos';
 const CURRENT_SCHEMA_VERSION = '2026-06-05-responsaveis-sem-nivel';
 const TABELA_CONVENIOS_JSON_API = window.CPROEISContratosJsonApi || null;
+const CONTRACT_TABLE_PAGE_SIZE = 10;
+
+function hydrateContractTableDemoFromUrl() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Permite que a página-esqueleto da tabela receba a massa demo diretamente
+   * ao abrir com parâmetro de URL, evitando falha visual quando a navegação ocorre logo após o clique
+   * em "Carregar contratos".
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna boolean indicando se algum demo foi carregado.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê `window.location.search` e chama as funções globais de seed,
+   * que persistem contratos/distribuição no LocalStorage atual.
+   * TODO: Em produção, substituir este mecanismo por chamada ao adaptador `CPROEISContratosJsonApi`
+   * com endpoint de homologação ou fixture controlada pelo backend.
+   */
+  const demoMode = new URLSearchParams(window.location.search).get('demo');
+  if (demoMode === 'contratos' && typeof window.seedDemoContratos === 'function') {
+    window.seedDemoContratos();
+    return true;
+  }
+  if (demoMode === 'distribuicao' && typeof window.seedDemoDistribuicaoDiretor === 'function') {
+    window.seedDemoDistribuicaoDiretor();
+    return true;
+  }
+  return false;
+}
+
+hydrateContractTableDemoFromUrl();
 
 window.CPROEIS_CONTRATOS_STORAGE = {
   valores: STORAGE_VALORES,
@@ -13,7 +43,9 @@ window.CPROEIS_CONTRATOS_STORAGE = {
   responsaveis: STORAGE_RESPONSAVEIS,
   limitesVagas: STORAGE_LIMITES_VAGAS,
   historicos: STORAGE_HISTORICOS,
-  schemaVersion: STORAGE_SCHEMA_VERSION
+  schemaVersion: STORAGE_SCHEMA_VERSION,
+  gsiUsuariosContrato: STORAGE_GSI_USUARIOS_CONTRATO,
+  gsiUsuariosContratoRemovidos: STORAGE_GSI_USUARIOS_CONTRATO_REMOVIDOS
 };
 
 if (localStorage.getItem(STORAGE_SCHEMA_VERSION) !== CURRENT_SCHEMA_VERSION) {
@@ -32,8 +64,12 @@ const gruposClasse = {
   A: 'Oficiais superiores',
   B: 'Oficiais intermediários e subalternos',
   C: 'Praças subtenentes e sargentos',
-  D: 'Cabos e soldados'
+  D: 'Cabos e soldados',
+  'C/D': 'Subtenentes, sargentos, cabos e soldados'
 };
+
+const classesValoresContrato = ['A', 'B', 'C', 'D'];
+const classesLimitesVagasContrato = ['A', 'B', 'C/D'];
 
 const tipoConveniadoLabels = {
   municipio: 'Município',
@@ -131,14 +167,19 @@ const dailyLimitInputs = {
     servico6: document.getElementById('limite-b-6')
   },
   C: {
-    servico12: document.getElementById('limite-c-12'),
-    servico8: document.getElementById('limite-c-8'),
-    servico6: document.getElementById('limite-c-6')
+    servico12: document.getElementById('limite-cd-12'),
+    servico8: document.getElementById('limite-cd-8'),
+    servico6: document.getElementById('limite-cd-6')
   },
   D: {
-    servico12: document.getElementById('limite-d-12'),
-    servico8: document.getElementById('limite-d-8'),
-    servico6: document.getElementById('limite-d-6')
+    servico12: document.getElementById('limite-cd-12'),
+    servico8: document.getElementById('limite-cd-8'),
+    servico6: document.getElementById('limite-cd-6')
+  },
+  'C/D': {
+    servico12: document.getElementById('limite-cd-12'),
+    servico8: document.getElementById('limite-cd-8'),
+    servico6: document.getElementById('limite-cd-6')
   }
 };
 
@@ -242,7 +283,7 @@ const validationRules = {
 };
 
 const valueValidationRules = Object.values(valueInputs).flatMap((group) => Object.values(group)).filter(Boolean);
-const dailyLimitValidationRules = Object.values(dailyLimitInputs).flatMap((group) => Object.values(group)).filter(Boolean);
+const dailyLimitValidationRules = [...new Set(Object.values(dailyLimitInputs).flatMap((group) => Object.values(group)).filter(Boolean))];
 const currencyInputs = [
   fields.valorContrato,
   fields.valorPassagem,
@@ -255,9 +296,14 @@ const activeValidationFields = new Set();
 
 let selectedConvenioId = '';
 let responsaveisState = [];
+let appliedContractTableFilters = createEmptyContractTableFilters();
+let contractTableCurrentPage = 1;
 
 const cnpjApiStatus = document.getElementById('cnpj-api-status');
 const cepApiStatus = document.getElementById('cep-api-status');
+const contractPagePrev = document.getElementById('contract-page-prev');
+const contractPageNext = document.getElementById('contract-page-next');
+const contractPaginationStatus = document.getElementById('contract-pagination-status');
 
 function loadList(key) {
   /*
@@ -563,8 +609,17 @@ function isValidDailyLimitInput(input) {
 }
 
 function formatDate(value) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Formata datas salvas no padrão ISO simples ou completo para leitura pt-BR.
+   * PARÂMETROS E RETORNO: Recebe value como string `yyyy-mm-dd` ou ISO com hora; retorna `dd/mm/yyyy`
+   * ou "Sem fim" quando não há valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; apenas transforma valores já carregados.
+   * TODO: Em produção, centralizar formatação com timezone oficial da aplicação.
+   */
   if (!value) return 'Sem fim';
-  const [year, month, day] = value.split('-');
+  const datePart = String(value).slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) return String(value);
+  const [year, month, day] = datePart.split('-');
   return `${day}/${month}/${year}`;
 }
 
@@ -901,17 +956,105 @@ function getContractResponsaveis(convenio) {
   return getResponsaveis().filter((item) => item.convenioId === convenio.id);
 }
 
+function getContractOperationalAccessUsers(convenio) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Consolida os usuários de acesso operacional vinculados a um contrato,
+   * trazendo tanto os acessos ativos quanto os retirados pelo GSI para aparecerem no detalhe.
+   * PARÂMETROS E RETORNO: Recebe convenio como objeto do contrato e retorna array normalizado
+   * com nome, CPF, email, início, fim/remoção e situação do acesso.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê `cproeis_gsi_usuarios_contrato` e
+   * `cproeis_gsi_usuarios_contrato_removidos` via camada JSON/localStorage; não grava dados.
+   * TODO: Em produção, substituir por endpoint do contrato que retorne histórico auditável de acessos.
+   */
+  if (!convenio?.id) return [];
+
+  const normalizeAccessUser = (user, status) => {
+    /*
+     * DESCRIÇÃO DO BLOCO: Padroniza campos que vieram das telas do GSI para a tabela de detalhes.
+     * PARÂMETROS E RETORNO: Recebe user como objeto bruto e status como string; retorna objeto de exibição.
+     * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa armazenamento; transforma apenas o registro em memória.
+     * TODO: Em produção, manter essa normalização no contrato de resposta da API.
+     */
+    const removedAt = user.removidoEm || user.dataFimAcesso || user.fim || '';
+    return {
+      id: user.id || '',
+      nome: user.nome || '',
+      cpf: user.cpf || '',
+      email: user.email || '',
+      inicio: user.dataInicioAcesso || user.inicio || '',
+      fim: status === 'Retirado' ? removedAt : '',
+      situacao: status,
+      removidoEm: removedAt
+    };
+  };
+
+  const activeUsers = loadList(STORAGE_GSI_USUARIOS_CONTRATO)
+    .filter((user) => user.contratoId === convenio.id || user.escopoContrato === convenio.id)
+    .map((user) => normalizeAccessUser(user, 'Ativo'));
+  const removedUsers = loadList(STORAGE_GSI_USUARIOS_CONTRATO_REMOVIDOS)
+    .filter((user) => user.contratoId === convenio.id || user.escopoContrato === convenio.id)
+    .map((user) => normalizeAccessUser(user, 'Retirado'));
+
+  return [...activeUsers, ...removedUsers].sort((a, b) => {
+    /*
+     * DESCRIÇÃO DO BLOCO: Ordena acessos ativos primeiro e, em seguida, os retirados mais recentes.
+     * PARÂMETROS E RETORNO: Recebe dois registros normalizados e retorna número para Array.sort.
+     * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; ordena apenas o array em memória.
+     * TODO: Em produção, delegar a ordenação ao banco com índices por contrato, situação e data.
+     */
+    if (a.situacao !== b.situacao) return a.situacao === 'Ativo' ? -1 : 1;
+    return (b.removidoEm || b.inicio || '').localeCompare(a.removidoEm || a.inicio || '');
+  });
+}
+
+function normalizeDailyLimitRows(rows = [], convenioId = '') {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Converte limites diários antigos com C e D separados para a linha
+   * operacional única C/D usada no cadastro atual de quantidade de vagas.
+   * PARÂMETROS E RETORNO: Recebe rows como array e convenioId como string; retorna array com
+   * classes A, B e C/D.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; lê somente o contrato em memória ou dados
+   * vindos de `cproeis_contratos_limites_vagas`.
+   * TODO: Em produção, substituir esta adaptação por migração definitiva no banco de dados.
+   */
+  const findClass = (classe) => rows.find((item) => item.classe === classe) || {};
+  const classeC = findClass('C');
+  const classeD = findClass('D');
+  const classeCD = findClass('C/D');
+
+  return classesLimitesVagasContrato.map((classe) => {
+    const row = findClass(classe);
+    const isClasseCD = classe === 'C/D';
+
+    return {
+      id: row.id || `${convenioId}-limite-classe-${classe.toLowerCase().replace('/', '')}`,
+      convenioId: row.convenioId || convenioId,
+      classe,
+      grupo: row.grupo || gruposClasse[classe],
+      servico12: isClasseCD
+        ? Number(classeCD.servico12 || 0) + Number(classeC.servico12 || 0) + Number(classeD.servico12 || 0)
+        : Number(row.servico12 || 0),
+      servico8: isClasseCD
+        ? Number(classeCD.servico8 || 0) + Number(classeC.servico8 || 0) + Number(classeD.servico8 || 0)
+        : Number(row.servico8 || 0),
+      servico6: isClasseCD
+        ? Number(classeCD.servico6 || 0) + Number(classeC.servico6 || 0) + Number(classeD.servico6 || 0)
+        : Number(row.servico6 || 0)
+    };
+  });
+}
+
 function buildEmptyDailyLimitRows(convenioId) {
   /*
    * DESCRIÇÃO DA FUNÇÃO: Cria linhas padrão zeradas para exibir a matriz de limites diários
    * quando um contrato antigo ainda não possui configuração salva.
-   * PARÂMETROS E RETORNO: Recebe convenioId como string e retorna array com classes A, B, C e D.
+   * PARÂMETROS E RETORNO: Recebe convenioId como string e retorna array com classes A, B e C/D.
    * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava LocalStorage; apenas monta dados em memória
    * para renderização e compatibilidade com registros legados.
    * TODO: Em produção, diferenciar explicitamente "sem limite configurado" de limite zero no banco.
    */
-  return ['A', 'B', 'C', 'D'].map((classe) => ({
-    id: `${convenioId}-limite-classe-${classe}`,
+  return classesLimitesVagasContrato.map((classe) => ({
+    id: `${convenioId}-limite-classe-${classe.toLowerCase().replace('/', '')}`,
     convenioId,
     classe,
     grupo: gruposClasse[classe],
@@ -930,13 +1073,15 @@ function getContractDailyLimits(convenio) {
    * `cproeis_contratos_limites_vagas` no LocalStorage.
    * TODO: Em produção, carregar estes limites por endpoint próprio e aplicar versionamento por contrato/aditivo.
    */
-  if (convenio.limitesVagasDiarias?.length) return convenio.limitesVagasDiarias;
+  if (convenio.limitesVagasDiarias?.length) {
+    return normalizeDailyLimitRows(convenio.limitesVagasDiarias, convenio.id);
+  }
   const storedLimits = getLimitesVagas().filter((item) => item.convenioId === convenio.id);
-  return storedLimits.length ? storedLimits : buildEmptyDailyLimitRows(convenio.id);
+  return storedLimits.length ? normalizeDailyLimitRows(storedLimits, convenio.id) : buildEmptyDailyLimitRows(convenio.id);
 }
 
 function getValueRows(convenioId) {
-  return ['A', 'B', 'C', 'D'].map((classe) => ({
+  return classesValoresContrato.map((classe) => ({
     id: `${convenioId}-classe-${classe}`,
     convenioId,
     classe,
@@ -958,13 +1103,14 @@ function getDailyLimitRows(convenioId) {
   /*
    * DESCRIÇÃO DA FUNÇÃO: Monta a tabela persistível de total diário de vagas por classe e turno
    * a partir dos inputs do formulário de contrato.
-   * PARÂMETROS E RETORNO: Recebe convenioId como string e retorna array com um registro por classe.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Lê os inputs `limite-*-12`, `limite-*-8` e `limite-*-6`; o retorno
-   * é gravado no objeto do convênio e em `cproeis_contratos_limites_vagas`.
-   * TODO: Em produção, validar estes tetos contra regras contratuais oficiais antes de salvar.
+   * PARÂMETROS E RETORNO: Recebe convenioId como string e retorna array com registros A, B e C/D.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê os inputs `limite-a-*`, `limite-b-*` e `limite-cd-*`; o
+   * retorno é gravado no objeto do convênio e em `cproeis_contratos_limites_vagas`.
+   * TODO: Em produção, validar estes tetos contra regras contratuais oficiais antes de salvar
+   * e separar pagamento C/D por graduação somente na FOPAG.
    */
-  return ['A', 'B', 'C', 'D'].map((classe) => ({
-    id: `${convenioId}-limite-classe-${classe}`,
+  return classesLimitesVagasContrato.map((classe) => ({
+    id: `${convenioId}-limite-classe-${classe.toLowerCase().replace('/', '')}`,
     convenioId,
     classe,
     grupo: gruposClasse[classe],
@@ -1351,6 +1497,15 @@ function addResponsavelFromFields() {
 }
 
 function collectPayload() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Monta o objeto de convênio a partir do formulário compartilhado
+   * com a listagem, preservando os dados usados em edição e revisão.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna objeto com dados cadastrais,
+   * valores, limites e responsáveis.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê o DOM e `responsaveisState`; a persistência local
+   * acontece depois via `saveList`/`syncRelatedStorage`.
+   * TODO: Em produção, substituir esta montagem local por DTO validado no backend.
+   */
   const id = editingId.value || makeId();
   const valores = getValueRows(id);
   const limitesVagasDiarias = getDailyLimitRows(id);
@@ -1453,7 +1608,7 @@ function fillForm(convenio) {
   fields.numero.value = formatContractNumber(convenio.numero || '');
   fields.diarioData.value = convenio.diarioData || '';
   fields.diarioPagina.value = convenio.diarioPagina || convenio.diario || '';
-  setCurrencyFieldValue(fields.valorContrato, convenio.valorContrato ?? convenio.valorMensal ?? 0);
+  setCurrencyFieldValue(fields.valorContrato, convenio.valorContrato ?? 0);
   fields.inicio.value = convenio.inicio || '';
   fields.fim.value = convenio.fim || '';
   applyClientData({
@@ -1483,7 +1638,7 @@ function renewContract(convenio) {
   fields.cnpj.value = convenio.cnpj || '';
   fields.tipoConveniado.value = normalizeTipoConveniado(convenio.tipoConveniado || '');
   setEnderecoFields(convenio);
-  setCurrencyFieldValue(fields.valorContrato, convenio.valorContrato ?? convenio.valorMensal ?? 0);
+  setCurrencyFieldValue(fields.valorContrato, convenio.valorContrato ?? 0);
   fields.classeA && (fields.classeA.value = convenio.classeA || 0);
   fields.classeB && (fields.classeB.value = convenio.classeB || 0);
   fields.classeC && (fields.classeC.value = convenio.classeC || 0);
@@ -1508,7 +1663,7 @@ function renewContract(convenio) {
  * Lê os filtros preenchidos na tabela de contratos e normaliza os valores para comparação.
  *
  * PARÂMETROS E RETORNO:
- * @returns {object} Filtros atuais de texto, situação, tipo e intervalo de início de vigência.
+ * @returns {object} Filtros atuais de convênio, CNPJ, situação, tipo e distribuição do diretor.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
  * Não acessa LocalStorage; lê somente campos do DOM usados para filtrar a lista já carregada.
@@ -1516,14 +1671,92 @@ function renewContract(convenio) {
  * NOTAS DE EXPANSÃO:
  * TODO: enviar filtros para API quando a listagem de contratos for paginada em ambiente online.
  */
+function createEmptyContractTableFilters() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Define o estado inicial dos filtros aplicados na tabela de contratos,
+   * mantendo contratos ativos como consulta padrão.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna objeto com filtros iniciais.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa LocalStorage nem DOM; mantém apenas estado em memória.
+   * TODO: Em produção, enviar `status=active` por padrão para a consulta paginada da API.
+   */
+  return {
+    name: '',
+    cnpj: '',
+    status: 'active',
+    type: '',
+    directorRegion: '',
+    orderBy: 'situacao-inicio'
+  };
+}
+
 function getContractTableFilters() {
   return {
-    text: normalizeText(document.getElementById('contract-filter-text')?.value || '').toLowerCase(),
+    name: normalizeText(document.getElementById('contract-filter-name')?.value || '').toLowerCase(),
+    cnpj: onlyDigits(document.getElementById('contract-filter-cnpj')?.value || ''),
     status: document.getElementById('contract-filter-status')?.value || '',
     type: normalizeTipoConveniado(document.getElementById('contract-filter-type')?.value || ''),
-    startFrom: document.getElementById('contract-filter-start-from')?.value || '',
-    startTo: document.getElementById('contract-filter-start-to')?.value || ''
+    directorRegion: document.getElementById('contract-filter-director-region')?.value || '',
+    orderBy: document.getElementById('contract-sort-order')?.value || 'situacao-inicio'
   };
+}
+
+function getDirectorDistributionMaps() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Monta mapas de CPAs e classificações criadas no Acesso Diretor
+   * para exibir a distribuição operacional na tabela de contratos.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna objeto com regionById e classificationByContract.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê `cproeis_diretor_regioes` e
+   * `cproeis_diretor_contratos_regioes`; não grava dados.
+   * TODO: Em produção, consumir esta informação por uma view consolidada do backend.
+   */
+  const regionById = new Map(loadList(STORAGE_DIRETOR_REGIOES)
+    .filter((region) => !region.tipo || region.tipo === 'CPA')
+    .map((region) => [region.id, region]));
+  const classificationByContract = new Map(
+    loadList(STORAGE_DIRETOR_CLASSIFICACOES).map((classification) => [classification.contratoId, classification])
+  );
+  return { regionById, classificationByContract };
+}
+
+function getContractDirectorDistribution(convenio, maps = getDirectorDistributionMaps()) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Resolve a CPA atribuída pelo diretor a um contrato específico.
+   * PARÂMETROS E RETORNO: Recebe convenio como objeto de contrato e maps como mapas opcionais;
+   * retorna objeto com id, nome e tipo da distribuição, ou campos vazios.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê apenas os mapas em memória montados de LocalStorage.
+   * TODO: Em produção, manter histórico de redistribuições e vigência da classificação.
+   */
+  const classification = maps.classificationByContract.get(convenio.id) || {};
+  const region = maps.regionById.get(classification.regiaoId) || {};
+  return {
+    id: region.id || '',
+    nome: region.nome || '',
+    tipo: 'CPA'
+  };
+}
+
+function fillContractDirectorRegionFilter() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Carrega no filtro de contratos as CPAs criadas pelo diretor.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê `cproeis_diretor_regioes`; escreve somente opções no DOM.
+   * TODO: Em produção, carregar CPAs autorizadas por API com cache controlado.
+   */
+  const select = document.getElementById('contract-filter-director-region');
+  if (!select) return;
+  const currentValue = select.value;
+  const regions = loadList(STORAGE_DIRETOR_REGIOES)
+    .filter((region) => !region.tipo || region.tipo === 'CPA')
+    .sort((a, b) => normalizeText(a.nome).localeCompare(normalizeText(b.nome)));
+
+  select.innerHTML = [
+    '<option value="">Todos</option>',
+    '<option value="nao-classificado">Não classificado</option>',
+    ...regions.map((region) => `<option value="${escapeHtml(region.id)}">${escapeHtml(region.nome || 'CPA sem nome')}</option>`)
+  ].join('');
+  select.value = currentValue === 'nao-classificado' || regions.some((region) => region.id === currentValue)
+    ? currentValue
+    : '';
 }
 
 /**
@@ -1538,124 +1771,222 @@ function getContractTableFilters() {
  * Não grava dados; filtra em memória os registros lidos da chave de convênios no LocalStorage.
  *
  * NOTAS DE EXPANSÃO:
- * TODO: mover busca textual e filtros de vigência para o backend para evitar carregar todos os contratos no navegador.
+ * TODO: mover busca por nome/CNPJ e filtros estruturados para o backend para evitar carregar todos os contratos no navegador.
  */
-function applyContractTableFilters(convenios) {
-  const filters = getContractTableFilters();
+function applyContractTableFilters(convenios, filters = appliedContractTableFilters) {
+  const distributionMaps = getDirectorDistributionMaps();
 
   return convenios.filter((convenio) => {
     const situacao = getSituacao(convenio);
     const tipo = normalizeTipoConveniado(convenio.tipoConveniado);
-    const searchable = [
-      convenio.nome,
-      formatCnpj(convenio.cnpj),
-      onlyDigits(convenio.cnpj),
-      convenio.numero
-    ].filter(Boolean).join(' ').toLowerCase();
+    const distribution = getContractDirectorDistribution(convenio, distributionMaps);
+    const convenioName = normalizeText(convenio.nome).toLowerCase();
+    const convenioCnpj = onlyDigits(convenio.cnpj);
 
-    if (filters.text && !searchable.includes(filters.text)) return false;
+    if (filters.name && !convenioName.includes(filters.name)) return false;
+    if (filters.cnpj && !convenioCnpj.includes(filters.cnpj)) return false;
     if (filters.status === 'active' && !situacao.active) return false;
     if (filters.status === 'inactive' && situacao.active) return false;
     if (filters.type && tipo !== filters.type) return false;
-    if (filters.startFrom && (convenio.inicio || '') < filters.startFrom) return false;
-    if (filters.startTo && (convenio.inicio || '') > filters.startTo) return false;
+    if (filters.directorRegion === 'nao-classificado' && distribution.id) return false;
+    if (filters.directorRegion === 'nao-classificado') return true;
+    if (filters.directorRegion && distribution.id !== filters.directorRegion) return false;
     return true;
   });
 }
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
- * Ordena a tabela única colocando contratos ativos primeiro e, em seguida, os mais antigos pela data de início.
+ * Ordena a tabela única conforme a opção aplicada pelo usuário no filtro.
  *
  * PARÂMETROS E RETORNO:
  * @param {Array<object>} convenios - Contratos filtrados para ordenação.
+ * @param {string} orderBy - Critério de ordenação selecionado na tela.
  * @returns {Array<object>} Nova lista ordenada para renderização.
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
  * Não acessa armazenamento; cria uma cópia ordenada da lista recebida.
  *
  * NOTAS DE EXPANSÃO:
- * TODO: alinhar esta ordenação com índices do banco de dados quando houver persistência online.
+ * TODO: alinhar esta ordenação com parâmetros e índices do banco de dados quando houver persistência online.
  */
-function sortContractsForTable(convenios) {
+function sortContractsForTable(convenios, orderBy = 'situacao-inicio') {
+  const distributionMaps = orderBy === 'distribuicao-asc' ? getDirectorDistributionMaps() : null;
+  const byName = (a, b) => normalizeText(a.nome).localeCompare(normalizeText(b.nome));
+  const byStart = (a, b) => String(a.inicio || '').localeCompare(String(b.inicio || ''));
+  const byValue = (a, b) => Number(a.valorContrato || 0) - Number(b.valorContrato || 0);
+  const byDistribution = (a, b) => {
+    const distributionA = getContractDirectorDistribution(a, distributionMaps).nome || 'Não classificado';
+    const distributionB = getContractDirectorDistribution(b, distributionMaps).nome || 'Não classificado';
+    return normalizeText(distributionA).localeCompare(normalizeText(distributionB)) || byName(a, b);
+  };
+
   return [...convenios].sort((a, b) => {
+    if (orderBy === 'nome-asc') return byName(a, b);
+    if (orderBy === 'nome-desc') return byName(b, a);
+    if (orderBy === 'inicio-asc') return byStart(a, b) || byName(a, b);
+    if (orderBy === 'inicio-desc') return byStart(b, a) || byName(a, b);
+    if (orderBy === 'valor-asc') return byValue(a, b) || byName(a, b);
+    if (orderBy === 'valor-desc') return byValue(b, a) || byName(a, b);
+    if (orderBy === 'distribuicao-asc') return byDistribution(a, b);
+
     const activeDiff = Number(getSituacao(b).active) - Number(getSituacao(a).active);
     if (activeDiff) return activeDiff;
-    const startDiff = (a.inicio || '').localeCompare(b.inicio || '');
+    const startDiff = byStart(a, b);
     if (startDiff) return startDiff;
-    return (a.nome || '').localeCompare(b.nome || '');
+    return byName(a, b);
   });
+}
+
+function paginateContractsForTable(convenios) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Separa a lista filtrada/ordenada em páginas de 10 registros para
+   * reduzir a quantidade de linhas renderizadas de uma vez na tabela.
+   * PARÂMETROS E RETORNO: Recebe convenios como array já filtrado e ordenado; retorna objeto
+   * com rows da página atual, totalPages, currentPage e totalFiltered.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava LocalStorage; usa somente estado em memória
+   * `contractTableCurrentPage` e a lista recebida.
+   * TODO: Em produção, substituir este slice local por paginação no endpoint com `page` e `limit`.
+   */
+  const totalFiltered = convenios.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / CONTRACT_TABLE_PAGE_SIZE));
+  contractTableCurrentPage = Math.min(Math.max(1, contractTableCurrentPage), totalPages);
+
+  const startIndex = (contractTableCurrentPage - 1) * CONTRACT_TABLE_PAGE_SIZE;
+  return {
+    rows: convenios.slice(startIndex, startIndex + CONTRACT_TABLE_PAGE_SIZE),
+    totalPages,
+    currentPage: contractTableCurrentPage,
+    totalFiltered
+  };
+}
+
+function renderContractPagination(pageInfo) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Atualiza os controles Anterior/Próxima e o texto da página atual.
+   * PARÂMETROS E RETORNO: Recebe pageInfo com currentPage e totalPages; não retorna valores.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa armazenamento; altera somente elementos do DOM
+   * da paginação.
+   * TODO: Em produção, refletir a página atual na URL para permitir compartilhamento do estado.
+   */
+  if (contractPaginationStatus) {
+    contractPaginationStatus.textContent = `Página ${pageInfo.currentPage} de ${pageInfo.totalPages}`;
+  }
+  if (contractPagePrev) contractPagePrev.disabled = pageInfo.currentPage <= 1;
+  if (contractPageNext) contractPageNext.disabled = pageInfo.currentPage >= pageInfo.totalPages;
+}
+
+function bindContractPagination() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Liga os botões de paginação local da tabela de contratos.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valores.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Atualiza apenas `contractTableCurrentPage` em memória e
+   * renderiza novamente a tabela; não grava LocalStorage.
+   * TODO: Em produção, trocar a troca de página por nova chamada ao endpoint paginado.
+   */
+  if (contractPagePrev && contractPagePrev.dataset.paginationBound !== 'true') {
+    contractPagePrev.dataset.paginationBound = 'true';
+    contractPagePrev.addEventListener('click', () => {
+      contractTableCurrentPage -= 1;
+      renderTables();
+    });
+  }
+
+  if (contractPageNext && contractPageNext.dataset.paginationBound !== 'true') {
+    contractPageNext.dataset.paginationBound = 'true';
+    contractPageNext.addEventListener('click', () => {
+      contractTableCurrentPage += 1;
+      renderTables();
+    });
+  }
 }
 
 /**
  * DESCRIÇÃO DA FUNÇÃO:
- * Configura os eventos dos filtros da tabela de contratos para atualizar a lista em tempo real.
+ * Configura os eventos dos filtros da tabela de contratos para pesquisar somente sob comando explícito.
  *
  * PARÂMETROS E RETORNO:
  * @returns {void}
  *
  * ARMAZENAMENTO E PERSISTÊNCIA:
- * Não grava dados; dispara nova renderização lendo filtros do DOM e contratos do LocalStorage.
+ * Não grava dados; o botão Filtrar copia os valores do DOM para o estado aplicado em memória e
+ * dispara nova renderização lendo contratos do LocalStorage.
  *
  * NOTAS DE EXPANSÃO:
- * TODO: adicionar debounce na busca textual quando os filtros consultarem uma API.
+ * TODO: enviar o estado aplicado como query params quando os filtros consultarem uma API.
  */
 function bindContractTableFilters() {
-  const filterIds = ['contract-filter-text', 'contract-filter-status', 'contract-filter-type', 'contract-filter-start-from', 'contract-filter-start-to'];
+  fillContractDirectorRegionFilter();
+  const filterIds = ['contract-filter-name', 'contract-filter-cnpj', 'contract-filter-status', 'contract-filter-type', 'contract-filter-director-region', 'contract-sort-order'];
 
   filterIds.forEach((id) => {
     const input = document.getElementById(id);
     if (!input || input.dataset.filterBound === 'true') return;
 
     input.dataset.filterBound = 'true';
-    input.addEventListener('input', renderTables);
-    input.addEventListener('change', renderTables);
   });
 
-  const clearButton = document.getElementById('clear-contract-filters');
-  if (clearButton && clearButton.dataset.filterBound !== 'true') {
-    clearButton.dataset.filterBound = 'true';
-    clearButton.addEventListener('click', () => {
-      filterIds.forEach((id) => {
-        const input = document.getElementById(id);
-        if (input) input.value = '';
-      });
+  const applyButton = document.getElementById('apply-contract-filters');
+  if (applyButton && applyButton.dataset.filterBound !== 'true') {
+    applyButton.dataset.filterBound = 'true';
+    applyButton.addEventListener('click', () => {
+      /*
+       * DESCRIÇÃO DO BLOCO: Aplica a pesquisa somente quando o usuário confirma no botão Filtrar,
+       * impedindo recarregamento da tabela durante digitação ou troca de selects.
+       * PARÂMETROS E RETORNO: O listener recebe o evento de clique e não retorna valores.
+       * ARMAZENAMENTO E PERSISTÊNCIA: Copia valores do DOM para `appliedContractTableFilters`
+       * em memória; não grava LocalStorage.
+       * TODO: Em produção, disparar requisição paginada à API usando estes critérios.
+       */
+      appliedContractTableFilters = getContractTableFilters();
+      contractTableCurrentPage = 1;
       renderTables();
     });
   }
+
 }
 
 function resetContractTableFiltersOnLoad() {
   /*
-   * DESCRIÇÃO DA FUNÇÃO: Limpa os campos de filtro da tabela ao carregar a página, evitando que
-   * valores restaurados pelo navegador limitem a massa demo sem ação explícita do usuário.
+   * DESCRIÇÃO DA FUNÇÃO: Reinicia os campos de filtro da tabela ao carregar a página, mantendo
+   * Ativos como situação padrão.
    * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valores.
    * ARMAZENAMENTO E PERSISTÊNCIA: Lê apenas inputs do DOM e altera seus valores; não usa LocalStorage.
-   * TODO: Em produção, decidir se filtros devem vir da URL, sessão do usuário ou sempre vazios.
+   * TODO: Em produção, decidir se filtros devem vir da URL, sessão do usuário ou padrão ativo.
    */
-  ['contract-filter-text', 'contract-filter-status', 'contract-filter-type', 'contract-filter-start-from', 'contract-filter-start-to']
+  ['contract-filter-name', 'contract-filter-cnpj', 'contract-filter-status', 'contract-filter-type', 'contract-filter-director-region', 'contract-sort-order']
     .forEach((id) => {
       const input = document.getElementById(id);
-      if (input) input.value = '';
+      if (!input) return;
+      if (id === 'contract-sort-order') {
+        input.value = 'situacao-inicio';
+        return;
+      }
+      input.value = id === 'contract-filter-status' ? 'active' : '';
     });
+  appliedContractTableFilters = createEmptyContractTableFilters();
+  contractTableCurrentPage = 1;
 }
 
 function renderTableRows(target, convenios) {
   if (!convenios.length) {
-    target.innerHTML = '<tr><td class="empty" colspan="9">Nenhum contrato encontrado para os filtros selecionados.</td></tr>';
+    target.innerHTML = '<tr><td class="empty" colspan="10">Nenhum contrato encontrado para os filtros selecionados.</td></tr>';
     return;
   }
 
+  const distributionMaps = getDirectorDistributionMaps();
   target.innerHTML = convenios.map((convenio) => {
     const situacao = getSituacao(convenio);
+    const distribution = getContractDirectorDistribution(convenio, distributionMaps);
 
     return `
       <tr>
         <td><strong>${escapeHtml(titleCaseText(convenio.nome))}</strong></td>
         <td>${escapeHtml(formatCnpj(convenio.cnpj) || '-')}</td>
         <td>${escapeHtml(normalizeTipoConveniado(convenio.tipoConveniado) || 'Não informado')}</td>
+        <td>${distribution.nome ? escapeHtml(distribution.nome) : 'Não classificado'}</td>
         <td>${escapeHtml(convenio.numero || '-')}</td>
-        <td>${dinheiro.format(Number(convenio.valorContrato ?? convenio.valorMensal ?? 0))}</td>
+        <td>${dinheiro.format(Number(convenio.valorContrato ?? 0))}</td>
         <td>${formatDateOrDash(convenio.inicio)}</td>
         <td>${formatDateOrDash(convenio.fim)}</td>
         <td>
@@ -1694,13 +2025,22 @@ function renderTables() {
   if (!contratosBody) return;
 
   const convenios = getConvenios();
-  const filtrados = sortContractsForTable(applyContractTableFilters(convenios));
+  const filtrados = sortContractsForTable(
+    applyContractTableFilters(convenios, appliedContractTableFilters),
+    appliedContractTableFilters.orderBy
+  );
+  const pageInfo = paginateContractsForTable(filtrados);
   const total = convenios.length;
+  const displayed = pageInfo.rows.length;
 
-  if (contractsCount) contractsCount.textContent = filtrados.length === 1
-    ? `1 contrato exibido de ${total} cadastrado.`
-    : `${filtrados.length} contratos exibidos de ${total} cadastrados.`;
-  renderTableRows(contratosBody, filtrados);
+  if (contractsCount) {
+    const totalLabel = total === 1 ? '1 cadastrado' : `${total} cadastrados`;
+    contractsCount.textContent = displayed === 1
+      ? `1 contrato exibido de ${totalLabel}.`
+      : `${displayed} contratos exibidos de ${totalLabel}.`;
+  }
+  renderTableRows(contratosBody, pageInfo.rows);
+  renderContractPagination(pageInfo);
 }
 
 function detailItem(label, value) {
@@ -1729,15 +2069,17 @@ function detailReviewSection(title, content) {
   return `<section class="review-section"><h3>${escapeHtml(title)}</h3>${content}</section>`;
 }
 
-function detailReviewTable(headers, rows) {
+function detailReviewTable(headers, rows, emptyMessage = '') {
   /*
    * DESCRIÇÃO DA FUNÇÃO: Renderiza tabelas compactas de detalhes usando o mesmo padrão visual
    * da página de revisão do cadastro.
-   * PARÂMETROS E RETORNO: Recebe headers como array de strings e rows como matriz de valores;
-   * retorna string HTML da tabela.
+   * PARÂMETROS E RETORNO: Recebe headers como array de strings, rows como matriz de valores e
+   * emptyMessage como string opcional; retorna string HTML da tabela.
    * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa LocalStorage; usa apenas arrays já resolvidos.
    * TODO: Em produção, mover render de tabelas para componente com ordenação e acessibilidade.
    */
+  const hasRows = Array.isArray(rows) && rows.length > 0;
+
   return `
     <div class="review-table-wrap">
       <table class="review-table">
@@ -1745,9 +2087,11 @@ function detailReviewTable(headers, rows) {
           <tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join('')}</tr>
         </thead>
         <tbody>
-          ${rows.map((row) => `
+          ${hasRows ? rows.map((row) => `
             <tr>${row.map((cell) => `<td>${escapeHtml(cell ?? '-')}</td>`).join('')}</tr>
-          `).join('')}
+          `).join('') : `
+            <tr><td class="empty" colspan="${headers.length}">${escapeHtml(emptyMessage || 'Nenhum registro encontrado.')}</td></tr>
+          `}
         </tbody>
       </table>
     </div>
@@ -1800,9 +2144,11 @@ function renderDetails(id) {
    * DESCRIÇÃO DA FUNÇÃO: Renderiza a página dedicada de detalhes em layout fixo, preenchendo os
    * campos quando há convênio selecionado e mantendo o modelo vazio quando não há seleção.
    * PARÂMETROS E RETORNO: Recebe id como string opcional do convênio e não retorna valores; atualiza
-   * o DOM com dados de identificação, contrato, vigência, valores, limites e responsáveis.
+   * o DOM com dados de identificação, contrato, vigência, valores, limites, responsáveis e
+   * acessos operacionais vinculados pelo GSI.
    * ARMAZENAMENTO E PERSISTÊNCIA: Lê cproeis_contratos_convenios, cproeis_contratos_valores,
-   * cproeis_contratos_limites_vagas e cproeis_contratos_responsaveis no LocalStorage.
+   * cproeis_contratos_limites_vagas, cproeis_contratos_responsaveis,
+   * cproeis_gsi_usuarios_contrato e cproeis_gsi_usuarios_contrato_removidos no LocalStorage.
    * TODO: Em produção, buscar os detalhes por endpoint autenticado e aplicar controle de acesso por perfil.
    */
   if (!detailsHeading || !detailsSubtitle || !detailsContent || !detailsEmpty || !detailsPanel) {
@@ -1821,9 +2167,9 @@ function renderDetails(id) {
   const valores = getContractValues(convenio);
   const limitesVagasDiarias = getContractDailyLimits(convenio);
   const responsaveis = getContractResponsaveis(convenio);
+  const acessosOperacionais = getContractOperationalAccessUsers(convenio);
   const situacao = convenioEncontrado ? getSituacao(convenio) : { label: '', active: false, className: '' };
   const valorBase = valores[0] || {};
-  const classesContratuais = ['A', 'B', 'C', 'D'];
   const diasSemana = [
     { key: 'segunda', label: 'Segunda' },
     { key: 'terca', label: 'Terça' },
@@ -1867,7 +2213,7 @@ function renderDetails(id) {
       ${detailReviewField('Nº do contrato', convenio.numero)}
       ${detailReviewField('Data da publicação', formatDateOrDash(convenio.diarioData))}
       ${detailReviewField('Página do diário oficial', convenio.diarioPagina)}
-      ${detailReviewField('Valor do contrato', hasDetailsData ? dinheiro.format(Number(convenio.valorContrato ?? convenio.valorMensal ?? 0)) : '-')}
+      ${detailReviewField('Valor do contrato', hasDetailsData ? dinheiro.format(Number(convenio.valorContrato ?? 0)) : '-')}
     </div>
   `;
   const vigenciaHtml = `
@@ -1878,7 +2224,7 @@ function renderDetails(id) {
   `;
   const valoresHtml = detailReviewTable(
     ['Classe', 'Grupo', '6h', '8h', '12h'],
-    classesContratuais.map((classe) => {
+    classesValoresContrato.map((classe) => {
       const valor = valores.find((item) => item.classe === classe) || {};
       return [
         `Classe ${classe}`,
@@ -1897,7 +2243,7 @@ function renderDetails(id) {
   `;
   const limitesVagasHtml = detailReviewTable(
     ['Classe', 'Grupo', '6h por dia', '8h por dia', '12h por dia'],
-    classesContratuais.map((classe) => {
+    classesLimitesVagasContrato.map((classe) => {
       const limite = limitesVagasDiarias.find((item) => item.classe === classe) || {};
       return [
         `Classe ${classe}`,
@@ -1909,16 +2255,27 @@ function renderDetails(id) {
     })
   );
   const responsaveisHtml = detailReviewTable(
-    ['Nome', 'CPF', 'Email', 'Telefone', 'Início', 'Fim', 'Situação'],
+    ['Nome', 'CPF', 'Email', 'Telefone', 'Início', 'Fim'],
     (responsaveis.length ? responsaveis : [{}]).map((responsavel) => [
       titleCaseText(responsavel.nome) || '-',
       maskCpfForDisplay(responsavel.cpf),
       normalizeText(responsavel.email).toLowerCase() || '-',
       formatPhone(responsavel.telefone) || '-',
       formatDateOrBlank(responsavel.inicio) || '-',
-      formatDateOrBlank(responsavel.fim) || '-',
-      responsavel.fim ? 'Acesso retirado' : (responsavel.nome ? 'Ativo' : '-')
+      formatDateOrBlank(responsavel.fim) || '-'
     ])
+  );
+  const acessosOperacionaisHtml = detailReviewTable(
+    ['Nome', 'CPF', 'Email', 'Início do acesso', 'Retirado em', 'Situação'],
+    acessosOperacionais.map((acesso) => [
+      titleCaseText(acesso.nome) || '-',
+      formatCpf(acesso.cpf) || '-',
+      normalizeText(acesso.email).toLowerCase() || '-',
+      formatDateOrBlank(acesso.inicio) || '-',
+      formatDateOrBlank(acesso.fim) || '-',
+      acesso.situacao || '-'
+    ]),
+    'Nenhum acesso operacional cadastrado para este contrato.'
   );
 
   detailsHeading.textContent = titleCaseText(convenio.nome) || 'Detalhes do convênio';
@@ -1934,7 +2291,8 @@ function renderDetails(id) {
     detailReviewSection('Passagem e alimentação', beneficiosHtml),
     detailReviewSection('Total diário de vagas por classe e turno', limitesVagasHtml),
     detailReviewSection('Dias de funcionamento do contrato', diasHtml),
-    detailReviewSection('Responsáveis', responsaveisHtml)
+    detailReviewSection('Responsáveis', responsaveisHtml),
+    detailReviewSection('Acessos operacionais do convênio', acessosOperacionaisHtml)
   ].join('');
 
   detailsEmpty.hidden = true;
@@ -2168,5 +2526,6 @@ createFieldHints();
 renderResponsaveisForm();
 carregarAcaoInicialDoFormulario();
 resetContractTableFiltersOnLoad();
+bindContractPagination();
 renderAll();
 carregarDetalheInicialDaURL();

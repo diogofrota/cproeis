@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Remover usuário administrativo</title>
+  <link rel="stylesheet" href="../css/style-gsi-controle-acesso.css">
+</head>
+<body data-gsi-operator-page="remover" data-gsi-access-scope="sistema">
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>GSI</h1>
+      </div>
+    </div>
+
+    <!--
+      DESCRIÇÃO DO BLOCO: Menu do GSI para navegação entre controle de acesso e usuários administrativos.
+      PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; os links apontam para
+      páginas locais.
+      ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; esta página remove registros de
+      `cproeis_gsi_operadores_sistema` e grava histórico em `cproeis_gsi_usuários administrativos_removidos`.
+      TODO: Em produção, exigir permissão de administrador GSI antes de mostrar a rotina de remoção.
+    -->
+    <nav class="module-menu" id="gsi-menu" aria-label="Opções do GSI">
+      <a href="menu.html" data-history-back="false">Página inicial</a>
+      <a href="planejamento-operacional.html">Planejamento Operacional</a>
+      <a href="controle-acesso.html">Controle de Acesso</a>
+      <a href="cadastrar-operador.html">Cadastrar usuário administrativo</a>
+      <a href="tabela-operadores.html">Tabela de usuários administrativos</a>
+      <a class="active" href="remover-operador.html">Remover usuário administrativo</a>
+      <a href="cadastrar-acesso-convenio.html">Cadastrar usuário do contrato</a>
+      <a href="tabela-acessos-convenio.html">Tabela de usuários do contrato</a>
+      <a href="remover-acesso-convenio.html">Remover usuário do contrato</a>
+      <a href="credenciamento.html">Credenciamento</a>
+      <a href="relatorios.html">Relatórios GSI</a>
+      <a href="monitoramento.html">Monitoramento</a>
+      <a href="auditoria.html">Auditoria</a>
+      <a href="tipos-curso.html">Tipos de curso</a>
+      <a href="../convenios/cursos.html">Cursos</a>
+      <a href="vagas-fora-prazo.html">Vagas fora do prazo</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Remover usuário administrativo</h2>
+          <p class="hint">Retire da lista ativa usuários administrativos que não devem mais acessar o sistema.</p>
+        </div>
+      </div>
+
+      <!--
+        DESCRIÇÃO DO BLOCO: Formulário de remoção de usuário administrativo administrado pelo GSI.
+        PARÂMETROS E RETORNO: Não recebe parâmetros HTML; o JavaScript lê a busca por nome/RG,
+        o usuário administrativo selecionado e o motivo antes de remover.
+        ARMAZENAMENTO E PERSISTÊNCIA: Remove o usuário administrativo de `cproeis_gsi_operadores_sistema` e grava
+        auditoria local em `cproeis_gsi_usuários administrativos_removidos`.
+        TODO: Em produção, transformar remoção em inativação auditável no banco, com usuário administrativo executor,
+        protocolo e controle de sessão.
+      -->
+      <form id="gsi-operator-remove-form" class="gsi-operator-form compact gsi-operator-remove-form">
+        <label class="wide">
+          Usuário administrativo
+          <select id="gsi-operator-remove-id" required></select>
+        </label>
+        <div class="gsi-access-summary wide" id="gsi-operator-remove-summary" aria-live="polite">
+          Selecione um usuário administrativo para conferir os dados antes de remover.
+        </div>
+        <input id="gsi-operator-remove-search" type="hidden">
+        <input id="gsi-operator-remove-reason" type="hidden" value="Remoção administrativa pelo GSI">
+        <div class="form-actions">
+          <button type="submit" class="danger-button">Remover</button>
+        </div>
+      </form>
+      <p class="hint" id="gsi-operator-remove-feedback" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <script src="../js/script-gsi-operadores.js"></script>
+  <script src="../js/script-gsi-controle-acesso.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

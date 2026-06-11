@@ -14,9 +14,94 @@
     valores: 'cproeis_contratos_valores',
     responsaveis: 'cproeis_contratos_responsaveis',
     limitesVagas: 'cproeis_contratos_limites_vagas',
+    renovacoes: 'cproeis_contratos_renovacoes',
+    historicos: 'cproeis_contratos_historicos',
+    diretorCpas: 'cproeis_diretor_regioes',
+    diretorContratosCpas: 'cproeis_diretor_contratos_regioes',
+    gsiUsuariosContrato: 'cproeis_gsi_usuarios_contrato',
+    gsiUsuariosContratoRemovidos: 'cproeis_gsi_usuarios_contrato_removidos',
     revisaoConvenio: 'cproeis_contratos_revisao_convenio',
     revisaoResponsavel: 'cproeis_contratos_revisao_responsavel'
   };
+
+  const API_CONTRACT = {
+    /*
+     * DESCRIÇÃO DO BLOCO: Centraliza o desenho inicial dos endpoints que substituirão o
+     * LocalStorage quando o módulo de contratos migrar para uma API real.
+     * PARÂMETROS E RETORNO: Não recebe parâmetros; expõe strings de rota e versão de schema
+     * para as funções da camada `CPROEISContratosJsonApi`.
+     * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; serve como contrato em memória
+     * para manter as telas acopladas ao adaptador, não ao banco ou SQL.
+     * TODO: Em produção, mover baseUrl para configuração de ambiente e sincronizar estas rotas
+     * com OpenAPI/Swagger oficial do backend.
+     */
+    schemaVersion: '2026-06-05-responsaveis-sem-nivel',
+    baseUrl: '/api',
+    endpoints: {
+      convenios: '/contratos/convenios',
+      convenioById: (id) => `/contratos/convenios/${encodeURIComponent(id)}`,
+      valores: (convenioId) => `/contratos/convenios/${encodeURIComponent(convenioId)}/valores`,
+      limitesVagas: (convenioId) => `/contratos/convenios/${encodeURIComponent(convenioId)}/limites-vagas`,
+      responsaveis: (convenioId) => `/contratos/convenios/${encodeURIComponent(convenioId)}/responsaveis`,
+      responsavelById: (convenioId, responsavelId) => `/contratos/convenios/${encodeURIComponent(convenioId)}/responsaveis/${encodeURIComponent(responsavelId)}`,
+      renovacoes: '/contratos/renovacoes',
+      historicos: '/contratos/historicos',
+      diretorCpas: '/diretor/cpas',
+      diretorContratosCpas: '/diretor/contratos-cpas',
+      gsiUsuariosContrato: (convenioId) => `/contratos/convenios/${encodeURIComponent(convenioId)}/usuarios-operacionais`,
+      gsiUsuariosContratoRemovidos: (convenioId) => `/contratos/convenios/${encodeURIComponent(convenioId)}/usuarios-operacionais/removidos`,
+      revisaoConvenio: '/contratos/convenios/revisoes',
+      revisaoResponsavel: '/contratos/responsaveis/revisoes'
+    }
+  };
+
+  function buildApiRequestOptions(method = 'GET', payload = null) {
+    /*
+     * DESCRIÇÃO DA FUNÇÃO: Monta opções padronizadas para futuras chamadas `fetch` da API,
+     * mantendo headers JSON e credenciais no mesmo ponto.
+     * PARÂMETROS E RETORNO: Recebe method como string HTTP e payload como objeto opcional;
+     * retorna objeto de configuração compatível com `fetch`.
+     * ARMAZENAMENTO E PERSISTÊNCIA: Não acessa LocalStorage nem sessionStorage; apenas prepara
+     * dados em memória para a requisição futura.
+     * TODO: Em produção, incluir token CSRF/JWT, correlation-id e política de timeout/cancelamento.
+     */
+    const options = {
+      method,
+      credentials: 'same-origin',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'X-CPROEIS-Schema': API_CONTRACT.schemaVersion
+      }
+    };
+
+    if (payload !== null) options.body = JSON.stringify(payload);
+    return options;
+  }
+
+  async function requestJson(endpoint, options = buildApiRequestOptions()) {
+    /*
+     * DESCRIÇÃO DA FUNÇÃO: Define o caminho de migração para chamadas HTTP reais sem espalhar
+     * `fetch` pelas telas de contratos.
+     * PARÂMETROS E RETORNO: Recebe endpoint como string relativa e options como configuração
+     * de `fetch`; retorna uma Promise com o JSON de resposta ou lança erro em falha HTTP.
+     * ARMAZENAMENTO E PERSISTÊNCIA: Não usa armazenamento local; buscará dados na API quando
+     * as funções públicas deixarem de usar os helpers locais.
+     * TODO: Em produção, ativar esta função nas operações públicas, tratar 401/403 de forma
+     * centralizada e registrar falhas em observabilidade.
+     */
+    const response = await fetch(`${API_CONTRACT.baseUrl}${endpoint}`, options);
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      const error = new Error(data?.message || 'Falha ao comunicar com a API.');
+      error.status = response.status;
+      error.data = data;
+      throw error;
+    }
+
+    return data;
+  }
 
   function readJsonList(key) {
     /*
@@ -199,11 +284,14 @@
 
   window.CPROEISContratosJsonApi = {
     STORAGE_KEYS,
+    API_CONTRACT,
     listarConvenios,
     buscarConvenioPorId,
     confirmarCadastroConvenio,
     adicionarResponsavel,
     retirarResponsavel,
+    buildApiRequestOptions,
+    requestJson,
     readJsonList,
     writeJsonList,
     readSessionJson,

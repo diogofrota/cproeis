@@ -3,6 +3,7 @@ const CONTRACT_RENEWAL_STORAGE_CONVENIOS = 'cproeis_contratos_convenios';
 const CONTRACT_RENEWAL_STORAGE_VALORES = 'cproeis_contratos_valores';
 const CONTRACT_RENEWAL_STORAGE_RESPONSAVEIS = 'cproeis_contratos_responsaveis';
 const CONTRACT_RENEWAL_STORAGE_HISTORICOS = 'cproeis_contratos_historicos';
+const CONTRACT_RENEWAL_JSON_API = window.CPROEISContratosJsonApi || null;
 
 const contractRenewalStatusLabels = {
   rascunho: 'Rascunho',
@@ -37,13 +38,15 @@ const approveDocumentsButton = document.getElementById('approve-documents');
 const finishRenewalButton = document.getElementById('finish-renewal');
 
 /*
-  DESCRIÇÃO DA FUNÇÃO: Lê listas JSON do LocalStorage com fallback seguro para array vazio,
-  mantendo a tela de análise funcional mesmo sem dados cadastrados.
+  DESCRIÇÃO DA FUNÇÃO: Lê listas JSON pela camada de dados do módulo de contratos, deixando a
+  tela de renovações pronta para receber dados de API sem alterar seu esqueleto HTML.
   PARÂMETROS E RETORNO: Recebe key (string) e retorna Array<object>.
-  ARMAZENAMENTO E PERSISTÊNCIA: Lê LocalStorage; não grava dados.
-  TODO: Em produção, substituir por consultas paginadas à API da seção de contratos.
+  ARMAZENAMENTO E PERSISTÊNCIA: Usa `CPROEISContratosJsonApi.readJsonList`, que hoje lê
+  LocalStorage e futuramente será substituído por endpoints do backend.
+  TODO: Em produção, ativar consultas paginadas no adaptador e propagar estados de loading/erro.
 */
 function renewalContractsReadList(key) {
+  if (CONTRACT_RENEWAL_JSON_API?.readJsonList) return CONTRACT_RENEWAL_JSON_API.readJsonList(key);
   try {
     return JSON.parse(localStorage.getItem(key)) || [];
   } catch (error) {
@@ -52,12 +55,17 @@ function renewalContractsReadList(key) {
 }
 
 /*
-  DESCRIÇÃO DA FUNÇÃO: Persiste listas usadas pela análise de renovação no armazenamento local.
+  DESCRIÇÃO DA FUNÇÃO: Persiste listas usadas pela análise de renovação por meio da camada de dados.
   PARÂMETROS E RETORNO: Recebe key (string) e list (Array<object>); não retorna valores.
-  ARMAZENAMENTO E PERSISTÊNCIA: Grava LocalStorage na chave informada.
-  TODO: Em produção, migrar esta gravação para endpoints transacionais com controle de auditoria.
+  ARMAZENAMENTO E PERSISTÊNCIA: Usa `CPROEISContratosJsonApi.writeJsonList`, que hoje grava
+  LocalStorage e futuramente chamará endpoints transacionais.
+  TODO: Em produção, migrar esta gravação no adaptador para endpoints com controle de auditoria.
 */
 function renewalContractsSaveList(key, list) {
+  if (CONTRACT_RENEWAL_JSON_API?.writeJsonList) {
+    CONTRACT_RENEWAL_JSON_API.writeJsonList(key, list);
+    return;
+  }
   localStorage.setItem(key, JSON.stringify(list));
 }
 

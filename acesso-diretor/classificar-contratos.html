@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPROEIS - Distribuição de contratos</title>
+  <link rel="stylesheet" href="../css/style-acesso-comandante.css">
+</head>
+<body>
+  <!--
+    DESCRIÇÃO DO BLOCO: Página do diretor para vincular e alterar contratos já cadastrados em
+    uma CPA operacional criada previamente.
+    PARÂMETROS E RETORNO: Não recebe parâmetros pela URL; os selects de cada linha da tabela
+    gravam/atualizam o vínculo contrato-CPA no armazenamento local.
+    ARMAZENAMENTO E PERSISTÊNCIA: Lê `cproeis_contratos_convenios`, `cproeis_diretor_regioes`,
+    `cproeis_gsi_usuarios_contrato` e `cproeis_gsi_usuarios_contrato_removidos`;
+    grava em `cproeis_diretor_contratos_regioes`.
+    TODO: Em produção, validar permissões e registrar histórico de alteração de CPA.
+  -->
+  <header class="module-header">
+    <div class="header-top">
+      <div class="header-copy">
+        <h1>Acesso Diretor</h1>
+        <p>Distribuição dos contratos por CPA.</p>
+      </div>
+    </div>
+
+    <nav class="module-menu" id="acesso-diretor-menu" aria-label="Menu de acesso diretor">
+      <a href="index.html">Página inicial</a>
+      <a href="tabela-regioes.html">Tabela CPAs</a>
+      <a class="active" href="classificar-contratos.html">Distribuição dos contratos</a>
+      <a class="menu-back-link" href="../index.html" data-history-back="false">Sistema CPROEIS</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="director-panel">
+      <div class="director-panel-header">
+        <div>
+          <h2>Distribuição dos contratos</h2>
+          <p class="hint" id="director-classifications-count">Nenhum contrato cadastrado.</p>
+        </div>
+      </div>
+
+      <div class="director-filter-bar director-contract-filter-bar">
+        <label>
+          Convênio
+          <input id="director-classification-filter-name" type="search" placeholder="Nome do convênio">
+        </label>
+
+        <label>
+          CNPJ
+          <input id="director-classification-filter-cnpj" type="search" inputmode="numeric" placeholder="00.000.000/0000-00">
+        </label>
+
+        <label>
+          Situação
+          <select id="director-classification-filter-status">
+            <option value="">Todos</option>
+            <option value="active" selected>Ativos</option>
+            <option value="inactive">Inativos</option>
+          </select>
+        </label>
+
+        <label>
+          Tipo
+          <select id="director-classification-filter-type">
+            <option value="">Todos</option>
+            <option value="Município">Município</option>
+            <option value="Concessionária">Concessionária</option>
+            <option value="Órgão Público">Órgão Público</option>
+            <option value="Outros">Outros</option>
+          </select>
+        </label>
+
+        <label>
+          CPA atual
+          <select id="director-classification-filter-region">
+            <option value="">Todos</option>
+          </select>
+        </label>
+
+        <label>
+          Ordenar por
+          <select id="director-classification-sort-order">
+            <option value="situacao-inicio">Situação e início</option>
+            <option value="nome-asc">Convênio A-Z</option>
+            <option value="nome-desc">Convênio Z-A</option>
+            <option value="inicio-asc">Início mais antigo</option>
+            <option value="inicio-desc">Início mais recente</option>
+            <option value="valor-desc">Maior valor</option>
+            <option value="valor-asc">Menor valor</option>
+            <option value="distribuicao-asc">Distribuição</option>
+          </select>
+        </label>
+
+        <div class="director-filter-actions">
+          <button type="button" id="director-classification-filter-apply">Filtrar</button>
+        </div>
+      </div>
+
+      <p class="form-feedback" id="director-classification-feedback" aria-live="polite"></p>
+
+      <div class="director-table-wrap">
+        <table class="director-contract-table">
+          <thead>
+            <tr>
+              <th>Convênio</th>
+              <th>CNPJ</th>
+              <th>Tipo</th>
+              <th>Distribuição</th>
+              <th>Acessos</th>
+              <th>Contrato</th>
+              <th>Valor</th>
+              <th>Início</th>
+              <th>Término</th>
+              <th>Situação</th>
+              <th>Data</th>
+              <th>Nova CPA</th>
+              <th>Salvar</th>
+            </tr>
+          </thead>
+          <tbody id="director-classifications-body"></tbody>
+        </table>
+      </div>
+
+      <div class="director-table-pagination" aria-label="Paginação da distribuição de contratos">
+        <button type="button" class="secondary" id="director-classification-page-prev">Anterior</button>
+        <span id="director-classification-pagination-status">Página 1 de 1</span>
+        <button type="button" class="secondary" id="director-classification-page-next">Próxima</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script-acesso-diretor-regioes.js"></script>
+  <script src="../js/script-navigation.js"></script>
+</body>
+</html>

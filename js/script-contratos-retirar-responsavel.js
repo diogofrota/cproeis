@@ -49,12 +49,12 @@ function retirarSetFieldState(key, valid) {
   return valid;
 }
 
-function retirarGetResponsaveisAtivos(convenio = retirarConvenioAtual) {
+function retirarGetResponsaveisSemDataFinal(convenio = retirarConvenioAtual) {
   /*
-   * DESCRIÇÃO DA FUNÇÃO: Resolve responsáveis ativos do convênio selecionado.
+   * DESCRIÇÃO DA FUNÇÃO: Resolve responsáveis do convênio selecionado que ainda não possuem data final.
    * PARÂMETROS E RETORNO: Recebe convenio como objeto opcional e retorna array de responsáveis sem data fim.
    * ARMAZENAMENTO E PERSISTÊNCIA: Lê dados em memória vindos de `cproeis_contratos_convenios`.
-   * TODO: Em produção, buscar responsáveis ativos por endpoint paginado e auditável.
+   * TODO: Em produção, buscar responsáveis por endpoint paginado e auditável, sem associar este registro a acesso ao sistema.
    */
   return (convenio?.responsaveis || []).filter((responsavel) => !responsavel.fim);
 }
@@ -82,15 +82,15 @@ function retirarRenderConvenios() {
 
 function retirarRenderResponsaveis() {
   /*
-   * DESCRIÇÃO DA FUNÇÃO: Preenche o seletor de responsáveis ativos conforme o convênio selecionado.
+   * DESCRIÇÃO DA FUNÇÃO: Preenche o seletor de responsáveis sem data final conforme o convênio selecionado.
    * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valores.
    * ARMAZENAMENTO E PERSISTÊNCIA: Lê `retirarConvenioAtual` em memória; escreve somente no DOM.
    * TODO: Em produção, bloquear retirada quando houver pendências operacionais em aberto.
    */
-  const responsaveis = retirarGetResponsaveisAtivos();
+  const responsaveis = retirarGetResponsaveisSemDataFinal();
   if (retirarFields.responsavel) {
     retirarFields.responsavel.innerHTML = [
-      '<option value="">Selecione um responsável ativo</option>',
+      '<option value="">Selecione um responsável sem data final</option>',
       ...responsaveis.map((responsavel) => `<option value="${responsavel.id}">${responsavel.nome || 'Responsável sem nome'} | ${responsavel.cpf || 'CPF não informado'}</option>`)
     ].join('');
     retirarFields.responsavel.value = retirarResponsavelId;
@@ -105,13 +105,13 @@ function retirarRenderResponsaveis() {
   if (retirarPageSubtitle) {
     retirarPageSubtitle.textContent = retirarConvenioAtual
       ? `${retirarConvenioAtual.nome || 'Convênio sem nome'} | Contrato ${retirarConvenioAtual.numero || '-'}`
-      : 'Selecione o convênio e o responsável que terá o acesso encerrado.';
+      : 'Selecione o convênio e o responsável que terá uma data final registrada.';
   }
 }
 
 function retirarValidateForm() {
   /*
-   * DESCRIÇÃO DA FUNÇÃO: Valida convênio, responsável e data final antes de encerrar o acesso.
+   * DESCRIÇÃO DA FUNÇÃO: Valida convênio, responsável e data final antes de enviar para revisão.
    * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna booleano.
    * ARMAZENAMENTO E PERSISTÊNCIA: Lê inputs e estado em memória; não grava dados.
    * TODO: Em produção, repetir a validação no backend antes de confirmar a retirada.
@@ -137,7 +137,7 @@ function retirarSalvarRascunhoRevisao() {
    * não altera LocalStorage.
    * TODO: Em produção, criar rascunho no backend com bloqueio contra alterações concorrentes.
    */
-  const responsavel = retirarGetResponsaveisAtivos()
+  const responsavel = retirarGetResponsaveisSemDataFinal()
     .find((item) => item.id === retirarResponsavelId) || {};
 
   const draft = {

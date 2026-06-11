@@ -145,11 +145,16 @@ function reviewCreateEmptyPayload() {
    * em memória para apresentação.
    * TODO: Em produção, derivar este modelo dos metadados oficiais dos campos do contrato.
    */
-  const classes = [
+  const classesValores = [
     ['A', 'Oficiais superiores'],
     ['B', 'Oficiais intermediários e subalternos'],
     ['C', 'Praças subtenentes e sargentos'],
     ['D', 'Cabos e soldados']
+  ];
+  const classesLimites = [
+    ['A', 'Oficiais superiores'],
+    ['B', 'Oficiais intermediários e subalternos'],
+    ['C/D', 'Subtenentes, sargentos, cabos e soldados']
   ];
 
   return {
@@ -183,14 +188,14 @@ function reviewCreateEmptyPayload() {
         { key: 'domingo', label: 'Domingo', ativo: false }
       ]
     },
-    limitesVagasDiarias: classes.map(([classe, grupo]) => ({
+    limitesVagasDiarias: classesLimites.map(([classe, grupo]) => ({
       classe,
       grupo,
       servico6: null,
       servico8: null,
       servico12: null
     })),
-    valores: classes.map(([classe, grupo]) => ({
+    valores: classesValores.map(([classe, grupo]) => ({
       classe,
       grupo,
       servico6: null,

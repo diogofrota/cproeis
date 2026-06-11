@@ -16,7 +16,7 @@
     ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava dados; os links continuam apontando para
     âncoras internas temporárias e páginas locais já existentes.
     TODO: Em produção, substituir as âncoras por rotas reais, registrar o item ativo pela rota
-    atual e validar permissões conforme perfil de acesso do usuário.
+    atual e validar permissões conforme perfil de acesso do usuário administrativo.
   -->
   <header class="module-header">
     <div class="header-top">
@@ -30,6 +30,12 @@
       <a class="active" href="menu.html" data-history-back="false">Página inicial</a>
       <a href="planejamento-operacional.html">Planejamento Operacional</a>
       <a href="controle-acesso.html">Controle de Acesso</a>
+      <a href="cadastrar-operador.html">Cadastrar usuário administrativo</a>
+      <a href="tabela-operadores.html">Tabela de usuários administrativos</a>
+      <a href="remover-operador.html">Remover usuário administrativo</a>
+      <a href="cadastrar-acesso-convenio.html">Cadastrar usuário do contrato</a>
+      <a href="tabela-acessos-convenio.html">Tabela de usuários do contrato</a>
+      <a href="remover-acesso-convenio.html">Remover usuário do contrato</a>
       <a href="credenciamento.html">Credenciamento</a>
       <a href="relatorios.html">Relatórios GSI</a>
       <a href="monitoramento.html">Monitoramento</a>
@@ -56,9 +62,33 @@
           <strong>Controle de Acesso</strong>
           <span>Estruturar liberações, permissões e controles de acesso do módulo GSI.</span>
         </a>
+        <a class="module-feature-card" href="cadastrar-operador.html">
+          <strong>Cadastrar usuário administrativo</strong>
+          <span>Incluir usuário administrativo com login, senha temporária e perfil de acesso.</span>
+        </a>
+        <a class="module-feature-card" href="tabela-operadores.html">
+          <strong>Tabela de usuários administrativos</strong>
+          <span>Consultar usuários administrativos cadastrados pelo GSI.</span>
+        </a>
+        <a class="module-feature-card" href="remover-operador.html">
+          <strong>Remover usuário administrativo</strong>
+          <span>Retirar usuário administrativo da lista ativa e registrar o motivo administrativo.</span>
+        </a>
+        <a class="module-feature-card" href="cadastrar-acesso-convenio.html">
+          <strong>Cadastrar usuário do contrato</strong>
+          <span>Incluir usuário vinculado a um contrato específico, com login e perfil de acesso.</span>
+        </a>
+        <a class="module-feature-card" href="tabela-acessos-convenio.html">
+          <strong>Tabela de usuários do contrato</strong>
+          <span>Consultar usuários vinculados a contrato cadastrados pelo GSI.</span>
+        </a>
+        <a class="module-feature-card" href="remover-acesso-convenio.html">
+          <strong>Remover usuário do contrato</strong>
+          <span>Retirar usuário vinculado a contrato da lista ativa e registrar o motivo.</span>
+        </a>
         <a class="module-feature-card" href="credenciamento.html">
           <strong>Credenciamento</strong>
-          <span>Preparar rotinas de credenciamento e validação administrativa de usuários.</span>
+          <span>Preparar rotinas de credenciamento e validação administrativa de usuários administrativos.</span>
         </a>
         <a class="module-feature-card" href="relatorios.html">
           <strong>Relatórios GSI</strong>

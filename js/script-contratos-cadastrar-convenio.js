@@ -33,8 +33,12 @@ const gruposClasse = {
   A: 'Oficiais superiores',
   B: 'Oficiais intermediários e subalternos',
   C: 'Praças subtenentes e sargentos',
-  D: 'Cabos e soldados'
+  D: 'Cabos e soldados',
+  'C/D': 'Subtenentes, sargentos, cabos e soldados'
 };
+
+const classesValoresContrato = ['A', 'B', 'C', 'D'];
+const classesLimitesVagasContrato = ['A', 'B', 'C/D'];
 
 const diasSemanaContrato = [
   { key: 'segunda', label: 'Segunda-feira', businessDay: true },
@@ -137,24 +141,32 @@ const dailyLimitInputs = {
     servico6: document.getElementById('limite-b-6')
   },
   C: {
-    servico12: document.getElementById('limite-c-12'),
-    servico8: document.getElementById('limite-c-8'),
-    servico6: document.getElementById('limite-c-6')
+    servico12: document.getElementById('limite-cd-12'),
+    servico8: document.getElementById('limite-cd-8'),
+    servico6: document.getElementById('limite-cd-6')
   },
   D: {
-    servico12: document.getElementById('limite-d-12'),
-    servico8: document.getElementById('limite-d-8'),
-    servico6: document.getElementById('limite-d-6')
+    servico12: document.getElementById('limite-cd-12'),
+    servico8: document.getElementById('limite-cd-8'),
+    servico6: document.getElementById('limite-cd-6')
+  },
+  'C/D': {
+    servico12: document.getElementById('limite-cd-12'),
+    servico8: document.getElementById('limite-cd-8'),
+    servico6: document.getElementById('limite-cd-6')
   }
 };
 
 const weekdayOperationInputs = document.querySelectorAll('input[name="weekday-operacao"]');
+const weekdayAllDaysInput = document.getElementById('weekday-all-days');
+const weekdayCustomToggle = document.getElementById('weekday-custom-toggle');
+const weekdayCustomPanel = document.getElementById('weekday-custom-panel');
 const weekdayOperationByKey = diasSemanaContrato.reduce((acc, dia) => {
   /*
-   * DESCRIÇÃO DO BLOCO: Mapeia os checkboxes de dias de funcionamento por chave de dia
-   * para facilitar preenchimento em edição e coleta no salvamento.
+   * DESCRIÇÃO DO BLOCO: Mapeia os chips de dias de funcionamento por chave de dia
+   * para facilitar preenchimento em edição, personalização e coleta no salvamento.
    * PARÂMETROS E RETORNO: Usa a lista local `diasSemanaContrato` e retorna um objeto indexado
-   * por chave de dia, contendo o checkbox correspondente.
+   * por chave de dia, contendo o checkbox correspondente dentro do chip visual.
    * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; apenas guarda referências ao DOM que serão
    * lidas por `getWeeklyLimitPayload`.
    * TODO: Em produção, carregar dias permitidos a partir de calendário operacional oficial.
@@ -255,7 +267,7 @@ const validationRules = {
 };
 
 const valueValidationRules = Object.values(valueInputs).flatMap((group) => Object.values(group)).filter(Boolean);
-const dailyLimitValidationRules = Object.values(dailyLimitInputs).flatMap((group) => Object.values(group)).filter(Boolean);
+const dailyLimitValidationRules = [...new Set(Object.values(dailyLimitInputs).flatMap((group) => Object.values(group)).filter(Boolean))];
 const currencyInputs = [
   fields.valorContrato,
   fields.valorPassagem,
@@ -916,17 +928,55 @@ function getContractResponsaveis(convenio) {
   return getResponsaveis().filter((item) => item.convenioId === convenio.id);
 }
 
+function normalizeDailyLimitRows(rows = [], convenioId = '') {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Converte limites diários antigos com C e D separados para o formato
+   * operacional atual, no qual a quantidade de vagas é cadastrada em uma única linha C/D.
+   * PARÂMETROS E RETORNO: Recebe rows como array de limites e convenioId como string; retorna
+   * array normalizado para as classes A, B e C/D.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; lê apenas objetos em memória vindos do
+   * contrato ou de `cproeis_contratos_limites_vagas`.
+   * TODO: Em produção, executar migração de schema no backend para consolidar limites C/D
+   * sem depender de normalização no frontend.
+   */
+  const findClass = (classe) => rows.find((item) => item.classe === classe) || {};
+  const classeC = findClass('C');
+  const classeD = findClass('D');
+  const classeCD = findClass('C/D');
+
+  return classesLimitesVagasContrato.map((classe) => {
+    const row = findClass(classe);
+    const isClasseCD = classe === 'C/D';
+
+    return {
+      id: row.id || `${convenioId}-limite-classe-${classe.toLowerCase().replace('/', '')}`,
+      convenioId: row.convenioId || convenioId,
+      classe,
+      grupo: row.grupo || gruposClasse[classe],
+      servico12: isClasseCD
+        ? Number(classeCD.servico12 || 0) + Number(classeC.servico12 || 0) + Number(classeD.servico12 || 0)
+        : Number(row.servico12 || 0),
+      servico8: isClasseCD
+        ? Number(classeCD.servico8 || 0) + Number(classeC.servico8 || 0) + Number(classeD.servico8 || 0)
+        : Number(row.servico8 || 0),
+      servico6: isClasseCD
+        ? Number(classeCD.servico6 || 0) + Number(classeC.servico6 || 0) + Number(classeD.servico6 || 0)
+        : Number(row.servico6 || 0)
+    };
+  });
+}
+
 function buildEmptyDailyLimitRows(convenioId) {
   /*
    * DESCRIÇÃO DA FUNÇÃO: Cria linhas padrão zeradas para exibir a matriz de limites diários
    * quando um contrato antigo ainda não possui configuração salva.
-   * PARÂMETROS E RETORNO: Recebe convenioId como string e retorna array com classes A, B, C e D.
+   * PARÂMETROS E RETORNO: Recebe convenioId como string e retorna array com classes A, B e C/D.
    * ARMAZENAMENTO E PERSISTÊNCIA: Não lê nem grava LocalStorage; apenas monta dados em memória
    * para renderização e compatibilidade com registros legados.
    * TODO: Em produção, diferenciar explicitamente "sem limite configurado" de limite zero no banco.
    */
-  return ['A', 'B', 'C', 'D'].map((classe) => ({
-    id: `${convenioId}-limite-classe-${classe}`,
+  return classesLimitesVagasContrato.map((classe) => ({
+    id: `${convenioId}-limite-classe-${classe.toLowerCase().replace('/', '')}`,
     convenioId,
     classe,
     grupo: gruposClasse[classe],
@@ -945,13 +995,15 @@ function getContractDailyLimits(convenio) {
    * `cproeis_contratos_limites_vagas` no LocalStorage.
    * TODO: Em produção, carregar estes limites por endpoint próprio e aplicar versionamento por contrato/aditivo.
    */
-  if (convenio.limitesVagasDiarias?.length) return convenio.limitesVagasDiarias;
+  if (convenio.limitesVagasDiarias?.length) {
+    return normalizeDailyLimitRows(convenio.limitesVagasDiarias, convenio.id);
+  }
   const storedLimits = getLimitesVagas().filter((item) => item.convenioId === convenio.id);
-  return storedLimits.length ? storedLimits : buildEmptyDailyLimitRows(convenio.id);
+  return storedLimits.length ? normalizeDailyLimitRows(storedLimits, convenio.id) : buildEmptyDailyLimitRows(convenio.id);
 }
 
 function getValueRows(convenioId) {
-  return ['A', 'B', 'C', 'D'].map((classe) => ({
+  return classesValoresContrato.map((classe) => ({
     id: `${convenioId}-classe-${classe}`,
     convenioId,
     classe,
@@ -973,13 +1025,14 @@ function getDailyLimitRows(convenioId) {
   /*
    * DESCRIÇÃO DA FUNÇÃO: Monta a tabela persistível de total diário de vagas por classe e turno
    * a partir dos inputs do formulário de contrato.
-   * PARÂMETROS E RETORNO: Recebe convenioId como string e retorna array com um registro por classe.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Lê os inputs `limite-*-12`, `limite-*-8` e `limite-*-6`; o retorno
-   * é gravado no objeto do convênio e em `cproeis_contratos_limites_vagas`.
-   * TODO: Em produção, validar estes tetos contra regras contratuais oficiais antes de salvar.
+   * PARÂMETROS E RETORNO: Recebe convenioId como string e retorna array com registros A, B e C/D.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê os inputs `limite-a-*`, `limite-b-*` e `limite-cd-*`; o
+   * retorno é gravado no objeto do convênio e em `cproeis_contratos_limites_vagas`.
+   * TODO: Em produção, validar estes tetos contra regras contratuais oficiais antes de salvar
+   * e separar pagamento C/D por graduação somente na FOPAG.
    */
-  return ['A', 'B', 'C', 'D'].map((classe) => ({
-    id: `${convenioId}-limite-classe-${classe}`,
+  return classesLimitesVagasContrato.map((classe) => ({
+    id: `${convenioId}-limite-classe-${classe.toLowerCase().replace('/', '')}`,
     convenioId,
     classe,
     grupo: gruposClasse[classe],
@@ -994,28 +1047,56 @@ function getDailyClassTotalsFromRows(rows = getDailyLimitRows('preview')) {
    * DESCRIÇÃO DA FUNÇÃO: Soma os turnos 6h, 8h e 12h por classe para gerar a quantidade diária
    * total aplicável aos dias de funcionamento selecionados.
    * PARÂMETROS E RETORNO: Recebe rows como array de limites por classe e retorna objeto
-   * com totais numéricos para A, B, C e D.
+   * com totais numéricos para A, B e C/D.
    * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; usa rows em memória ou lê inputs diários
    * quando nenhum array é informado.
    * TODO: Em produção, permitir derivar o total por dia considerando escalas com turnos
    * simultâneos, sobreposição e regras de posto.
    */
-  return ['A', 'B', 'C', 'D'].reduce((acc, classe) => {
+  return classesLimitesVagasContrato.reduce((acc, classe) => {
     const row = rows.find((item) => item.classe === classe) || {};
     acc[classe] = Number(row.servico6 || 0) + Number(row.servico8 || 0) + Number(row.servico12 || 0);
     return acc;
   }, {});
 }
 
+function getAllWeekdayKeys() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Centraliza a lista completa de dias operacionais do contrato para
+   * representar o padrão de vagas todos os dias da semana.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna array de strings com as chaves de
+   * segunda a domingo.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê somente a constante local `diasSemanaContrato`; não grava dados.
+   * TODO: Em produção, obter essa configuração de um calendário operacional parametrizado por contrato.
+   */
+  return diasSemanaContrato.map((dia) => dia.key);
+}
+
+function isFullWeekSelected(selectedKeys = []) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Verifica se a seleção atual representa todos os dias da semana,
+   * permitindo alternar automaticamente entre modo padrão e modo personalizado.
+   * PARÂMETROS E RETORNO: Recebe selectedKeys como array de strings e retorna boolean.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; compara arrays em memória.
+   * TODO: Em produção, considerar exceções oficiais antes de classificar uma semana como completa.
+   */
+  const selectedSet = new Set(Array.isArray(selectedKeys) ? selectedKeys : []);
+  return diasSemanaContrato.every((dia) => selectedSet.has(dia.key));
+}
+
 function getSelectedWeekdayKeys() {
   /*
    * DESCRIÇÃO DA FUNÇÃO: Lê quais dias da semana foram marcados pelo usuário como dias de
-   * funcionamento do contrato.
+   * funcionamento do contrato, respeitando o modo padrão de todos os dias.
    * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna array de strings com chaves de dias.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Lê apenas checkboxes do DOM; o retorno é persistido em
-   * `limitesVagasSemana` pelo collectPayload.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê o checkbox principal e os chips do DOM; o retorno é
+   * persistido em `limitesVagasSemana` pelo collectPayload.
    * TODO: Em produção, validar se ao menos um dia operacional foi aprovado pela regra contratual.
    */
+  if (weekdayAllDaysInput?.checked) {
+    return getAllWeekdayKeys();
+  }
+
   const selected = [...weekdayOperationInputs]
     .filter((input) => input.checked)
     .map((input) => input.value);
@@ -1034,6 +1115,7 @@ function buildWeeklyDaysFromTotals(totals, selectedKeys = []) {
    * TODO: Em produção, aplicar calendário oficial de feriados, suspensão temporária e exceções por evento.
    */
   const selectedSet = new Set(selectedKeys);
+  const classeCDTotal = Number(totals['C/D'] || 0);
   return diasSemanaContrato.map((dia) => {
     const ativo = selectedSet.has(dia.key);
     return {
@@ -1042,8 +1124,8 @@ function buildWeeklyDaysFromTotals(totals, selectedKeys = []) {
       ativo,
       classeA: ativo ? Number(totals.A || 0) : 0,
       classeB: ativo ? Number(totals.B || 0) : 0,
-      classeC: ativo ? Number(totals.C || 0) : 0,
-      classeD: ativo ? Number(totals.D || 0) : 0
+      classeC: ativo ? classeCDTotal : 0,
+      classeD: 0
     };
   });
 }
@@ -1083,7 +1165,7 @@ function getSelectedWeekdayKeysFromSavedWeek(savedWeek = {}) {
     return savedWeek.dias
       .filter((dia) => dia.ativo !== false && (
         dia.ativo === true ||
-        Number(dia.classeA || 0) + Number(dia.classeB || 0) + Number(dia.classeC || 0) + Number(dia.classeD || 0) > 0
+        Number(dia.classeA || 0) + Number(dia.classeB || 0) + Number(dia.classeC || 0) + Number(dia.classeD || 0) + Number(dia.classeCD || 0) > 0
       ))
       .map((dia) => dia.key)
       .filter(Boolean);
@@ -1092,18 +1174,41 @@ function getSelectedWeekdayKeysFromSavedWeek(savedWeek = {}) {
   return [];
 }
 
-function setWeekdayOperationFields(selectedKeys = []) {
+function updateWeekdayModeState({ expandCustom = false } = {}) {
   /*
-   * DESCRIÇÃO DA FUNÇÃO: Marca os checkboxes dos dias de funcionamento conforme uma lista de
-   * dias salva ou padrão.
+   * DESCRIÇÃO DA FUNÇÃO: Sincroniza o checkbox de todos os dias, o painel de personalização
+   * e o estado visual do botão conforme os dias marcados.
+   * PARÂMETROS E RETORNO: Recebe objeto opcional com expandCustom boolean e não retorna valor.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Atualiza apenas atributos e propriedades no DOM; não grava LocalStorage.
+   * TODO: Em produção, registrar no backend auditoria de mudanças quando dias contratuais forem alterados.
+   */
+  const selectedKeys = [...weekdayOperationInputs]
+    .filter((input) => input.checked)
+    .map((input) => input.value);
+  const allSelected = isFullWeekSelected(selectedKeys);
+  const shouldExpandCustom = expandCustom || !allSelected;
+
+  if (weekdayAllDaysInput) weekdayAllDaysInput.checked = allSelected && !shouldExpandCustom;
+  if (weekdayCustomPanel) weekdayCustomPanel.hidden = !shouldExpandCustom;
+  if (weekdayCustomToggle) {
+    weekdayCustomToggle.setAttribute('aria-expanded', String(shouldExpandCustom));
+    weekdayCustomToggle.textContent = shouldExpandCustom ? 'Personalização ativa' : 'Personalizar dias';
+  }
+}
+
+function setWeekdayOperationFields(selectedKeys = getAllWeekdayKeys()) {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Marca os chips dos dias de funcionamento conforme uma lista de dias
+   * salva ou pelo padrão de funcionamento diário.
    * PARÂMETROS E RETORNO: Recebe selectedKeys como array de strings e não retorna valor.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Escreve somente no DOM; não altera LocalStorage.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Escreve somente no DOM; não altera LocalStorage nem sessionStorage.
    * TODO: Em produção, exibir dias bloqueados por contrato com estado disabled e justificativa.
    */
-  const normalizedKeys = Array.isArray(selectedKeys) ? selectedKeys : [];
+  const normalizedKeys = Array.isArray(selectedKeys) && selectedKeys.length ? selectedKeys : getAllWeekdayKeys();
   Object.entries(weekdayOperationByKey).forEach(([key, input]) => {
     if (input) input.checked = normalizedKeys.includes(key);
   });
+  updateWeekdayModeState({ expandCustom: !isFullWeekSelected(normalizedKeys) });
 }
 
 function createFieldHints() {
@@ -1308,51 +1413,6 @@ function validateResponsavelDraft(options = {}) {
   ];
 
   return keys.map((key) => runFieldValidation(key, options)).every(Boolean);
-}
-
-function encerrarAcessoResponsavelFormulario(responsavelId) {
-  /*
-   * DESCRIÇÃO DA FUNÇÃO: Retira o acesso de um responsável já listado no formulário, mantendo o cadastro
-   * no histórico e registrando a data atual como fim de atuação.
-   * PARÂMETROS E RETORNO: Recebe responsavelId como string e não retorna valores.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Atualiza o array local responsaveisState; quando o convênio já existe
-   * em edição, também grava imediatamente em cproeis_contratos_convenios e cproeis_contratos_responsaveis.
-   * TODO: Em produção, trocar confirm local por modal auditável e chamar endpoint que registre operador,
-   * horário do servidor e justificativa da retirada de acesso.
-   */
-  const responsavel = responsaveisState.find((item) => item.id === responsavelId);
-  if (!responsavel || responsavel.fim) return;
-
-  const nome = titleCaseText(responsavel.nome) || 'este responsável';
-  if (!confirm(`Retirar o acesso de ${nome} a partir de hoje?`)) return;
-
-  responsaveisState = responsaveisState.map((item) => (
-    item.id === responsavelId ? { ...item, fim: today } : item
-  ));
-  persistResponsaveisStateIfEditing();
-  renderResponsaveisForm();
-}
-
-function persistResponsaveisStateIfEditing() {
-  /*
-   * DESCRIÇÃO DA FUNÇÃO: Sincroniza a lista de responsáveis no armazenamento local quando a retirada
-   * de acesso ocorre em um convênio já cadastrado.
-   * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valores.
-   * ARMAZENAMENTO E PERSISTÊNCIA: Lê editingId e responsaveisState; grava LocalStorage nas chaves
-   * cproeis_contratos_convenios e cproeis_contratos_responsaveis para refletir a data fim imediatamente.
-   * TODO: Em produção, substituir esta gravação local por requisição PATCH transacional do responsável.
-   */
-  const convenioId = editingId.value;
-  if (!convenioId) return;
-
-  const responsaveis = responsaveisState.map((responsavel) => ({ ...responsavel, convenioId }));
-  saveList(STORAGE_RESPONSAVEIS, [
-    ...getResponsaveis().filter((item) => item.convenioId !== convenioId),
-    ...responsaveis
-  ]);
-  saveList(STORAGE_CONVENIOS, getConvenios().map((convenio) => (
-    convenio.id === convenioId ? { ...convenio, responsaveis } : convenio
-  )));
 }
 
 function normalizeFieldValue(key) {
@@ -1686,31 +1746,26 @@ function getResponsavelInicioForPayload(row = null) {
   return fields.inicio.value || row?.dataset.responsavelInicio || editingResponsavelDraft?.inicio || '';
 }
 
-function formatResponsavelAccessStatus(responsavel) {
+function formatResponsavelReferencePeriod(responsavel) {
   /*
-   * DESCRIÇÃO DA FUNÇÃO: Monta o texto de situação de acesso do responsável na tabela do formulário,
-   * destacando quando o acesso foi retirado por data final registrada.
+   * DESCRIÇÃO DA FUNÇÃO: Monta o período informativo do responsável cadastrado no contrato,
+   * sem tratar o registro como credencial de acesso ao sistema.
    * PARÂMETROS E RETORNO: Recebe um objeto responsavel e retorna string HTML com dados escapados.
    * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; lê apenas o objeto em memória de responsaveisState.
-   * TODO: Em produção, substituir a leitura local por status calculado no backend com trilha de auditoria.
+   * TODO: Em produção, vincular responsáveis signatários a documentos do contrato sem conceder acesso automático.
    */
   const inicio = formatDateOrBlank(responsavel.inicio) || 'Sem início informado';
-  const fim = formatDateOrBlank(responsavel.fim);
-
-  if (fim) {
-    return `<span class="access-status ended">Acesso retirado em ${escapeHtml(fim)}</span><br><small>Início: ${escapeHtml(inicio)}</small>`;
-  }
-
-  return `<span class="access-status active">Ativo</span><br><small>Início: ${escapeHtml(inicio)}</small>`;
+  const fim = formatDateOrBlank(responsavel.fim) || 'Sem fim informado';
+  return `<span>${escapeHtml(inicio)}</span><br><small>Fim: ${escapeHtml(fim)}</small>`;
 }
 
 function renderResponsaveisForm() {
   /*
-   * DESCRIÇÃO DA FUNÇÃO: Renderiza a lista temporária de responsáveis do convênio, incluindo o botão
-   * discreto para retirar acesso sem excluir o histórico do cadastro.
+   * DESCRIÇÃO DA FUNÇÃO: Renderiza a lista temporária de responsáveis do convênio como referência
+   * cadastral de assinatura, sem conceder ou retirar acesso ao sistema.
    * PARÂMETROS E RETORNO: Não recebe parâmetros e não retorna valores; atualiza o tbody da tabela.
    * ARMAZENAMENTO E PERSISTÊNCIA: Lê o array local responsaveisState e escreve somente no DOM.
-   * TODO: Em produção, paginar responsáveis e buscar status/auditoria a partir de API dedicada.
+   * TODO: Em produção, separar definitivamente responsáveis signatários de usuários autenticáveis do GSI.
    */
   if (!responsaveisFormBody) return;
 
@@ -1724,11 +1779,10 @@ function renderResponsaveisForm() {
       <td><strong>${escapeHtml(titleCaseText(responsavel.nome))}</strong></td>
       <td>${escapeHtml(formatCpf(responsavel.cpf) || '-')}</td>
       <td>${escapeHtml(normalizeText(responsavel.email).toLowerCase() || '-')}${responsavel.telefone ? `<br><small>${escapeHtml(formatPhone(responsavel.telefone))}</small>` : ''}</td>
-      <td>${formatResponsavelAccessStatus(responsavel)}</td>
+      <td>${formatResponsavelReferencePeriod(responsavel)}</td>
       <td>
         <div class="actions">
           <button type="button" data-action="edit-form-responsavel" data-id="${responsavel.id}">Editar</button>
-          ${responsavel.fim ? '' : `<button type="button" class="danger subtle-danger" data-action="end-form-responsavel-access" data-id="${responsavel.id}">Retirar acesso</button>`}
           <button type="button" class="danger" data-action="remove-form-responsavel" data-id="${responsavel.id}">Remover</button>
         </div>
       </td>
@@ -1821,6 +1875,15 @@ function ensureResponsavelObrigatorio() {
 }
 
 function collectPayload() {
+  /*
+   * DESCRIÇÃO DA FUNÇÃO: Consolida todos os campos do cadastro em um único objeto de convênio
+   * para revisão e posterior persistência local.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros e retorna objeto com identificação,
+   * endereço, vigência, valores, limites de vagas e responsáveis.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Lê campos do DOM e `responsaveisState`; não grava diretamente.
+   * A gravação ocorre após confirmação em `cproeis_contratos_convenios` e chaves relacionadas.
+   * TODO: Em produção, enviar este payload para uma API transacional com validação cadastral.
+   */
   const id = editingId.value || makeId();
   const valores = getValueRows(id);
   const limitesVagasDiarias = getDailyLimitRows(id);
@@ -2185,8 +2248,7 @@ function renderDetails(id) {
   detailsSubtitle.textContent = `Contrato ${convenio.numero || '-'} | ${situacao.label}`;
 
   const valorBase = valores[0] || {};
-  const classesContratuais = ['A', 'B', 'C', 'D'];
-  const valoresHtml = classesContratuais.length ? `
+  const valoresHtml = classesValoresContrato.length ? `
     <h3 class="section-title">Valores unitários por classe</h3>
     <div class="table-wrap">
       <table class="compact-table contract-values-details-table">
@@ -2200,7 +2262,7 @@ function renderDetails(id) {
           </tr>
         </thead>
         <tbody>
-          ${classesContratuais.map((classe) => {
+          ${classesValoresContrato.map((classe) => {
             const valor = valores.find((item) => item.classe === classe) || {};
 
             return `
@@ -2218,7 +2280,7 @@ function renderDetails(id) {
     </div>
   ` : '';
 
-  const limitesVagasHtml = classesContratuais.length ? `
+  const limitesVagasHtml = classesLimitesVagasContrato.length ? `
     <h3 class="section-title">Total diário de vagas</h3>
     <div class="table-wrap">
       <table class="compact-table daily-limits-details-table">
@@ -2232,7 +2294,7 @@ function renderDetails(id) {
           </tr>
         </thead>
         <tbody>
-          ${classesContratuais.map((classe) => {
+          ${classesLimitesVagasContrato.map((classe) => {
             const limite = limitesVagasDiarias.find((item) => item.classe === classe) || {};
 
             return `
@@ -2265,7 +2327,7 @@ function renderDetails(id) {
           ${limitesVagasSemana.dias.map((dia) => {
             const ativo = dia.ativo !== false && (
               dia.ativo === true ||
-              Number(dia.classeA || 0) + Number(dia.classeB || 0) + Number(dia.classeC || 0) + Number(dia.classeD || 0) > 0
+              Number(dia.classeA || 0) + Number(dia.classeB || 0) + Number(dia.classeC || 0) + Number(dia.classeD || 0) + Number(dia.classeCD || 0) > 0
             );
 
             return `
@@ -2291,14 +2353,17 @@ function renderDetails(id) {
   /*
    * DESCRIÇÃO DO BLOCO: Calcula o teto financeiro diário do contrato por turno, multiplicando
    * a quantidade máxima de vagas pelo valor unitário de cada classe/turno.
-   * PARÂMETROS E RETORNO: Usa arrays locais `valores`, `limitesVagasDiarias` e `classesContratuais`;
-   * gera objetos em memória para renderizar a tabela e o card resumo.
+   * PARÂMETROS E RETORNO: Usa arrays locais `valores`, `limitesVagasDiarias` e
+   * `classesLimitesVagasContrato`; gera objetos em memória para renderizar a tabela e o card resumo.
    * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; apenas lê os registros já carregados do LocalStorage.
    * TODO: Em produção, mover este cálculo para endpoint financeiro auditável, considerando aditivos,
-   * regras de arredondamento e possíveis exceções por período.
+   * regras de arredondamento e possíveis exceções por período. Para C/D, a FOPAG deverá calcular
+   * o valor definitivo por graduação do policial escalado.
    */
-  const totaisFinanceirosPorClasse = classesContratuais.map((classe) => {
-    const valor = valores.find((item) => item.classe === classe) || {};
+  const totaisFinanceirosPorClasse = classesLimitesVagasContrato.map((classe) => {
+    const valor = classe === 'C/D'
+      ? valores.find((item) => item.classe === 'C/D') || valores.find((item) => item.classe === 'C') || valores.find((item) => item.classe === 'D') || {}
+      : valores.find((item) => item.classe === classe) || {};
     const limite = limitesVagasDiarias.find((item) => item.classe === classe) || {};
     const total12 = Number(valor.servico12 || 0) * Number(limite.servico12 || 0);
     const total8 = Number(valor.servico8 || 0) * Number(limite.servico8 || 0);
@@ -2369,7 +2434,6 @@ function renderDetails(id) {
             <th>Telefone</th>
             <th>Início</th>
             <th>Fim</th>
-            <th>Situação</th>
           </tr>
         </thead>
         <tbody>
@@ -2381,7 +2445,6 @@ function renderDetails(id) {
               <td>${escapeHtml(formatPhone(responsavel.telefone) || '-')}</td>
               <td>${formatDateOrBlank(responsavel.inicio)}</td>
               <td>${formatDateOrBlank(responsavel.fim)}</td>
-              <td>${responsavel.fim ? 'Acesso retirado' : 'Ativo'}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -2619,16 +2682,50 @@ dailyLimitValidationRules.forEach((input) => {
 weekdayOperationInputs.forEach((input) => {
   input.addEventListener('change', () => {
     /*
-     * DESCRIÇÃO DO BLOCO: Mantém a seleção dos dias de funcionamento editável, inclusive
-     * permitindo que todos comecem ou permaneçam desmarcados.
+     * DESCRIÇÃO DO BLOCO: Mantém a seleção personalizada dos dias de funcionamento editável,
+     * atualizando o modo padrão quando todos os dias voltam a ficar marcados.
      * PARÂMETROS E RETORNO: O listener recebe evento de change e não retorna valores.
      * ARMAZENAMENTO E PERSISTÊNCIA: Altera apenas o DOM; o submit grava `limitesVagasSemana`
      * em LocalStorage dentro do contrato.
      * TODO: Em produção, bloquear desmarcação de dias que já tenham vagas publicadas.
      */
     input.checked = Boolean(input.checked);
+    updateWeekdayModeState();
   });
 });
+
+if (weekdayAllDaysInput) {
+  weekdayAllDaysInput.addEventListener('change', () => {
+    /*
+     * DESCRIÇÃO DO BLOCO: Aplica o modo mais comum de funcionamento do contrato, marcando
+     * segunda a domingo e recolhendo a seleção individual.
+     * PARÂMETROS E RETORNO: O listener recebe evento de change e não retorna valores.
+     * ARMAZENAMENTO E PERSISTÊNCIA: Altera somente o DOM; a persistência ocorre no submit.
+     * TODO: Em produção, confirmar alterações que removam exceções já aprovadas em aditivo.
+     */
+    if (weekdayAllDaysInput.checked) {
+      setWeekdayOperationFields(getAllWeekdayKeys());
+      return;
+    }
+
+    updateWeekdayModeState({ expandCustom: true });
+  });
+}
+
+if (weekdayCustomToggle) {
+  weekdayCustomToggle.addEventListener('click', () => {
+    /*
+     * DESCRIÇÃO DO BLOCO: Abre ou fecha a personalização de dias sem alterar os valores
+     * já marcados, permitindo que o usuário desmarque apenas exceções.
+     * PARÂMETROS E RETORNO: O listener recebe evento de clique e não retorna valores.
+     * ARMAZENAMENTO E PERSISTÊNCIA: Atualiza apenas DOM e aria-expanded; o submit grava os dias.
+     * TODO: Em produção, substituir a personalização manual por agenda com histórico de validade.
+     */
+    const shouldExpand = weekdayCustomPanel?.hidden !== false;
+    if (shouldExpand && weekdayAllDaysInput) weekdayAllDaysInput.checked = false;
+    updateWeekdayModeState({ expandCustom: shouldExpand });
+  });
+}
 
 if (addResponsavelButton) {
   addResponsavelButton.addEventListener('click', () => {
@@ -2698,11 +2795,6 @@ document.addEventListener('click', (event) => {
       removeIncludedResponsavelFromDraftRow(row);
       row.remove();
     }
-    return;
-  }
-
-  if (button.dataset.action === 'end-form-responsavel-access') {
-    encerrarAcessoResponsavelFormulario(button.dataset.id);
     return;
   }
 

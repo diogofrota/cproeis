@@ -28,6 +28,7 @@
       <a class="tab-button" href="index.html" data-history-back="false">Página inicial</a>
       <a class="tab-button" href="cadastrar-convenio.html">Cadastrar convênio</a>
       <a class="tab-button active" href="tabela-convenios.html">Tabela Convênios</a>
+      <a class="tab-button" href="tabela-responsaveis.html">Tabela Responsáveis</a>
       <a class="tab-button" href="incluir-responsavel.html">Adicionar responsável</a>
       <a class="tab-button" href="retirar-responsavel.html">Retirar responsável</a>
       <a class="tab-button" href="renovacoes.html">Renovações</a>
@@ -46,15 +47,20 @@
 
         <div class="filter-bar" aria-label="Filtros de contratos">
           <label>
-            Pesquisar
-            <input id="contract-filter-text" type="search" placeholder="Convênio, CNPJ ou contrato">
+            Convênio
+            <input id="contract-filter-name" type="search" placeholder="Nome do convênio">
+          </label>
+
+          <label>
+            CNPJ
+            <input id="contract-filter-cnpj" type="search" inputmode="numeric" placeholder="00.000.000/0000-00">
           </label>
 
           <label>
             Situação
             <select id="contract-filter-status">
               <option value="">Todos</option>
-              <option value="active">Ativos</option>
+              <option value="active" selected>Ativos</option>
               <option value="inactive">Inativos</option>
             </select>
           </label>
@@ -71,17 +77,28 @@
           </label>
 
           <label>
-            Início a partir de
-            <input id="contract-filter-start-from" type="date">
+            Distribuição do diretor
+            <select id="contract-filter-director-region">
+              <option value="">Todos</option>
+            </select>
           </label>
 
           <label>
-            Início até
-            <input id="contract-filter-start-to" type="date">
+            Ordenar por
+            <select id="contract-sort-order">
+              <option value="situacao-inicio">Situação e início</option>
+              <option value="nome-asc">Convênio A-Z</option>
+              <option value="nome-desc">Convênio Z-A</option>
+              <option value="inicio-asc">Início mais antigo</option>
+              <option value="inicio-desc">Início mais recente</option>
+              <option value="valor-desc">Maior valor</option>
+              <option value="valor-asc">Menor valor</option>
+              <option value="distribuicao-asc">Distribuição</option>
+            </select>
           </label>
 
           <div class="form-actions filter-actions">
-            <button type="button" class="secondary" id="clear-contract-filters">Limpar filtros</button>
+            <button type="button" id="apply-contract-filters">Filtrar</button>
           </div>
         </div>
 
@@ -92,16 +109,23 @@
                 <th>Convênio</th>
                 <th>CNPJ</th>
                 <th>Tipo</th>
+                <th>Distribuição</th>
                 <th>Contrato</th>
                 <th>Valor</th>
                 <th>Início</th>
                 <th>Término</th>
                 <th>Situação</th>
-                <th>Ações</th>
+                <th>Detalhes</th>
               </tr>
             </thead>
             <tbody id="contratos-body"></tbody>
           </table>
+        </div>
+
+        <div class="table-pagination" aria-label="Paginação de contratos">
+          <button type="button" class="secondary" id="contract-page-prev">Anterior</button>
+          <span id="contract-pagination-status">Página 1 de 1</span>
+          <button type="button" class="secondary" id="contract-page-next">Próxima</button>
         </div>
       </div>
     </section>
@@ -125,6 +149,8 @@
     </section>
   </main>
 
+  <script src="../dados-simulados/dados-contratos-demo.js"></script>
+  <script src="../js/script-index-demo-data.js"></script>
   <script src="../js/script-contratos-json-api.js"></script>
   <script src="../js/script-contratos-tabela-convenios.js"></script>
   <script src="../js/script-navigation.js"></script>

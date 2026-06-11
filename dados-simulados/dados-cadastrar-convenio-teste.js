@@ -78,24 +78,15 @@
     setNumber('limite-b-6', 2);
     setNumber('limite-b-8', 3);
     setNumber('limite-b-12', 4);
-    setNumber('limite-c-6', 4);
-    setNumber('limite-c-8', 6);
-    setNumber('limite-c-12', 8);
-    setNumber('limite-d-6', 8);
-    setNumber('limite-d-8', 10);
-    setNumber('limite-d-12', 12);
+    setNumber('limite-cd-6', 12);
+    setNumber('limite-cd-8', 16);
+    setNumber('limite-cd-12', 20);
 
-    document.querySelectorAll('input[name="weekday-operacao"]').forEach((checkbox) => {
-      checkbox.checked = false;
-      checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-    });
-
-    ['segunda', 'terca', 'quarta', 'quinta', 'sexta'].forEach((day) => {
-      const checkbox = document.querySelector(`input[name="weekday-operacao"][value="${day}"]`);
-      if (!checkbox) return;
-      checkbox.checked = true;
-      checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-    });
+    const allDaysInput = document.getElementById('weekday-all-days');
+    if (allDaysInput) {
+      allDaysInput.checked = true;
+      allDaysInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
 
     setValue('responsavel-nome', 'Mariana Costa Almeida');
     setValue('responsavel-cpf', '12345678909');

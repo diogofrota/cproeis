@@ -437,11 +437,11 @@ textarea.invalid {
 
 .weekday-picker {
   /*
-   * DESCRIÇÃO DO BLOCO: Exibe os dias de funcionamento como checkboxes compactos em linha,
-   * simplificando o cadastro para contratos que operam em dias específicos.
+   * DESCRIÇÃO DO BLOCO: Exibe os dias de funcionamento como chips compactos de exceção,
+   * preservando leitura rápida quando o usuário precisa alterar o padrão de todos os dias.
    * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; estiliza o grupo e seus labels.
    * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; os valores marcados são lidos pelo JavaScript.
-   * TODO: Em produção, substituir por componente de seleção múltipla do design system.
+   * TODO: Em produção, substituir por componente de calendário operacional do design system.
    */
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -449,13 +449,91 @@ textarea.invalid {
   width: 100%;
 }
 
+.weekday-mode-row {
+  /*
+   * DESCRIÇÃO DO BLOCO: Organiza o modo padrão de funcionamento semanal e a ação de
+   * personalização no mesmo nível visual, reduzindo cliques para o cadastro mais comum.
+   * PARÂMETROS E RETORNO: Não recebe parâmetros nem retorna valores; aplica layout aos controles.
+   * ARMAZENAMENTO E PERSISTÊNCIA: Não grava dados; o estado é sincronizado pelo JavaScript.
+   * TODO: Em produção, exibir neste bloco alertas de exceções oficiais vindas do backend.
+   */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.weekday-all-days {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 58px;
+  padding: 12px 14px;
+  border: 1px solid #9fb3ff;
+  border-radius: 8px;
+  background: #f5f7ff;
+  color: #1e293b;
+  cursor: pointer;
+}
+
+.weekday-all-days input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #1f2a8a;
+  flex: 0 0 auto;
+}
+
+.weekday-all-days span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.weekday-all-days strong {
+  color: #1f2a8a;
+  font-size: 14px;
+}
+
+.weekday-all-days small {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.weekday-custom-toggle {
+  min-height: 58px;
+  padding: 0 18px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2a8a;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.weekday-custom-toggle[aria-expanded="true"] {
+  border-color: #1f2a8a;
+  background: #eef2ff;
+}
+
+.weekday-custom-panel {
+  display: grid;
+  gap: 8px;
+}
+
+.weekday-custom-panel[hidden] {
+  display: none;
+}
+
 .weekday-picker label {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 38px;
-  padding: 8px 12px;
+  min-height: 42px;
+  padding: 8px 10px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   background: #fff;
@@ -472,9 +550,17 @@ textarea.invalid {
 }
 
 .weekday-picker input {
-  width: auto;
-  height: auto;
-  margin: 0 7px 0 0;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+}
+
+.weekday-picker span {
+  line-height: 1;
 }
 
 .responsavel-box {
@@ -931,6 +1017,14 @@ tr:hover td {
 
   .weekly-limits-header {
     flex-direction: column;
+  }
+
+  .weekday-mode-row {
+    grid-template-columns: 1fr;
+  }
+
+  .weekday-custom-toggle {
+    width: 100%;
   }
 
   .weekday-picker {
